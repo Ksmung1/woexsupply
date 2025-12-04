@@ -12,6 +12,7 @@ import Shortcut from './components/Global/Shortcut'
 import Admin from './pages/Admin'
 import Orders from './pages/Orders'
 import Wallet from './pages/Wallet'
+import ScrollToTop from './components/utils/ScrollToTop'
 const App =()=> {
 
   return (
@@ -19,7 +20,7 @@ const App =()=> {
       <ModalProvider>
       <AlertProvider>
    <Router>
-  
+  <ScrollToTop/>
       <Navbar/>
       <Routes>
         <Route path='/' element={<Home/>}/>

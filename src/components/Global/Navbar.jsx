@@ -4,6 +4,7 @@ import { useUser } from "../../context/UserContext";
 import { RxHamburgerMenu } from "react-icons/rx";
 import HomeSearch from "../Homes/HomeSearch";
 import logo from "../../assets/images/logo.png"
+import axios from "axios";
 
 const navItems = [
   { label: "Home", to: "/" },
@@ -74,6 +75,7 @@ const Navbar = () => {
     return path.startsWith(to);
   };
 
+
   const NavItem = ({ item, onClick, isMobile = false }) => {
     const active = isActive(item.to);
     return (
@@ -111,7 +113,6 @@ const Navbar = () => {
     <header className="fixed top-0 left-0 w-full z-50">
       <div className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16 h-16 flex items-center justify-between gap-1">
-          
           {/* LEFT — Hamburger + Logo */}
           <div className="flex items-center gap-2 justify-start min-w-[80px]">
 

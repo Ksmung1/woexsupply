@@ -1,280 +1,79 @@
-import { useState, useEffect } from "react";
+// RechargeForm.jsx (wrapper)
+import React from "react";
 import { useLocation } from "react-router-dom";
 import { useUser } from "../../context/UserContext";
-import { checkUsername } from "../utils/checkUsername";
-import { RefreshCw, Info } from "lucide-react";
 
-// GAME CONFIG
+import RechargeFormZone from "./RechargeFormZone";     // your zone-based component
+import RechargeFormRegion from "./RechargeFormRegion"; // your region-based component
+
+// GAME CONFIG (same as you had)
 const GAME_CONFIG = {
-  "/recharge/mlbb": { product: "mobilelegends", productId: "13", storageKey: "ml_prev_data" },
-  "/recharge/mcgg": { product: "magicchessgogo", productId: "23837", storageKey: "mc_prev_data" },
-  "/recharge/supersus": { product: "supersus", productId: "3088", storageKey: "ss_prev_data" },
-  "/recharge/bloodstrike": { product: "bloodstrike", productId: "20294", storageKey: "bs_prev_data" },
+  "/recharge/mlbb": { product: "mobilelegends", productId: "13", storageKey: "ml_prev_data", type: 'useridandzoneid' },
+  "/recharge/mcgg": { product: "magicchessgogo", productId: "23837", storageKey: "mc_prev_data", type: 'useridandzoneid' },
+  "/recharge/supersus": { product: "supersus", productId: "3088", storageKey: "ss_prev_data", type: 'useridandzoneid' },
+  "/recharge/bloodstrike": { product: "bloodstrike", productId: "20294", storageKey: "bs_prev_data", type: 'useridandzoneid' },
+  "/recharge/hsr": { product: "hsr", productId: "hsr", storageKey: "hsr_prev_data", type: 'userid|server' },
+  "/recharge/gi": { product: "gi", productId: "gi", storageKey: "gi_prev_data", type: 'userid|server' },
 };
 
-const DEFAULT_CONFIG = { product: "mobilelegends", productId: "13", storageKey: "ml_prev_data" };
+const DEFAULT_CONFIG = { product: "mobilelegends", productId: "13", storageKey: "ml_prev_data", type: 'useridandzoneid' };
 
-const RechargeForm = ({
-  userId,
-  setUserId,
-  zoneId,
-  setZoneId,
-  username,
-  setUsername,
-  usernameExists,
-  setUsernameExists,
-}) => {
+/**
+ * Wrapper RechargeForm
+ * Props expected (shared between both child components):
+ * - userId, setUserId, zoneId, setZoneId, username, setUsername, usernameExists, setUsernameExists
+ */
+const RechargeForm = (props) => {
+  const {
+    userId,
+    setUserId,
+    zoneId,
+    setZoneId,
+    username,
+    setUsername,
+    usernameExists,
+    setUsernameExists,
+  } = props;
+
   const location = useLocation();
   const { user } = useUser();
 
   const config = GAME_CONFIG[location.pathname] || DEFAULT_CONFIG;
 
-  const [zone, setZone] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [modalMessage, setModalMessage] = useState("");
-  const [showModal, setShowModal] = useState(false);
-  const [cooldown, setCooldown] = useState(0);
-  const [hasPrevData, setHasPrevData] = useState(false);
-  const [showTooltip, setShowTooltip] = useState(false);
+  // Choose which component to render but pass THE SAME props to both.
+  // This keeps your existing children unchanged — region variant will still receive zoneId/setZoneId.
+  if (config.type === "useridandzoneid") {
+    return (
+      <RechargeFormZone
+        userId={userId}
+        setUserId={setUserId}
+        zoneId={zoneId}
+        setZoneId={setZoneId}
+        username={username}
+        setUsername={setUsername}
+        usernameExists={usernameExists}
+        setUsernameExists={setUsernameExists}
+        config={config}
+        user={user}
+      />
+    );
+  }
 
-  const isReseller = user?.role === "reseller";
-
-  // Load previous saved ID
-  useEffect(() => {
-    const stored = localStorage.getItem(config.storageKey);
-    if (stored) setHasPrevData(true);
-  }, [config.storageKey]);
-
-  // Reset when usernameExists == false
-  useEffect(() => {
-    if (usernameExists === false) {
-      setUserId("");
-      setZoneId("");
-      setUsername("");
-      setZone("");
-      setModalMessage("");
-      setShowModal(false);
-      setLoading(false);
-      setCooldown(0);
-    }
-  }, [usernameExists]);
-
-  useEffect(() => {
-    if (cooldown > 0) {
-      const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [cooldown]);
-
-  const handleInfoClick = () => {
-    setShowTooltip(true);
-    setTimeout(() => setShowTooltip(false), 2500);
-  };
-
-  const resetResults = () => {
-    setUsername("");
-    setZone("");
-    setModalMessage("");
-    setShowModal(false);
-    setCooldown(0);
-  };
-
-  const handlePaste = (e) => {
-    const pasted = e.clipboardData.getData("text").trim();
-    resetResults();
-
-    const paren = pasted.match(/^(\d+)\s*\((\d+)\)$/);
-    if (paren) {
-      e.preventDefault();
-      setUserId(paren[1]);
-      setZoneId(paren[2]);
-      return;
-    }
-
-    const parts = pasted.split(/[\s-]+/);
-    if (parts.length === 2 && /^\d+$/.test(parts[0]) && /^\d+$/.test(parts[1])) {
-      e.preventDefault();
-      setUserId(parts[0]);
-      setZoneId(parts[1]);
-      return;
-    }
-
-    const digits = pasted.replace(/\D/g, "");
-    if (digits.length > 5) {
-      e.preventDefault();
-      setUserId(digits);
-      setZoneId("");
-    }
-  };
-
-  const handleNumberInput = (e, setter) => {
-    const value = e.target.value.replace(/\D/g, "");
-    resetResults();
-    setter(value);
-  };
-
-  const fetchLastId = () => {
-    const saved = JSON.parse(localStorage.getItem(config.storageKey));
-    if (saved) {
-      setUserId(saved.userId);
-      setZoneId(saved.zoneId);
-    } else {
-      setModalMessage("No previously saved ID found.");
-      setShowModal(true);
-    }
-  };
-
-  const handleClick = async () => {
-    if (cooldown > 0 && !isReseller) {
-      setModalMessage(`Please wait ${Math.ceil(cooldown / 60)} minutes.`);
-      setShowModal(true);
-      return;
-    }
-
-    if (!userId || !zoneId) {
-      setModalMessage("Missing User ID or Server ID.");
-      setShowModal(true);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      setUsernameExists(true);
-
-      const result = await checkUsername({
-        userid: userId,
-        zoneid: zoneId,
-        product: config.product,
-        productid: config.productId,
-      });
-
-      if (result.success) {
-        setUsername(result.username);
-        setZone(result.region || "");
-
-        localStorage.setItem(config.storageKey, JSON.stringify({
-          userId,
-          zoneId,
-          username: result.username,
-          region: result.region,
-        }));
-
-        setHasPrevData(true);
-      } else {
-        setModalMessage(result.message || "Failed to fetch username.");
-        setUsername("");
-        setShowModal(true);
-      }
-
-      if (!isReseller) {
-        setCooldown(5 * 60);
-      }
-    } catch {
-      setModalMessage("Something went wrong.");
-      setUsername("");
-      setShowModal(true);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-return (
-  <div  className="flex flex-col gap-3 p-3 shadow-md border border-gray-200 rounded-xl bg-white w-full text-[13px]">
-
-    {/* Header */}
-    <div className="flex items-center justify-between">
-      <p className="font-semibold text-sm">Order Info</p>
-
-      {hasPrevData && !userId && !zoneId && (
-        <div className="flex items-center gap-1">
-          <button
-            onClick={fetchLastId}
-            className="p-1.5 rounded-full bg-green-600 hover:bg-green-700 text-white"
-          >
-            <RefreshCw className="h-3 w-3" />
-          </button>
-
-          <div className="relative">
-            <button
-              onClick={handleInfoClick}
-              className="p-1.5 rounded-full bg-gray-600 hover:bg-gray-700 text-white"
-            >
-              <Info className="h-3 w-3" />
-            </button>
-
-            {showTooltip && (
-              <div className="absolute top-full right-0 mt-1 py-1 px-2 text-[11px] bg-white text-black border border-gray-300 shadow-sm rounded-md animate-fadeInOut whitespace-nowrap">
-                Load previous ID
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-
-    {/* User ID */}
-    <input
-      value={userId}
-      onChange={(e) => handleNumberInput(e, setUserId)}
-      onPaste={handlePaste}
-      type="text"
-      placeholder="User ID"
-      maxLength={20}
-      className="text-center w-full p-2 rounded-lg border border-gray-300 text-[13px] bg-gray-50 focus:border-blue-500 focus:ring-1 focus:ring-blue-300 outline-none"
+  // For region-style games we still pass zoneId/setZoneId (as you requested)
+  return (
+    <RechargeFormRegion
+      userId={userId}
+      setUserId={setUserId}
+      zoneId={zoneId}         // region component will receive this prop (use it as region if you want)
+      setZoneId={setZoneId}   // setter still works the same
+      username={username}
+      setUsername={setUsername}
+      usernameExists={usernameExists}
+      setUsernameExists={setUsernameExists}
+      config={config}
+      user={user}
     />
-
-    {/* Server ID */}
-    <input
-      value={zoneId}
-      onChange={(e) => handleNumberInput(e, setZoneId)}
-      onPaste={handlePaste}
-      type="text"
-      placeholder="Server ID"
-      maxLength={10}
-      className="text-center w-full p-2 rounded-lg border border-gray-300 text-[13px] bg-gray-50 focus:border-blue-500 focus:ring-1 focus:ring-blue-300 outline-none"
-    />
-
-    {/* Check Button */}
-    <button
-      onClick={handleClick}
-      disabled={loading || (cooldown > 0 && !isReseller)}
-      className={`w-full py-2 rounded-lg text-white text-[13px] font-medium shadow-sm transition
-        ${
-          loading || (cooldown > 0 && !isReseller)
-            ? "bg-blue-400 cursor-not-allowed"
-            : "bg-blue-600 hover:bg-blue-700"
-        }`}
-      dangerouslySetInnerHTML={{
-        __html: loading ? "Checking..." : username ? `✔ ${username}` : "Check Username",
-      }}
-    />
-
-    {/* Username Result */}
-    {username && (
-      <div className="w-full p-2 mt-1 rounded-lg bg-gray-50 border border-gray-300 shadow-sm text-[12px] space-y-1">
-        <p><strong>ID:</strong> {userId}</p>
-        <p><strong>Server:</strong> {zoneId}</p>
-        <p><strong>Name:</strong> {username}</p>
-        {zone && <p><strong>Region:</strong> {zone}</p>}
-      </div>
-    )}
-
-    {/* Error Box */}
-    {showModal && (
-      <div className="w-full bg-red-50 border border-red-400 text-red-700 rounded-md p-2 flex justify-between items-center text-[12px] shadow-sm">
-        <span dangerouslySetInnerHTML={{ __html: modalMessage }} />
-        <button
-          onClick={() => setShowModal(false)}
-          className="font-bold px-2 py-1 rounded hover:bg-red-100"
-        >
-          ✕
-        </button>
-      </div>
-    )}
-  </div>
-);
-
-
+  );
 };
 
 export default RechargeForm;

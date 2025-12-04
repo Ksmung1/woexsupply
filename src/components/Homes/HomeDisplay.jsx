@@ -232,11 +232,11 @@ const HomeDisplay = () => {
                 className="flex-shrink-0 w-full"
                 style={{ width: `${100 / slides.length * slides.length}%` }} // each slide 100% of viewport
               >
-                <div className="w-full h-64 md:h-96 bg-gray-100 flex items-center justify-center">
+                <div className="w-full max-h-[200px] md:h-96 bg-gray-100 flex items-center justify-center">
                   <img
                     src={src}
                     alt={`slide-${i}`}
-                    className="w-full h-full object-cover"
+                    className="w-full max-h-[200px] object-cover"
                     draggable={false}
                   />
                 </div>

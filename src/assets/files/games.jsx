@@ -2,7 +2,8 @@ import mlLogo from '../images/ml-logo.avif';
 import mcgg from '../images/mcgg.avif';
 import supersus from '../images/supersus.webp'
 import bloodStrike from "../images/blood-strike.webp"
-
+import honkai from '../images/honkai.avif'
+import genshin from '../images/genshin.jpg'
 const games = [
   {
     id: 1,
@@ -42,9 +43,29 @@ const games = [
     img: bloodStrike,
     route: '/recharge/bloodstrike',
     filter: 'others',
-    order:3,
+    order:4,
     tag: 'bs',
     collectionName: "bsproductlist"
+  },
+    {
+    id: 5,
+    name: "Honkai Star Rail",
+    img: honkai,
+    route: '/recharge/hsr',
+    filter: 'others',
+    order:5,
+    tag: 'hsr',
+    collectionName: "hsrproductlist"
+  },
+    {
+    id: 6,
+    name: "Genshin Impact",
+    img: genshin,
+    route: '/recharge/gi',
+    filter: 'others',
+    order:6,
+    tag: 'gi',
+    collectionName: "giproductlist"
   }
 ];
 

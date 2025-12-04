@@ -242,15 +242,16 @@ const RechargeCheckout = ({
             username: user.name,
             gameUsername: username,
             idtrx: newOrderId,
-            api: "smile",
+            api: selectedItem.api || "smile",
             product: "MLBB Recharge",
             stockPrice: selectedItem.price
           };
 
-          const { data } = await axios.post(
-            `${url}/smile/create-order`,
-            payload
-          );
+          const endpoint = selectedItem.api === 'smile' ?
+          `${url}/smile/create-order` :
+          `${url}/gamestopup/create-order`
+
+          const { data } = await axios.post(endpoint,payload);
 
           if (
             data?.status === 200 &&

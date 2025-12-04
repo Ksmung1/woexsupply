@@ -8,6 +8,10 @@ import ssLogo from '../../assets/images/supersus.webp'
 import displaySS from "../../assets/images/Supersus-bg.jpg"
 import bsLogo from "../../assets/images/blood-strike.webp"
 import displayBS from "../../assets/images/blood-strike-bg.jpg"
+import genLogo from "../../assets/images/genshin.jpg"
+import hsrLogo from "../../assets/images/honkai.avif"
+import displayGI from "../../assets/images/genshin-bg.jpg"
+import displayHSR from "../../assets/images/honkai-display.avif"
 import { IoIosInformationCircle } from "react-icons/io";
 
 const gameInfo = {
@@ -54,10 +58,10 @@ const gameInfo = {
     logo: ssLogo,
   },
    "/recharge/bloodstrike": {
-    name: "Super Sus",
+    name: "Blood Strike",
     image: displayBS,
     guide: [
-      "Open Super Sus",
+      "Open Blood Strike",
       "Go to your Profile and copy UID & Server ID",
       "Paste the copied ID into our site",
       "Check if your nickname appears",
@@ -66,6 +70,34 @@ const gameInfo = {
       "Enjoy your items!"
     ],
     logo: bsLogo,
+  },
+   "/recharge/hsr": {
+    name: "Honkai Star Rail",
+    image: displayHSR,
+    guide: [
+      "Open Honkai Star Rail",
+      "Go to your Profile and copy UID & Server ID",
+      "Paste the copied ID into our site",
+      "Check if your nickname appears",
+      "Click Purchase",
+      "Confirm the amount",
+      "Enjoy your items!"
+    ],
+    logo: hsrLogo,
+  },
+   "/recharge/gi": {
+    name: "Genshin Impact",
+    image: displayGI,
+    guide: [
+      "Open Genshin Impact",
+      "Go to your Profile and copy UID & Server ID",
+      "Paste the copied ID into our site",
+      "Check if your nickname appears",
+      "Click Purchase",
+      "Confirm the amount",
+      "Enjoy your items!"
+    ],
+    logo: genLogo,
   }
 
 };

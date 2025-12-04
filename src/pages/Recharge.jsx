@@ -9,13 +9,17 @@ import RechargeForm from "../components/Recharges/RechargeForm";
 import RechargeCheckout from "../components/Recharges/RechargeCheckout";
 import SupersusProductList from "../components/Recharges/ProductsList/SuperSusProductList";
 import BloodStrikeProductList from "../components/Recharges/ProductsList/BloodStrikeProductList";
+import GenshinProductList from "../components/Recharges/ProductsList/GenshinProductList";
+import HonkaiProductList from "../components/Recharges/ProductsList/HonkaiProductList";
 
 // Map games → product list component
 const PRODUCT_COMPONENTS = {
   mlbb: MobileLegendsProductList,
   mcgg: MagicChessProductList,
   supersus: SupersusProductList,
-  bloodstrike: BloodStrikeProductList
+  bloodstrike: BloodStrikeProductList,
+  gi: GenshinProductList,
+  hsr: HonkaiProductList
 };
 
 const Recharge = () => {

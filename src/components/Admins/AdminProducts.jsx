@@ -4,12 +4,16 @@ import MobileLegendsAdmin from "./Products/MobileLegendsAdmin";
 import MagicChessAdmin from "./Products/MagicChessAdmin";
 import SuperSusAdmin from "./Products/SuperSusAdmin";
 import BloodStrikeAdmin from "./Products/BloodStrikeAdmin";
+import HonkaiAdmin from "./Products/HonkaiAdmin";
+import GenshinAdmin from "./Products/GenshinAdmin";
 
 const componentMap = {
   mlbb: MobileLegendsAdmin,
   mcgg: MagicChessAdmin,
   ss: SuperSusAdmin,
-  bs: BloodStrikeAdmin
+  bs: BloodStrikeAdmin,
+  hsr: HonkaiAdmin,
+  gi: GenshinAdmin
 };
 
 const AdminProducts = () => {
