@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import games from "../../assets/files/games"; // your games array
+import games from "../../assets/files/games";
 import MobileLegendsAdmin from "./Products/MobileLegendsAdmin";
 import MagicChessAdmin from "./Products/MagicChessAdmin";
-import SuperSusAdmin from "./Products/SuperSusAdmin";
 import BloodStrikeAdmin from "./Products/BloodStrikeAdmin";
 import HonkaiAdmin from "./Products/HonkaiAdmin";
 import GenshinAdmin from "./Products/GenshinAdmin";
+import SuperSusAdmin from "./Products/SuperSusAdmin";
 
 const componentMap = {
   mlbb: MobileLegendsAdmin,
@@ -13,73 +13,72 @@ const componentMap = {
   ss: SuperSusAdmin,
   bs: BloodStrikeAdmin,
   hsr: HonkaiAdmin,
-  gi: GenshinAdmin
+  gi: GenshinAdmin,
 };
 
 const AdminProducts = () => {
-  // choose the default selected game (first one)
-  const defaultGameKey = games.length ? (games[0].tag || "mlbb") : null;
+  const gamesArray = Array.isArray(games) ? games : [];
+  const defaultGameKey = gamesArray[0]?.tag ?? null;
   const [selected, setSelected] = useState(defaultGameKey);
 
-  // helper to get component for a game
   const getComponentFor = (game) => {
-    const key = game.tag ;
-    return componentMap[key] ?? (() => <div className="p-4">No admin UI for <strong>{game.name}</strong></div>);
+    const key = game?.tag;
+    return componentMap[key] ?? (() => (
+      <div className="p-4">
+        No admin UI for <strong>{game?.name ?? "Unknown"}</strong>
+      </div>
+    ));
   };
 
-  return (
-    <div className=" mt-20 px-4">
-      <div>
-
-        {/* Tab list */}
-        <div role="tablist" aria-label="Game tabs" className="flex gap-2 overflow-x-auto pb-2">
-          {games.map((g) => {
-            const key = g.tag;
-            const isActive = key === selected;
-            return (
-              <button
-                key={key}
-                role="tab"
-                aria-selected={isActive}
-                aria-controls={`panel-${key}`}
-                id={`tab-${key}`}
-                onClick={() => setSelected(key)}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap focus:outline-none focus:ring-2 ${
-                  isActive
-                    ? "bg-blue-600 text-white shadow"
-                    : "bg-white text-gray-700 border border-gray-200 hover:shadow-sm"
-                }`}
-              >
-                {g.tag.toUpperCase()}
-              </button>
-            );
-          })}
+  if (!gamesArray.length) {
+    return (
+      <div className="py-4 px-4">
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+          <p>No games configured.</p>
         </div>
       </div>
+    );
+  }
 
-      {/* Panels */}
-      <div>
-        {games.map((g) => {
-          const key = g.tag;
-          const PanelComponent = getComponentFor(g);
+  return (
+    <div className="py-4 px-4">
+      {/* Tabs */}
+      <div className="flex gap-2 overflow-x-auto pb-2">
+        {gamesArray.map((g, idx) => {
+          const key = g.tag ?? `game-${idx}`;
           const isActive = key === selected;
           return (
-            <div
+            <button
               key={key}
-              id={`panel-${key}`}
-              role="tabpanel"
-              aria-labelledby={`tab-${key}`}
-              hidden={!isActive}
+              onClick={() => setSelected(key)}
+              className={`px-3 py-1.5 rounded-md text-sm whitespace-nowrap ${
+                isActive
+                  ? "bg-blue-600 text-white shadow"
+                  : "bg-white text-gray-700 border border-gray-200 hover:shadow-sm"
+              }`}
             >
-              {isActive && (
-                <div className="mt-2 bg-white border border-gray-100 rounded-lg shadow-sm p-4">
-                  <PanelComponent game={g} collectionName={g.collectionName}/>
-                </div>
-              )}
-            </div>
+              {key.toUpperCase()}
+            </button>
           );
         })}
       </div>
+
+      {/* Panels */}
+      {gamesArray.map((g, idx) => {
+        const key = g.tag ?? `game-${idx}`;
+        const PanelComponent = getComponentFor(g);
+        const isActive = key === selected;
+
+        return (
+          <div key={key} hidden={!isActive}>
+            {isActive && (
+              <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4">
+                <PanelComponent game={g} collectionName={g.collectionName} />
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };

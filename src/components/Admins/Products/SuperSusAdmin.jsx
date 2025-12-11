@@ -186,7 +186,7 @@ const SuperSusAdmin = ({ collectionName  }) => {
   });
 
   return (
-    <div className="py-6 px-2 md:px-20 lg:px-40 bg-white text-gray-900">
+    <div className="py-6 px-2  bg-white text-gray-900">
       {/* Filter Tabs */}
       <div className="flex gap-3 mb-6 justify-left">
         {Object.entries(groupLabels).map(([key, label]) => (

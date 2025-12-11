@@ -166,7 +166,7 @@ const HonkaiAdmin = ({ collectionName}) => {
   };
 
   return (
-    <div className="py-6 px-2 md:px-20 lg:px-40 bg-white text-gray-900">
+    <div className="py-6 px-2  bg-white text-gray-900">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">Products ({collectionName})</h2>
       </div>

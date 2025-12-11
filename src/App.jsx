@@ -12,7 +12,11 @@ import Shortcut from './components/Global/Shortcut'
 import Admin from './pages/Admin'
 import Orders from './pages/Orders'
 import Wallet from './pages/Wallet'
-import ScrollToTop from './components/utils/ScrollToTop'
+import AdminOrders from './components/Admins/AdminOrders'
+import AdminLayout from './layouts/AdminLayout'
+import MainLayout from './layouts/MainLayout'
+import AdminProducts from './components/Admins/AdminProducts'
+import AdminUsers from './components/Admins/AdminUsers'
 const App =()=> {
 
   return (
@@ -20,17 +24,24 @@ const App =()=> {
       <ModalProvider>
       <AlertProvider>
    <Router>
-  <ScrollToTop/>
-      <Navbar/>
       <Routes>
-        <Route path='/' element={<Home/>}/>
-        <Route path='/admin' element={<Admin/>}/>
-        <Route path='/orders' element={<Orders/>}/>
-        <Route path='/wallet' element={<Wallet/>}/>
-        <Route path='/profile' element={<Profile/>}/>
-        <Route path='/leaderboards' element={<Profile/>}/>
-        <Route path='/recharge/:gamename' element={<Recharge/>}/>
-        <Route path='/authentication-selection' element={<Authentication/>}/>
+        <Route path='/' element={<MainLayout/>}>
+        <Route index element={Home}></Route>
+        <Route path='orders' element={<Orders/>}/>
+        <Route path='wallet' element={<Wallet/>}/>
+        <Route path='profile' element={<Profile/>}/>
+        <Route path='leaderboards' element={<Profile/>}/>
+        <Route path='recharge/:gamename' element={<Recharge/>}/>
+        <Route path='authentication-selection' element={<Authentication/>}/>
+
+
+      </Route>
+        <Route path='/admin' element={<AdminLayout/>}>
+          <Route index element={<Admin/>}/>
+          <Route path='orders' element={<AdminOrders/>}/>
+          <Route path='users' element={<AdminUsers/>}/>
+          <Route path='products' element={<AdminProducts/>}/>
+        </Route>
       </Routes>
       <div className='h-20'></div>
       <Shortcut/>
