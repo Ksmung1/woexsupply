@@ -10,9 +10,9 @@ function GameCardComponent({ id, name, img, route, isLoaded, onLoad }) {
     <Link
       to={route}
       aria-label={name}
-      className="w-full group rounded-lg overflow-hidden border border-gray-200 bg-white shadow-sm hover:shadow-md transition transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-300"
+      className="w-full group overflow-hidden bg-white gap-1 flex-col flex transition transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-300"
     >
-      <div className="w-full aspect-square bg-gray-100 relative">
+      <div className="w-full rounded-lg overflow-hidden aspect-square bg-gray-100 relative">
         {!isLoaded && (
           <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100" />
         )}
@@ -32,8 +32,8 @@ function GameCardComponent({ id, name, img, route, isLoaded, onLoad }) {
         />
       </div>
 
-      <div className="px-2 py-1 text-left">
-        <p className="text-xs font-semibold text-gray-800 truncate">{name}</p>
+      <div className="px-2 py-1 text-left text-center">
+        <p className="text-xs font-semibold text-center text-gray-800 ">{name}</p>
       </div>
     </Link>
   );

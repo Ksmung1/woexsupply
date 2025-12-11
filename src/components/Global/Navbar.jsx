@@ -5,6 +5,7 @@ import { RxHamburgerMenu } from "react-icons/rx";
 import HomeSearch from "../Homes/HomeSearch";
 import logo from "../../assets/images/logo.png"
 import axios from "axios";
+import { Bitcoin, Coins, CoinsIcon } from "lucide-react";
 
 const navItems = [
   { label: "Home", to: "/" },
@@ -166,62 +167,12 @@ const Navbar = () => {
                         </div>                  
                     </div>
 
-                    {/* Mobile Profile */}
-                    <div className="px-3 py-3 bg-gray-50">
-                      {user ? (
-                        <div
-                          onClick={() => {
-                            setMenuOpen(false);
-                            setMoreOpen(false);
-                            handleAvatarClick();
-                          }}
-                          className="flex items-center gap-3 cursor-pointer px-2 py-2 hover:bg-gray-100 rounded-md"
-                        >
-                          <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-200">
-                            {photoURL ? (
-                              <img
-                                src={photoURL}
-                                alt="Profile"
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-sm text-gray-600">
-                                {user.username?.charAt(0)?.toUpperCase() ?? "U"}
-                              </div>
-                            )}
-                          </div>
-                          <div>
-                            <div className="text-sm font-medium text-gray-800">
-                              {user.username || user.name || "Profile"}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              View profile
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div
-                          onClick={() => {
-                            setMenuOpen(false);
-                            setMoreOpen(false);
-                            navigate("/authentication-selection");
-                          }}
-                          className="flex items-center gap-3 cursor-pointer px-2 py-2 hover:bg-gray-100 rounded-md"
-                        >
-                          <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
-                            L
-                          </div>
-                          <div>
-                            <div className="text-sm font-medium text-gray-800">
-                              Login
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              Sign in / Sign up
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    
+            {/* coin */}
+            <div className="flex border p-2 border-gray-200 py-1 rounded-md gap-2 items-center">
+              <Bitcoin/>
+              <p>{parseFloat(user?.balance || 0).toFixed(2)}</p>
+            </div>
                   </nav>
                 </div>
               </div>
@@ -310,74 +261,14 @@ const Navbar = () => {
               )}
             </nav>
 
-            {/* Profile */}
-            <div
-              onClick={() => {
-                setMenuOpen(false);
-                setMoreOpen(false);
-                handleAvatarClick();
-              }}
-              className="flex items-center gap-3 cursor-pointer"
-            >
-              {user ? (
-                <div className="h-10 w-10 rounded-full overflow-hidden ring-1 ring-gray-100">
-                  {photoURL ? (
-                    <img
-                      src={photoURL}
-                      className="w-full h-full object-cover"
-                      alt="avatar"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-semibold">
-                      {(user.username || "U").charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div
-                  onClick={() => {
-                    setMenuOpen(false);
-                    setMoreOpen(false);
-                    navigate("/authentication-selection");
-                  }}
-                  className="h-9 w-9 rounded-full bg-gray-100 flex items-center justify-center text-sm text-gray-700"
-                >
-                  L
-                </div>
-              )}
-            </div>
           </div>
 
-          {/* RIGHT MOBILE — avatar only */}
-          <div className="md:hidden flex items-center justify-end min-w-[40px]">
-            <div
-              onClick={() => {
-                setMenuOpen(false);
-                setMoreOpen(false);
-                handleAvatarClick();
-              }}
-              className="cursor-pointer"
-            >
-              {user ? (
-                <img
-                  src={photoURL}
-                  className="h-9 w-9 rounded-full object-cover ring-1 ring-gray-100"
-                  alt="avatar"
-                />
-              ) : (
-                <div
-                  onClick={() => {
-                    setMenuOpen(false);
-                    setMoreOpen(false);
-                    navigate("/authentication-selection");
-                  }}
-                  className="h-9 w-9 rounded-full bg-gray-100 flex items-center justify-center"
-                >
-                  L
-                </div>
-              )}
+          
+            {/* coin */}
+            <div className="flex border p-2 border-gray-200 py-1 rounded-md gap-2 items-center">
+              <Bitcoin/>
+              <p>{parseFloat(user?.balance || 0).toFixed(2)}</p>
             </div>
-          </div>
 
         </div>
       </div>
