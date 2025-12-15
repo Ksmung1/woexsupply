@@ -41,9 +41,9 @@ const AdminProducts = () => {
   }
 
   return (
-    <div className="py-4 px-4">
+    <div className="py-2 sm:py-4 px-2 sm:px-4">
       {/* Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-2">
+      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
         {gamesArray.map((g, idx) => {
           const key = g.tag ?? `game-${idx}`;
           const isActive = key === selected;
@@ -51,10 +51,10 @@ const AdminProducts = () => {
             <button
               key={key}
               onClick={() => setSelected(key)}
-              className={`px-3 py-1.5 rounded-md text-sm whitespace-nowrap ${
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm whitespace-nowrap transition-all ${
                 isActive
-                  ? "bg-blue-600 text-white shadow"
-                  : "bg-white text-gray-700 border border-gray-200 hover:shadow-sm"
+                  ? "bg-blue-600 text-white shadow-lg"
+                  : "bg-white text-gray-700 border border-gray-200 hover:shadow-sm hover:bg-gray-50"
               }`}
             >
               {key.toUpperCase()}
@@ -72,7 +72,7 @@ const AdminProducts = () => {
         return (
           <div key={key} hidden={!isActive}>
             {isActive && (
-              <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4">
+              <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-3 sm:p-4 lg:p-6 mt-2 sm:mt-4">
                 <PanelComponent game={g} collectionName={g.collectionName} />
               </div>
             )}

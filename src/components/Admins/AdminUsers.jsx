@@ -114,60 +114,138 @@ export default function AdminUsers() {
     );
   }, [debounced, users]);
 
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold mb-4">Admin — Users</h1>
+  const formatUserDate = (val) => {
+    if (!val) return "—";
+    let date;
+    if (typeof val?.toDate === "function") {
+      date = val.toDate();
+    } else {
+      try {
+        date = new Date(val);
+      } catch {
+        return "—";
+      }
+    }
+    const now = new Date();
+    const diffMs = now - date;
+    const diffDays = Math.floor(diffMs / 86400000);
+    const diffMonths = Math.floor(diffDays / 30);
 
-      <div className="mb-4 flex gap-2 items-center">
+    if (diffDays < 1) return "Today";
+    if (diffDays < 7) return `${diffDays}d ago`;
+    if (diffMonths < 1) return `${Math.floor(diffDays / 7)}w ago`;
+    if (diffMonths < 12) return `${diffMonths}mo ago`;
+    return date.toLocaleDateString();
+  };
+
+  return (
+    <div className="p-4">
+      <div className="flex items-center justify-between mb-3">
+        <h1 className="text-lg font-semibold text-gray-900">Users</h1>
+        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+          {display.length} {loading ? "loading..." : "shown"}
+        </span>
+      </div>
+
+      <div className="mb-3 flex gap-2 items-center">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by username (prefix search supported)..."
-          className="px-3 py-2 border rounded w-full max-w-md"
+          placeholder="Search username..."
+          className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm flex-1 sm:max-w-xs focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
         />
-        <div className="text-sm text-gray-500">{loading ? "Loading…" : `${display.length} shown`}</div>
       </div>
 
-      {error && <div className="mb-4 p-3 bg-red-50 text-red-700 rounded">{error}</div>}
+      {error && (
+        <div className="mb-3 p-2 bg-red-50 text-red-700 rounded text-xs">{error}</div>
+      )}
 
-      <div className="overflow-x-auto bg-white rounded shadow-sm border">
-        <table className="min-w-full divide-y overflow-x-auto">
-          <thead className="bg-gray-50">
+      {/* Desktop Table View */}
+      <div className="hidden lg:block overflow-x-auto bg-white rounded-lg border border-gray-200">
+        <table className="min-w-full">
+          <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">#</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Username</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Email</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Created</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">UID</th>
+              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">#</th>
+              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Username</th>
+              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Email</th>
+              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Joined</th>
+              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">UID</th>
             </tr>
           </thead>
 
-          <tbody className="bg-white divide-y">
+          <tbody className="divide-y divide-gray-100">
             {display.map((u, i) => (
-              <tr key={u.id ?? u.uid ?? i} className="hover:bg-gray-50">
-                <td className="px-4 py-3 text-sm text-gray-800">{i + 1}</td>
-                <td className="px-4 py-3 text-sm text-gray-800">{u.name ?? "—"}</td>
-                <td className="px-4 py-3 text-sm text-gray-600">{u.email ?? "—"}</td>
-                <td className="px-4 py-3 text-sm text-gray-600">
-                  {u.createdAt && typeof u.createdAt.toDate === "function"
-                    ? u.createdAt.toDate().toLocaleString()
-                    : u.createdAt
-                    ? new Date(u.createdAt).toLocaleString()
-                    : "—"}
+              <tr key={u.id ?? u.uid ?? i} className="hover:bg-gray-50 transition-colors">
+                <td className="px-3 py-2">
+                  <span className="text-xs text-gray-500">#{i + 1}</span>
                 </td>
-                <td className="px-4 py-3 text-sm font-mono text-gray-700">{u.id ?? u.uid ?? "—"}</td>
+                <td className="px-3 py-2">
+                  <span className="text-xs font-medium text-gray-900 truncate block max-w-[150px]">
+                    {u.name ?? u.username ?? "—"}
+                  </span>
+                </td>
+                <td className="px-3 py-2">
+                  <span className="text-xs text-gray-600 truncate block max-w-[200px]" title={u.email ?? ""}>
+                    {u.email ?? "—"}
+                  </span>
+                </td>
+                <td className="px-3 py-2">
+                  <span className="text-xs text-gray-500">
+                    {formatUserDate(u.createdAt)}
+                  </span>
+                </td>
+                <td className="px-3 py-2">
+                  <span className="text-xs font-mono text-gray-500 truncate block max-w-[180px]" title={u.id ?? u.uid ?? ""}>
+                    {u.id ?? u.uid ?? "—"}
+                  </span>
+                </td>
               </tr>
             ))}
 
             {display.length === 0 && !loading && (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-sm text-gray-600">
+                <td colSpan={5} className="px-3 py-6 text-center text-xs text-gray-500">
                   No users found.
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile/Tablet Card View */}
+      <div className="lg:hidden space-y-2">
+        {display.length === 0 && !loading ? (
+          <div className="text-center py-6 text-xs text-gray-500 bg-gray-50 rounded-lg border border-gray-200">
+            No users found.
+          </div>
+        ) : (
+          display.map((u, i) => (
+            <div key={u.id ?? u.uid ?? i} className="bg-white rounded-lg border border-gray-200 p-3 hover:shadow-sm transition-shadow">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs text-gray-400">#{i + 1}</span>
+                <p className="text-sm font-semibold text-gray-900 truncate flex-1">{u.name ?? u.username ?? "—"}</p>
+              </div>
+
+              <div className="space-y-1.5 text-xs">
+                <div>
+                  <span className="text-gray-500">Email:</span>
+                  <span className="text-gray-700 ml-1 truncate block">{u.email ?? "—"}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-gray-500">Joined:</span>
+                    <span className="text-gray-600 ml-1">{formatUserDate(u.createdAt)}</span>
+                  </div>
+                </div>
+                <div>
+                  <span className="text-gray-500">UID:</span>
+                  <span className="text-gray-500 font-mono ml-1 text-[10px] truncate block">{u.id ?? u.uid ?? "—"}</span>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
