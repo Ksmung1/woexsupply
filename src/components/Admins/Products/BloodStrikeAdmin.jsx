@@ -3,12 +3,14 @@ import { db } from "../../../config/firebase";
 import { collection, onSnapshot, doc, updateDoc, setDoc } from "firebase/firestore";
 import { deleteItem } from "../Utils/DeleteItem";
 import { FiPlus } from "react-icons/fi";
+import { useAlert } from "../../../context/AlertContext";
 import AddModal from "../Utils/AddModal";
 import EditModal from "../Utils/EditModal";
 import AdminProduct from "../Utils/AdminProduct";
 import image from "../../../assets/images/game.png"
 
 const BloodStrikeAdmin = ({ collectionName  }) => {
+  const { showError, showSuccess, showWarning } = useAlert();
   const [items, setItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -96,7 +98,7 @@ const BloodStrikeAdmin = ({ collectionName  }) => {
         await updateDoc(docRef, { hide: !currentHide });
       } catch (error) {
         console.error("Error updating hide status:", error);
-        alert("Failed to update product visibility: " + error.message);
+        showError("Failed to update product visibility: " + error.message);
       }
     },
     [collectionName]
@@ -113,7 +115,7 @@ const BloodStrikeAdmin = ({ collectionName  }) => {
       const text = await file.text();
       const jsonData = JSON.parse(text);
       if (!Array.isArray(jsonData)) {
-        alert("Invalid JSON format: must be an array of products.");
+        showError("Invalid JSON format: must be an array of products.");
         return;
       }
       setLoading(true);
@@ -145,10 +147,10 @@ const BloodStrikeAdmin = ({ collectionName  }) => {
         });
       });
       await Promise.all(batchPromises);
-      alert("JSON imported successfully ✅");
+      showSuccess("JSON imported successfully!");
     } catch (err) {
       console.error("JSON upload error:", err);
-      alert("Failed to upload JSON: " + err.message);
+      showError("Failed to upload JSON: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -158,7 +160,7 @@ const BloodStrikeAdmin = ({ collectionName  }) => {
     setLoading(true);
     const { id, label, diamonds, type, rupees, falseRupees, resellerRupees, price, group, api } = newItem;
     if (!id || !label || !type || !rupees || !group || !resellerRupees) {
-      alert("Please fill all required fields");
+      showWarning("Please fill all required fields");
       setLoading(false);
       return;
     }
@@ -186,47 +188,68 @@ const BloodStrikeAdmin = ({ collectionName  }) => {
   });
 
   return (
-    <div className="py-6 px-2  bg-white text-gray-900">
-      {/* Filter Tabs */}
-      <div className="flex gap-3 mb-6 justify-left">
-        {Object.entries(groupLabels).map(([key, label]) => (
-          <button
-            key={key}
-            onClick={() => {
-              setActiveGroup(key);
-              setSelectedItem(null);
-            }}
-            className={`px-2 py-2 rounded-lg text-xs font-semibold transition-colors ${activeGroup === key ? "bg-green-400 text-black" : "bg-gray-200 text-gray-700"}`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Products ({collectionName})</h2>
-      </div>
-
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredItems.map((item) => (
-            <AdminProduct
-              key={item.id}
-              item={item}
-              isSelected={selectedItem?.id === item.id}
-              onSelect={(it) => setSelectedItem((prev) => (prev?.id === it.id ? null : it))}
-              onToggleOutOfStock={toggleOutOfStock}
-              onHideToggle={handleHide}
-              typeImageMap={typeImageMap}
-              defaultImage={image}
-            />
-          ))}
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-indigo-50/30 py-6 md:py-8">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-6 md:mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Products</h2>
+          <p className="text-sm md:text-base text-gray-600">{collectionName}</p>
         </div>
-      )}
 
-      <EditModal
+        {/* Filter Tabs */}
+        <div className="mb-6 md:mb-8">
+          <div className="flex flex-wrap gap-2 md:gap-3">
+            {Object.entries(groupLabels).map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => {
+                  setActiveGroup(key);
+                  setSelectedItem(null);
+                }}
+                className={`px-4 py-2 md:px-5 md:py-2.5 rounded-lg text-sm md:text-base font-semibold transition-all duration-200 ${
+                  activeGroup === key
+                    ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg"
+                    : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Products Grid */}
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-gray-600 font-medium">Loading products...</p>
+            </div>
+          </div>
+        ) : filteredItems.length === 0 ? (
+          <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12 text-center">
+            <div className="text-6xl mb-4">📦</div>
+            <p className="text-gray-600 font-medium text-lg mb-2">No products found</p>
+            <p className="text-gray-500 text-sm">Try selecting a different group or add a new product</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            {filteredItems.map((item) => (
+              <AdminProduct
+                key={item.id}
+                item={item}
+                isSelected={selectedItem?.id === item.id}
+                onSelect={(it) => setSelectedItem((prev) => (prev?.id === it.id ? null : it))}
+                onToggleOutOfStock={toggleOutOfStock}
+                onHideToggle={handleHide}
+                typeImageMap={typeImageMap}
+                defaultImage={image}
+              />
+            ))}
+          </div>
+        )}
+
+        <EditModal
         show={!!selectedItem}
         onClose={() => setSelectedItem(null)}
         selectedItem={selectedItem}
@@ -270,9 +293,15 @@ const BloodStrikeAdmin = ({ collectionName  }) => {
         fields={fields}
       />
 
+      </div>
+
       {/* Floating + button */}
-      <button aria-label="Add new product" onClick={() => setShowAddForm(true)} className="fixed bottom-13 left-6 z-40 flex items-center justify-center w-14 h-14 rounded-full shadow-lg transform hover:-translate-y-0.5 transition bg-blue-600 text-white">
-        <FiPlus size={22} />
+      <button
+        aria-label="Add new product"
+        onClick={() => setShowAddForm(true)}
+        className="fixed bottom-6 md:bottom-8 right-6 md:right-8 z-40 flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-full shadow-2xl transform hover:scale-110 hover:shadow-3xl transition-all duration-300 bg-gradient-to-r from-purple-600 to-indigo-600 text-white"
+      >
+        <FiPlus size={24} className="md:w-6 md:h-6" />
       </button>
     </div>
   );

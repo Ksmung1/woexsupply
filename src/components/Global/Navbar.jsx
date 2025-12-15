@@ -1,16 +1,36 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "../../context/UserContext";
-import { RxHamburgerMenu } from "react-icons/rx";
+import { 
+  FaHome, 
+  FaCoins, 
+  FaShoppingBag, 
+  FaUser, 
+  FaBars,
+  FaSearch,
+  FaTrophy,
+  FaInfoCircle,
+  FaGlobe,
+  FaGamepad,
+  FaShieldAlt
+} from "react-icons/fa";
 import HomeSearch from "../Homes/HomeSearch";
-import logo from "../../assets/images/logo.png"
-import axios from "axios";
-import { Bitcoin, Coins, CoinsIcon } from "lucide-react";
+import logo from "../../assets/images/logo.png";
+import { Trophy } from "lucide-react";
 
-const navItems = [
-  { label: "Home", to: "/" },
-  { label: "Leaderboards", to: "/leaderboards" },
-  { label: "About", to: "/about" },
+// Desktop navigation items
+const desktopNavItems = [
+  { label: "Home", to: "/", icon: FaHome },
+  { label: "Leaderboards", to: "/leaderboards", icon: FaTrophy },
+  { label: "About", to: "/about", icon: FaInfoCircle },
+];
+
+// Mobile bottom navigation items
+const mobileNavItems = [
+  { label: "Home", to: "/", icon: FaHome },
+  { label: "Leaderboard", to: "/leaderboards", icon: Trophy },
+  { label: "Orders", to: "/orders", icon: FaShoppingBag },
+  { label: "Wallet", to: "/wallet", icon: FaCoins },
 ];
 
 const Navbar = () => {
@@ -19,55 +39,29 @@ const Navbar = () => {
   const { user } = useUser();
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const menuRef = useRef(null);
+  const profileRef = useRef(null);
 
-  const [moreOpen, setMoreOpen] = useState(false);
-  const moreRef = useRef(null);
-
-  // avatar
-  const photoURL = user?.photoURL ?? null;
-
-  // close menus on route change (this fixes navigation not showing view)
+  // Close menus on route change
   useEffect(() => {
     setMenuOpen(false);
-    setMoreOpen(false);
+    setProfileMenuOpen(false);
   }, [location.pathname]);
 
-  // expose helper so other components can close menus after navigate(route)
-  useEffect(() => {
-    window.__closeNavbarMenus = () => {
-      setMenuOpen(false);
-      setMoreOpen(false);
-    };
-    return () => {
-      try {
-        // clean up
-        if (window.__closeNavbarMenus) delete window.__closeNavbarMenus;
-      } catch {}
-    };
-  }, []);
-
-  // Close mobile menu when clicking outside
+  // Close menus when clicking outside
   useEffect(() => {
     const handler = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setMenuOpen(false);
       }
-    };
-    if (menuOpen) document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [menuOpen]);
-
-  // Close "More" dropdown when clicking outside
-  useEffect(() => {
-    const handler = (e) => {
-      if (moreRef.current && !moreRef.current.contains(e.target)) {
-        setMoreOpen(false);
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setProfileMenuOpen(false);
       }
     };
-    if (moreOpen) document.addEventListener("mousedown", handler);
+    document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, [moreOpen]);
+  }, []);
 
   // Active route checker
   const isActive = (to) => {
@@ -76,203 +70,231 @@ const Navbar = () => {
     return path.startsWith(to);
   };
 
-
-  const NavItem = ({ item, onClick, isMobile = false }) => {
-    const active = isActive(item.to);
-    return (
-      <button
-        onClick={onClick}
-        aria-current={active ? "page" : undefined}
-        className={`w-full md:w-auto text-left md:text-center 
-          px-3 rounded-lg p-2 transition-colors duration-200
-          ${
-            active
-              ? "bg-blue-50 text-blue-600 font-semibold shadow-sm"
-              : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
-          }
-          ${isMobile ? "text-base" : "text-sm"}`}
-      >
-        {item.label}
-      </button>
-    );
-  };
-
-  // Desktop nav split for overflow
-  const VISIBLE_COUNT = 3;
-  const visibleNav = navItems.slice(0, VISIBLE_COUNT);
-  const overflowNav = navItems.slice(VISIBLE_COUNT);
-
-  const handleAvatarClick = () => {
-    // close menus then navigate
+  const handleProfileClick = () => {
     setMenuOpen(false);
-    setMoreOpen(false);
+    setProfileMenuOpen(false);
     if (user) navigate("/profile");
     else navigate("/authentication-selection");
   };
 
   return (
-    <header className="fixed top-0 left-0 w-full z-50">
-      <div className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16 h-16 flex items-center justify-between gap-1">
-          {/* LEFT — Hamburger + Logo */}
-          <div className="flex items-center gap-2 justify-start min-w-[80px]">
-
-            {/* Hamburger */}
-            <div ref={menuRef} className="relative">
-              <button
-                className="md:hidden p-2 rounded-lg hover:bg-gray-100 active:scale-95 transition"
-                onClick={() => setMenuOpen((s) => !s)}
-                aria-expanded={menuOpen}
-                aria-label="Toggle menu"
-              >
-                <RxHamburgerMenu size={22} />
-              </button>
-
-              {/* MOBILE MENU */}
-              <div
-                className={`fixed inset-x-4 top-20 z-40 md:hidden transform-gpu transition-all duration-200 origin-top-right
-                  ${menuOpen ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"}`}
-              >
-                <div className="w-full bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                  <nav className="flex flex-col divide-y divide-gray-100">
-                    <div className="px-3 py-3">
-                      {navItems.map((item) => (
-                        <div key={item.to} className="mb-1 last:mb-0">
-                          <NavItem
-                            item={item}
-                            isMobile
-                            onClick={() => {
-                              navigate(item.to);
-                              setMenuOpen(false);
-                              setMoreOpen(false);
-                            }}
-                          />
-                        </div>
-                      ))}
-
-                    </div>
-                      <div className="px-3 py-3 bg-red-50">
-                   
-                        <div
-                          onClick={() => {
-                            setMenuOpen(false);
-                            setMoreOpen(false);
-                            navigate("/admin");
-                          }}
-                          className="flex items-center gap-3 cursor-pointer px-2 py-2 hover:bg-gray-100 rounded-md"
-                        >
-                            <div className="text-sm px-2 font-bold text-red-500">
-                              Admin
-                            </div>
-                        </div>                  
-                    </div>
-
-                    
-            {/* coin */}
-            <div className="flex border p-2 border-gray-200 py-1 rounded-md gap-2 items-center">
-              <Bitcoin/>
-              <p>{parseFloat(user?.balance || 0).toFixed(2)}</p>
-            </div>
-                  </nav>
-                </div>
-              </div>
-            </div>
-
-            {/* LOGO */}
+    <>
+      {/* DESKTOP NAVBAR - Only visible on md and above */}
+      <header className="hidden md:block fixed top-0 left-0 w-full z-50 bg-white shadow-md">
+        <div className="max-w-7xl mx-auto px-4 lg:px-8 h-16 flex items-center justify-between">
+          {/* LEFT - Logo */}
+          <div className="flex items-center gap-4 min-w-[200px]">
             <button
-              onClick={() => {
-                setMenuOpen(false);
-                setMoreOpen(false);
-                navigate("/");
-              }}
-
+              onClick={() => navigate("/")}
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
             >
-              <img src={logo} className="w-full h-7" alt="" />
+              <img src={logo} className="h-8 w-auto" alt="Logo" />
             </button>
           </div>
 
-          {/* CENTER — HOMESearch */}
-          <div className="flex-1 flex justify-center pl-1">
-            <div className="w-full max-w-xl">
-              <HomeSearch />
-            </div>
+          {/* CENTER - Search */}
+          <div className="flex-1 flex justify-center max-w-2xl mx-4">
+            <HomeSearch />
           </div>
 
-          {/* RIGHT — Desktop nav + avatar */}
-          <div className="hidden md:flex items-center gap-3 min-w-[200px] justify-end">
-
-            {/* Desktop inline nav */}
-            <nav className="flex items-center gap-2">
-              {visibleNav.map((item) => (
-                <button
-                  key={item.to}
-                  onClick={() => {
-                   setMenuOpen(false);
-                    setMoreOpen(false);
-                    navigate(item.to);
-           
-                  }}
-                  className={`text-sm px-3 py-2 rounded-md ${
-                    isActive(item.to)
-                      ? "bg-blue-50 text-blue-600 font-semibold"
-                      : "text-gray-700 hover:bg-gray-50"
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
-              <div onClick={()=>navigate('/admin')} className="text-sm text-red-600  font-semibold bg-red-50 p-2">Admin</div>
-
-              {/* MORE */}
-              {navItems.length > VISIBLE_COUNT && (
-                <div className="relative" ref={moreRef}>
+          {/* RIGHT - Navigation, Balance, Profile */}
+          <div className="flex items-center gap-3 min-w-[200px] justify-end">
+            {/* Desktop Navigation */}
+            <nav className="hidden lg:flex items-center gap-1">
+              {desktopNavItems.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item.to);
+                return (
                   <button
-                    onClick={() => setMoreOpen((s) => !s)}
-                    className="text-sm px-3 py-2 rounded-md text-gray-700 hover:bg-gray-50"
-                    aria-expanded={moreOpen}
+                    key={item.to}
+                    onClick={() => navigate(item.to)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                      active
+                        ? "bg-purple-50 text-purple-600 shadow-sm"
+                        : "text-gray-700 hover:bg-gray-50 hover:text-purple-600"
+                    }`}
                   >
-                    <RxHamburgerMenu/>
+                    <Icon size={16} />
+                    <span>{item.label}</span>
                   </button>
-
-                  {moreOpen && (
-                    <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-100 rounded-md shadow-lg z-50">
-                      <ul>
-                        {navItems
-                          .slice(VISIBLE_COUNT)
-                          .map((item) => (
-                            <li key={item.to}>
-                              <button
-                                onClick={() => {
-                                                         setMoreOpen(false);
-                                  setMenuOpen(false);
-                                  navigate(item.to);
-                 
-                                }}
-                                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 text-gray-700"
-                              >
-                                {item.label}
-                              </button>
-                            </li>
-                          ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              )}
+                );
+              })}
             </nav>
 
-          </div>
+            {/* Balance Display */}
+            <button
+              onClick={() => navigate("/wallet")}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105"
+            >
+              <FaCoins size={16} />
+              <span className="text-sm">₹{parseFloat(user?.balance || 0).toFixed(2)}</span>
+            </button>
 
-          
-            {/* coin */}
-            <div className="flex border p-2 border-gray-200 py-1 rounded-md gap-2 items-center">
-              <Bitcoin/>
-              <p>{parseFloat(user?.balance || 0).toFixed(2)}</p>
+            {/* Profile Menu */}
+            <div ref={profileRef} className="relative">
+              <button
+                onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                className="flex items-center gap-2 p-2 rounded-full hover:bg-gray-100 transition-colors"
+              >
+                {user?.photoURL ? (
+                  <img
+                    src={user.photoURL}
+                    alt="Profile"
+                    className="w-8 h-8 rounded-full border-2 border-purple-500"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 flex items-center justify-center text-white font-semibold">
+                    <FaUser size={14} />
+                  </div>
+                )}
+              </button>
+
+              {/* Profile Dropdown */}
+              {profileMenuOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50">
+                  <div className="py-1">
+                    <button
+                      onClick={handleProfileClick}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                    >
+                      <FaUser size={14} />
+                      <span>{user ? "Profile" : "Sign In"}</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate("/orders");
+                        setProfileMenuOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                    >
+                      <FaShoppingBag size={14} />
+                      <span>My Orders</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate("/wallet");
+                        setProfileMenuOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                    >
+                      <FaCoins size={14} />
+                      <span>Wallet</span>
+                    </button>
+                    {user?.role === "admin" && (
+                      <button
+                        onClick={() => {
+                          navigate("/admin");
+                          setProfileMenuOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                      >
+                        <FaShieldAlt size={14} />
+                        <span>Admin Panel</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
+            {/* Mobile Menu Button (for tablet) */}
+            <div ref={menuRef} className="lg:hidden relative">
+              <button
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <FaBars size={20} />
+              </button>
+
+              {menuOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50">
+                  <div className="py-1">
+                    {desktopNavItems.map((item) => {
+                      const Icon = item.icon;
+                      const active = isActive(item.to);
+                      return (
+                        <button
+                          key={item.to}
+                          onClick={() => {
+                            navigate(item.to);
+                            setMenuOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 ${
+                            active
+                              ? "bg-purple-50 text-purple-600"
+                              : "text-gray-700 hover:bg-gray-50"
+                          }`}
+                        >
+                          <Icon size={16} />
+                          <span>{item.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* MOBILE BOTTOM NAVIGATION - Only visible on mobile */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg">
+        <div className="flex items-center justify-around h-16 px-2">
+          {mobileNavItems.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.to);
+            return (
+              <button
+                key={item.to}
+                onClick={() => navigate(item.to)}
+                className={`flex flex-col items-center justify-center flex-1 h-full transition-all duration-200 ${
+                  active
+                    ? "text-purple-600"
+                    : "text-gray-500 hover:text-purple-500"
+                }`}
+              >
+                <Icon size={20} className={active ? "mb-1" : ""} />
+                <span className={`text-[10px] font-medium ${active ? "font-semibold" : ""}`}>
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+
+      {/* MOBILE TOP BAR - Logo, Search, Balance */}
+      <header className="md:hidden fixed top-0 left-0 right-0 z-40 bg-white shadow-md">
+        <div className="h-14 flex items-center justify-between px-3 gap-2">
+          {/* Logo */}
+          <button
+            onClick={() => navigate("/")}
+            className="flex-shrink-0"
+          >
+            <img src={logo} className="h-6 w-auto" alt="Logo" />
+          </button>
+
+          {/* Search */}
+          <div className="flex-1 min-w-0">
+            <HomeSearch />
+          </div>
+
+          {/* Balance */}
+          <button
+            onClick={() => navigate("/wallet")}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold shadow-sm flex-shrink-0"
+          >
+            <FaCoins size={14} />
+            <span className="text-xs">₹{parseFloat(user?.balance || 0).toFixed(0)}</span>
+          </button>
+        </div>
+      </header>
+
+      {/* Spacer for fixed headers */}
+      <div className="h-16 md:block hidden" />
+      <div className="h-14 md:hidden block" />
+    </>
   );
 };
 

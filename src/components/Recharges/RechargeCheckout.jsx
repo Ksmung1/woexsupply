@@ -141,7 +141,7 @@ const RechargeCheckout = ({
     try {
       showAlert("Redirecting to payment...");
       const { data } = await axios.post(
-        `${import.meta.env.VITE_PAYMENT_URL}/payment/start-order`,
+        `${import.meta.env.VITE_BACKEND_URL}/payment/start-order`,
         {
           ...orderData,
           ksmApi: import.meta.env.VITE_APP_KSM_API,
@@ -294,7 +294,7 @@ const RechargeCheckout = ({
                 onClick={() => setIsSelectedPayment(method)}
                 className={`relative flex items-center justify-between py-3 px-4 rounded-md transition font-medium shadow-md border ${
                   isSelectedPayment === method
-                    ? "bg-yellow-500 text-white border-yellow-700"
+                    ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-purple-700"
                     : "bg-white border-gray-300 hover:bg-gray-50"
                 }`}
               >
@@ -339,7 +339,7 @@ const RechargeCheckout = ({
             className={`w-full py-4 text-lg font-bold rounded-lg transition-all ${
               isDisabled || selectedItem?.outOfStock
                 ? "bg-gray-500 text-gray-300 cursor-not-allowed"
-                : "bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white"
+                : "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white"
             }`}
           >
             {selectedItem?.outOfStock

@@ -1,6 +1,7 @@
 // EditModal.jsx
 import React from "react";
 import { FiX } from "react-icons/fi";
+import { useAlert } from "../../../context/AlertContext";
 
 /**
  * Reusable EditModal
@@ -41,95 +42,153 @@ const EditModal = ({
   ],
   confirmBeforeDelete = true,
 }) => {
+  const { showConfirm, showError } = useAlert();
+  
   if (!show || !selectedItem) return null;
 
   const handleDelete = async () => {
     if (confirmBeforeDelete) {
-      const ok = window.confirm(`Delete ${selectedItem.id || selectedItem.label || "this item"}? This cannot be undone.`);
-      if (!ok) return;
+      showConfirm(
+        `Are you sure you want to delete "${selectedItem.id || selectedItem.label || "this item"}"? This action cannot be undone.`,
+        async () => {
+          try {
+            if (onDelete) await onDelete(selectedItem.id);
+          } catch (error) {
+            showError(error?.message || "Failed to delete item");
+          }
+        },
+        "Delete Item"
+      );
+      return;
     }
-    if (onDelete) await onDelete(selectedItem.id);
+    try {
+      if (onDelete) await onDelete(selectedItem.id);
+    } catch (error) {
+      showError(error?.message || "Failed to delete item");
+    }
   };
 
   return (
-    <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4">
-      <div onClick={onClose} className="absolute inset-0 bg-black/40" />
+    <div role="dialog" aria-modal="true" className="fixed inset-0 z-[9998] flex items-center justify-center p-4">
+      <div onClick={onClose} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
-      <div className="relative z-10 w-full md:w-[70%] lg:w-[50%] max-h-[80vh] overflow-auto rounded-lg p-6 shadow-lg bg-white border">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-bold">
-            Edit Product {collectionName ? `— ${collectionName}` : ""} {" "}
-            <span className="text-sm text-gray-500">({selectedItem.id})</span>
-          </h3>
-          <button aria-label="Close edit" onClick={onClose} className="p-1 rounded hover:bg-gray-100">
-            <FiX size={22} />
-          </button>
+      <div className="relative z-10 w-full md:w-[90%] lg:w-[70%] xl:w-[60%] max-h-[90vh] overflow-auto rounded-2xl shadow-2xl bg-white animate-scale-in">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4 sticky top-0 z-10">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-xl md:text-2xl font-bold text-white">
+                Edit Product {collectionName ? `— ${collectionName}` : ""}
+              </h3>
+              <p className="text-sm text-purple-100 mt-1">ID: {selectedItem.id}</p>
+            </div>
+            <button
+              aria-label="Close edit"
+              onClick={onClose}
+              className="p-2 rounded-lg hover:bg-white/20 transition-colors text-white"
+            >
+              <FiX size={24} />
+            </button>
+          </div>
         </div>
 
-        <div className="flex flex-col gap-4">
-          {fields.map(({ label, field, type, placeholder }) => (
-            <div key={field} className="flex flex-col gap-1 text-left">
-              <label className="font-medium text-sm">{label}</label>
-              <input
-                type={type}
-                value={selectedItem[field] ?? ""}
-                onChange={(e) => onChange(field, e.target.value)}
-                placeholder={placeholder}
-                className="border px-3 py-2 rounded text-sm bg-white border-gray-300 text-gray-900"
-              />
+        {/* Content */}
+        <div className="p-6 md:p-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+            {fields.map(({ label, field, type, placeholder }) => (
+              <div key={field} className="flex flex-col gap-2">
+                <label className="font-semibold text-sm text-gray-700">{label}</label>
+                <input
+                  type={type}
+                  value={selectedItem[field] ?? ""}
+                  onChange={(e) => onChange(field, e.target.value)}
+                  placeholder={placeholder}
+                  className="w-full border-2 border-gray-200 px-4 py-2.5 rounded-lg text-sm bg-white text-gray-900 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Group and API */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mt-4">
+            <div className="flex flex-col gap-2">
+              <label className="font-semibold text-sm text-gray-700">Group</label>
+              <div className="flex items-center gap-3">
+                <select
+                  value={selectedItem.group ?? ""}
+                  onChange={(e) => onChange("group", e.target.value)}
+                  className="flex-1 border-2 border-gray-200 px-4 py-2.5 rounded-lg text-sm bg-white text-gray-900 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
+                >
+                  <option value="">Select Group</option>
+                  {groups.map((g) => (
+                    <option key={g.key} value={g.key}>
+                      {g.label ?? g.key}
+                    </option>
+                  ))}
+                </select>
+                {selectedItem.group && (() => {
+                  const sel = groups.find((g) => g.key === selectedItem.group);
+                  return sel && sel.image ? (
+                    <img src={sel.image} alt={sel.label ?? sel.key} className="h-12 w-12 rounded-lg border-2 border-gray-200 object-cover" />
+                  ) : null;
+                })()}
+              </div>
             </div>
-          ))}
 
-          {/* Group selector (data-driven) */}
-          <div className="flex flex-col gap-2 mt-2">
-            <label className="font-medium text-sm">Group</label>
-            <div className="flex items-center gap-3">
-              <select
-                value={selectedItem.group ?? ""}
-                onChange={(e) => onChange("group", e.target.value)}
-                className="border px-3 py-2 rounded text-sm w-full bg-white border-gray-300 text-gray-900"
-              >
-                <option value="">Select Group</option>
-                {groups.map((g) => (
-                  <option key={g.key} value={g.key}>
-                    {g.label ?? g.key}
-                  </option>
-                ))}
-              </select>
-
-              {selectedItem.group && (() => {
-                const sel = groups.find((g) => g.key === selectedItem.group);
-                return sel && sel.image ? <img src={sel.image} alt={sel.label ?? sel.key} className="h-10 w-10 rounded-md border" /> : null;
-              })()}
+            <div className="flex flex-col gap-2">
+              <label className="font-semibold text-sm text-gray-700">API</label>
+              {apiOptions && apiOptions.length > 0 ? (
+                <select
+                  value={selectedItem.api ?? apiOptions[0].value}
+                  onChange={(e) => onChange("api", e.target.value)}
+                  className="w-full border-2 border-gray-200 px-4 py-2.5 rounded-lg text-sm bg-white text-gray-900 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
+                >
+                  {apiOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label ?? opt.value}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  value={selectedItem.api ?? "yokcash"}
+                  readOnly
+                  className="w-full border-2 border-gray-200 px-4 py-2.5 rounded-lg text-sm bg-gray-100 text-gray-600 cursor-not-allowed"
+                />
+              )}
             </div>
           </div>
 
-          {/* API (locked or editable depending on presence of apiOptions) */}
-          <div className="flex flex-col gap-2 mt-2">
-            <label className="font-medium text-sm">API</label>
-            {apiOptions && apiOptions.length > 0 ? (
-              <select
-                value={selectedItem.api ?? apiOptions[0].value}
-                onChange={(e) => onChange("api", e.target.value)}
-                className="border px-3 py-2 rounded text-sm w-full bg-white border-gray-300 text-gray-900"
-              >
-                {apiOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label ?? opt.value}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <input type="text" value={selectedItem.api ?? "yokcash"} readOnly className="border px-3 py-2 rounded text-sm bg-gray-100 w-full" />
-            )}
-          </div>
-
-          <div className="mt-6 flex justify-end gap-3">
-            <button onClick={handleDelete} disabled={loading} className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded">
-              {loading ? "Deleting..." : "Delete"}
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-6 border-t border-gray-200">
+            <button
+              onClick={handleDelete}
+              disabled={loading}
+              className="px-6 py-2.5 rounded-lg font-semibold text-white bg-red-600 hover:bg-red-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
             </button>
-            <button onClick={onSave} disabled={loading} className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded">
-              {loading ? "Saving..." : "Save"}
+            <button
+              onClick={onSave}
+              disabled={loading}
+              className="px-6 py-2.5 rounded-lg font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  Saving...
+                </>
+              ) : (
+                "Save Changes"
+              )}
             </button>
           </div>
         </div>

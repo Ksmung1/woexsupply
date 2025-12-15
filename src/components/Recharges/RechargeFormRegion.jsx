@@ -185,12 +185,12 @@ const RechargeFormRegion = ({
 
         {hasPrevData && !userId && !zoneId && (
           <div className="flex items-center gap-1">
-            <button onClick={fetchLastId} className="p-1.5 rounded-full bg-green-600 hover:bg-green-700 text-white">
+            <button onClick={fetchLastId} className="p-1.5 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white">
               <RefreshCw className="h-3 w-3" />
             </button>
 
             <div className="relative">
-              <button onClick={handleInfoClick} className="p-1.5 rounded-full bg-gray-600 hover:bg-gray-700 text-white">
+              <button onClick={handleInfoClick} className="p-1.5 rounded-full bg-purple-600 hover:bg-purple-700 text-white">
                 <Info className="h-3 w-3" />
               </button>
 
@@ -211,7 +211,7 @@ const RechargeFormRegion = ({
         type="text"
         placeholder="User ID"
         maxLength={20}
-        className="text-center w-full p-2 rounded-lg border border-gray-300 text-[13px] bg-gray-50 focus:border-blue-500 focus:ring-1 focus:ring-blue-300 outline-none"
+        className="text-center w-full p-2 rounded-lg border border-gray-300 text-[13px] bg-gray-50 focus:border-purple-500 focus:ring-1 focus:ring-purple-300 outline-none"
       />
 
       <select
@@ -220,7 +220,7 @@ const RechargeFormRegion = ({
           resetResults();
           setZoneId && setZoneId(e.target.value);
         }}
-        className="w-full p-2 rounded-lg border border-gray-300 bg-white text-[13px]"
+        className="w-full p-2 rounded-lg border border-gray-300 bg-white text-[13px] focus:border-purple-500 focus:ring-1 focus:ring-purple-300 outline-none"
       >
         <option value="">Select Server / Region</option>
         {REGION_OPTIONS.map((r) => (
@@ -234,7 +234,7 @@ const RechargeFormRegion = ({
         onClick={handleClick}
         disabled={loading || (cooldown > 0 && !isReseller)}
         className={`w-full py-2 rounded-lg text-white text-[13px] font-medium shadow-sm transition
-          ${loading || (cooldown > 0 && !isReseller) ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}`}
+          ${loading || (cooldown > 0 && !isReseller) ? "bg-purple-400 cursor-not-allowed" : "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"}`}
         dangerouslySetInnerHTML={{
           __html: loading ? "Checking..." : username ? `✔ ${username}` : "Check Username",
         }}

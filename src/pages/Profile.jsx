@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { doc, onSnapshot, getDocs, query, collection, where, updateDoc, documentId } from "firebase/firestore";
+import { doc, onSnapshot, getDocs, query, collection, where, updateDoc, documentId, getDoc } from "firebase/firestore";
 import { db } from "../config/firebase";
 import { useUser } from "../context/UserContext";
 import { format } from "date-fns";
+import { FaUser, FaTrophy, FaMedal, FaCoins, FaShoppingBag } from "react-icons/fa";
 
 /**
  * Profile.jsx
@@ -34,6 +35,13 @@ const Profile = () => {
   const [phoneInput, setPhoneInput] = useState("");
   const [savingPhone, setSavingPhone] = useState(false);
   const [error, setError] = useState("");
+
+  // Leaderboards state
+  const [topSpenders, setTopSpenders] = useState([]);
+  const [topOrderCount, setTopOrderCount] = useState([]);
+  const [loadingLeaderboards, setLoadingLeaderboards] = useState(true);
+  const [activeTab, setActiveTab] = useState("spenders"); // "spenders" or "orders"
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   // subscribe to user document
   useEffect(() => {
@@ -160,6 +168,64 @@ const Profile = () => {
     }
   };
 
+  // Fetch leaderboards
+  useEffect(() => {
+    const fetchLeaderboards = async () => {
+      setLoadingLeaderboards(true);
+      try {
+        // Fetch top spenders
+        const spendersDoc = await getDoc(doc(db, "leaderboards", "topSpenders"));
+        if (spendersDoc.exists()) {
+          const data = spendersDoc.data();
+          setTopSpenders(data.data || []);
+          if (data.updatedAt) {
+            setLastUpdated(data.updatedAt);
+          }
+        }
+
+        // Fetch top order count
+        const ordersDoc = await getDoc(doc(db, "leaderboards", "topOrderCount"));
+        if (ordersDoc.exists()) {
+          setTopOrderCount(ordersDoc.data().data || []);
+        }
+      } catch (err) {
+        console.error("Error fetching leaderboards:", err);
+      } finally {
+        setLoadingLeaderboards(false);
+      }
+    };
+
+    fetchLeaderboards();
+
+    // Set up real-time listener for leaderboards updates
+    const unsubscribeSpenders = onSnapshot(
+      doc(db, "leaderboards", "topSpenders"),
+      (snap) => {
+        if (snap.exists()) {
+          const data = snap.data();
+          setTopSpenders(data.data || []);
+          if (data.updatedAt) {
+            setLastUpdated(data.updatedAt);
+          }
+        }
+      }
+    );
+
+    const unsubscribeOrders = onSnapshot(
+      doc(db, "leaderboards", "topOrderCount"),
+      (snap) => {
+        if (snap.exists()) {
+          setTopOrderCount(snap.data().data || []);
+        }
+      }
+    );
+
+    return () => {
+      unsubscribeSpenders();
+      unsubscribeOrders();
+    };
+  }, []);
+
   const createdAtDisplay = useMemo(() => {
     const ts = userDoc?.createdAt;
     if (!ts) return "—";
@@ -174,10 +240,184 @@ const Profile = () => {
 
   // UI
   return (
-    <div className="max-w-5xl mt-20 mx-auto px-4 py-8">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-indigo-50/30 py-8">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+            <FaTrophy className="text-purple-600" />
+            Leaderboards
+          </h1>
+          <p className="text-gray-600">Top players and spenders on our platform</p>
+        </div>
+
+        {/* Leaderboards Section - Always visible */}
+        <div className="mb-8">
+          <div className="bg-white rounded-2xl shadow-xl p-6">
+            {/* Header with last updated */}
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-xl font-bold text-gray-800">Global Leaderboards</h2>
+                {lastUpdated && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Last updated: {format(lastUpdated.toDate ? lastUpdated.toDate() : new Date(lastUpdated), "PPp")}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex gap-2 mb-6 border-b border-gray-200">
+              <button
+                onClick={() => setActiveTab("spenders")}
+                className={`px-6 py-3 font-semibold transition-all duration-200 border-b-2 ${
+                  activeTab === "spenders"
+                    ? "border-purple-600 text-purple-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                <FaCoins className="inline mr-2" />
+                Top Spenders
+              </button>
+              <button
+                onClick={() => setActiveTab("orders")}
+                className={`px-6 py-3 font-semibold transition-all duration-200 border-b-2 ${
+                  activeTab === "orders"
+                    ? "border-purple-600 text-purple-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                <FaShoppingBag className="inline mr-2" />
+                Most Orders
+              </button>
+            </div>
+
+            {/* Leaderboard Content */}
+            {loadingLeaderboards ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {(activeTab === "spenders" ? topSpenders : topOrderCount).map((user, index) => {
+                  const isCurrentUser = uid && user.uid === uid;
+                  const rank = index + 1;
+                  const medalColor =
+                    rank === 1 ? "from-yellow-400 to-yellow-600" :
+                    rank === 2 ? "from-gray-300 to-gray-500" :
+                    rank === 3 ? "from-orange-400 to-orange-600" :
+                    "from-purple-100 to-indigo-100";
+
+                  return (
+                    <div
+                      key={user.uid || index}
+                      className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-200 ${
+                        isCurrentUser
+                          ? "bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-400 shadow-lg"
+                          : "bg-white border-gray-200 hover:shadow-md"
+                      }`}
+                    >
+                      {/* Rank */}
+                      <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${medalColor} flex items-center justify-center text-white font-bold text-lg shadow-md`}>
+                        {rank <= 3 ? (
+                          <FaMedal className="text-2xl" />
+                        ) : (
+                          rank
+                        )}
+                      </div>
+
+                      {/* Avatar */}
+                      <div className="w-14 h-14 rounded-full overflow-hidden ring-2 ring-gray-200">
+                        {user.photoURL ? (
+                          <img
+                            src={user.photoURL}
+                            alt={user.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-white font-bold text-xl">
+                            {(user.name || "A").charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* User Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-bold text-gray-800 truncate">
+                            {user.name || "Anonymous"}
+                            {isCurrentUser && (
+                              <span className="ml-2 text-xs bg-purple-600 text-white px-2 py-0.5 rounded-full">
+                                You
+                              </span>
+                            )}
+                          </h3>
+                        </div>
+                        {user.email && (
+                          <p className="text-sm text-gray-500 truncate">{user.email}</p>
+                        )}
+                      </div>
+
+                      {/* Stats */}
+                      <div className="text-right">
+                        {activeTab === "spenders" ? (
+                          <>
+                            <div className="text-2xl font-bold text-purple-600">
+                              ₹{Number(user.totalSpent || 0).toLocaleString()}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {user.orderCount || 0} {user.orderCount === 1 ? "order" : "orders"}
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="text-2xl font-bold text-indigo-600">
+                              {user.orderCount || 0}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              ₹{Number(user.totalSpent || 0).toLocaleString()} spent
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {((activeTab === "spenders" ? topSpenders : topOrderCount).length === 0) && (
+                  <div className="text-center py-12 text-gray-500">
+                    <FaTrophy className="text-4xl mx-auto mb-4 text-gray-300" />
+                    <p>No leaderboard data available yet.</p>
+                    <p className="text-sm mt-2">Leaderboards update every hour.</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Profile Section - Only show if logged in */}
+        {!uid && (
+          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl p-8 text-center border-2 border-purple-200">
+            <FaUser className="text-5xl text-purple-600 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Sign in to view your profile</h2>
+            <p className="text-gray-600 mb-4">Create an account to track your orders, spending, and see your ranking!</p>
+          </div>
+        )}
+
+        {uid && (
+          <>
+            <div className="mb-8">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+                <FaUser className="text-purple-600" />
+                Your Profile
+              </h2>
+              <p className="text-gray-600">Manage your account and view your activity</p>
+            </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Left: Profile card */}
-        <div className="col-span-1 bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+        <div className="col-span-1 bg-white border border-gray-200 rounded-xl p-6 shadow-lg">
           {loadingUser ? (
             <div className="animate-pulse space-y-3">
               <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto" />
@@ -249,30 +489,30 @@ const Profile = () => {
         </div>
 
         {/* Right top: Stats */}
-        <div className="col-span-2 bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col gap-4">
+        <div className="col-span-2 bg-white border border-gray-200 rounded-xl p-6 shadow-lg flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Account summary</h3>
             <div className="text-sm text-gray-500">Welcome back</div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="p-3 rounded-lg border border-gray-100 bg-gray-50 text-center">
-              <div className="text-sm text-gray-500">Total orders</div>
-              <div className="mt-2 text-xl font-bold text-gray-900">
+            <div className="p-4 rounded-xl border border-gray-200 bg-gradient-to-br from-purple-50 to-indigo-50 text-center hover:shadow-md transition-shadow">
+              <div className="text-sm text-gray-600 font-medium">Total Orders</div>
+              <div className="mt-2 text-2xl font-bold text-purple-700">
                 {ordersLoading ? "…" : ordersCount}
               </div>
             </div>
 
-            <div className="p-3 rounded-lg border border-gray-100 bg-gray-50 text-center">
-              <div className="text-sm text-gray-500">Total spent</div>
-              <div className="mt-2 text-xl font-bold text-gray-900">
-                {ordersLoading ? "…" : `₦${Number(totalSpent).toLocaleString()}`}
+            <div className="p-4 rounded-xl border border-gray-200 bg-gradient-to-br from-green-50 to-emerald-50 text-center hover:shadow-md transition-shadow">
+              <div className="text-sm text-gray-600 font-medium">Total Spent</div>
+              <div className="mt-2 text-2xl font-bold text-green-700">
+                {ordersLoading ? "…" : `₹${Number(totalSpent).toLocaleString()}`}
               </div>
             </div>
 
-            <div className="p-3 rounded-lg border border-gray-100 bg-gray-50 text-center">
-              <div className="text-sm text-gray-500">Saved phone</div>
-              <div className="mt-2 text-lg text-gray-900">{userDoc?.phone ?? "—"}</div>
+            <div className="p-4 rounded-xl border border-gray-200 bg-gradient-to-br from-blue-50 to-cyan-50 text-center hover:shadow-md transition-shadow">
+              <div className="text-sm text-gray-600 font-medium">Phone Number</div>
+              <div className="mt-2 text-lg font-semibold text-blue-700">{userDoc?.phone ?? "Not set"}</div>
             </div>
           </div>
 
@@ -302,12 +542,15 @@ const Profile = () => {
                 // navigate to orders page if you have one
                 window.location.href = "/orders";
               }}
-              className="px-3 py-2 rounded-md bg-blue-600 text-white text-sm hover:bg-blue-700"
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-semibold hover:from-purple-700 hover:to-indigo-700 shadow-md hover:shadow-lg transition-all"
             >
-              View all orders
+              View All Orders
             </button>
           </div>
         </div>
+        </div>
+        </>
+        )}
       </div>
     </div>
   );

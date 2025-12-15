@@ -17,6 +17,8 @@ import AdminLayout from './layouts/AdminLayout'
 import MainLayout from './layouts/MainLayout'
 import AdminProducts from './components/Admins/AdminProducts'
 import AdminUsers from './components/Admins/AdminUsers'
+import NotFound from './pages/NotFound'
+import About from './pages/About'
 const App =()=> {
 
   return (
@@ -26,16 +28,17 @@ const App =()=> {
    <Router>
       <Routes>
         <Route path='/' element={<MainLayout/>}>
-        <Route index element={Home}></Route>
+        <Route index element={<Home/>}></Route>
         <Route path='orders' element={<Orders/>}/>
         <Route path='wallet' element={<Wallet/>}/>
-        <Route path='profile' element={<Profile/>}/>
+        <Route path='login' element={<Authentication/>}/>
+        <Route path='about' element={<About/>}/>
         <Route path='leaderboards' element={<Profile/>}/>
         <Route path='recharge/:gamename' element={<Recharge/>}/>
         <Route path='authentication-selection' element={<Authentication/>}/>
-
-
+        <Route path='*' element={<NotFound/>}/>
       </Route>
+
         <Route path='/admin' element={<AdminLayout/>}>
           <Route index element={<Admin/>}/>
           <Route path='orders' element={<AdminOrders/>}/>

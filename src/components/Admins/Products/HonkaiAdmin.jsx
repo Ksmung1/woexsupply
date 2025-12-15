@@ -4,12 +4,14 @@ import { db } from "../../../config/firebase";
 import { collection, onSnapshot, doc, updateDoc, setDoc } from "firebase/firestore";
 import { deleteItem } from "../Utils/DeleteItem";
 import { FiPlus } from "react-icons/fi";
+import { useAlert } from "../../../context/AlertContext";
 import AddModal from "../Utils/AddModal";
 import EditModal from "../Utils/EditModal";
 import AdminProduct from "../Utils/AdminProduct";
 import image from "../../../assets/images/game.png";
 
 const HonkaiAdmin = ({ collectionName}) => {
+  const { showError, showSuccess, showWarning } = useAlert();
   const [items, setItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -84,7 +86,7 @@ const HonkaiAdmin = ({ collectionName}) => {
         await updateDoc(docRef, { hide: !currentHide });
       } catch (error) {
         console.error("Error updating hide status:", error);
-        alert("Failed to update product visibility: " + error.message);
+        showError("Failed to update product visibility: " + error.message);
       }
     },
     [collectionName]
@@ -101,7 +103,7 @@ const HonkaiAdmin = ({ collectionName}) => {
       const text = await file.text();
       const jsonData = JSON.parse(text);
       if (!Array.isArray(jsonData)) {
-        alert("Invalid JSON format: must be an array of products.");
+        showError("Invalid JSON format: must be an array of products.");
         return;
       }
       setLoading(true);
@@ -131,10 +133,10 @@ const HonkaiAdmin = ({ collectionName}) => {
         });
       });
       await Promise.all(batchPromises);
-      alert("JSON imported successfully ✅");
+      showSuccess("JSON imported successfully!");
     } catch (err) {
       console.error("JSON upload error:", err);
-      alert("Failed to upload JSON: " + err.message);
+      showError("Failed to upload JSON: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -144,7 +146,7 @@ const HonkaiAdmin = ({ collectionName}) => {
     setLoading(true);
     const { id, label, diamonds, type, rupees, falseRupees, resellerRupees, price, api } = newItem;
     if (!id || !label || !type || !rupees || !resellerRupees) {
-      alert("Please fill all required fields");
+      showWarning("Please fill all required fields");
       setLoading(false);
       return;
     }

@@ -1,155 +1,114 @@
 import { useEffect, useRef, useState } from "react";
-
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 const images = [
-  "https://picsum.photos/id/1018/1200/600",
-  "https://picsum.photos/id/1025/1200/600",
-  "https://picsum.photos/id/1037/1200/600",
+  "https://i.pinimg.com/1200x/36/9f/6f/369f6f9d06575f4d0629f4f8bf8347f8.jpg",
+  "https://i.pinimg.com/1200x/e6/b9/c1/e6b9c1decfae8e63c78edf62d1328f3f.jpg",
+  "https://i.pinimg.com/736x/4a/6f/1d/4a6f1d0c21f1e9a4f697816720dc002b.jpg"
 ];
 
-const AUTO_PLAY_MS = 3000;
+const AUTO_PLAY_MS = 5000;
 const DRAG_THRESHOLD = 50;
 
 const HomeDisplay = () => {
-  // we create clones: [lastClone, ...images, firstClone]
   const total = images.length;
-  const [index, setIndex] = useState(1); // start at first real slide (1)
-  const [isTransitioning, setIsTransitioning] = useState(true);
-  const sliderRef = useRef(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const autoplayRef = useRef(null);
+  const containerRef = useRef(null);
 
   // Drag state
   const drag = useRef({
     startX: 0,
     currentX: 0,
     dragging: false,
-    moved: false,
   });
 
-  // Set up autoplay
+  // Autoplay
   useEffect(() => {
-    startAutoplay();
-    return stopAutoplay;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index]);
-
-  function startAutoplay() {
     stopAutoplay();
-    autoplayRef.current = setInterval(() => {
-      goNext();
+    if (isTransitioning) return;
+    
+    const timer = setInterval(() => {
+      setIsTransitioning(true);
+      setCurrentIndex((prev) => (prev + 1) % total);
+      setTimeout(() => setIsTransitioning(false), 600);
     }, AUTO_PLAY_MS);
-  }
-  function stopAutoplay() {
+    
+    autoplayRef.current = timer;
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [currentIndex, isTransitioning, total]);
+
+  const stopAutoplay = () => {
     if (autoplayRef.current) {
       clearInterval(autoplayRef.current);
       autoplayRef.current = null;
     }
-  }
+  };
 
-  // Reset autoplay after user interaction
   const resetAutoplay = () => {
     stopAutoplay();
-    startAutoplay();
+    setTimeout(() => {
+      if (!isTransitioning) {
+        autoplayRef.current = setInterval(() => goNext(), AUTO_PLAY_MS);
+      }
+    }, 100);
   };
 
-  // Move helpers
   const goNext = () => {
-    if (isTransitioning) {
-      setIndex((i) => i + 1);
-      setIsTransitioning(true);
-    }
+    if (isTransitioning) return;
+    setIsTransitioning(true);
+    setCurrentIndex((prev) => (prev + 1) % total);
+    setTimeout(() => setIsTransitioning(false), 600);
   };
+
   const goPrev = () => {
-    if (isTransitioning) {
-      setIndex((i) => i - 1);
-      setIsTransitioning(true);
-    }
+    if (isTransitioning) return;
+    setIsTransitioning(true);
+    setCurrentIndex((prev) => (prev - 1 + total) % total);
+    setTimeout(() => setIsTransitioning(false), 600);
   };
 
-  // Transition end: fix jump when on cloned slides
+  const goToSlide = (idx) => {
+    if (isTransitioning || idx === currentIndex) return;
+    setIsTransitioning(true);
+    setCurrentIndex(idx);
+    setTimeout(() => setIsTransitioning(false), 600);
+  };
+
+  // Drag handlers
   useEffect(() => {
-    const slider = sliderRef.current;
-    if (!slider) return;
-
-    const handleTransitionEnd = () => {
-      // if we moved to the cloned first (index === total + 1) -> snap to real first (1)
-      if (index === total + 1) {
-        setIsTransitioning(false); // remove transition for the jump
-        setIndex(1);
-        // allow next render to re-enable transition:
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => setIsTransitioning(true));
-        });
-      }
-
-      // if we moved to cloned last (index === 0) -> snap to real last (total)
-      if (index === 0) {
-        setIsTransitioning(false);
-        setIndex(total);
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => setIsTransitioning(true));
-        });
-      }
-    };
-
-    slider.addEventListener("transitionend", handleTransitionEnd);
-    return () => slider.removeEventListener("transitionend", handleTransitionEnd);
-  }, [index, total]);
-
-  // Drag / swipe handlers (pointer events)
-  useEffect(() => {
-    const el = sliderRef.current;
+    const el = containerRef.current;
     if (!el) return;
 
     const onPointerDown = (e) => {
       drag.current.dragging = true;
       drag.current.startX = e.clientX ?? e.touches?.[0]?.clientX;
-      drag.current.currentX = drag.current.startX;
-      drag.current.moved = false;
-      // pause transition while dragging
-      el.style.transition = "none";
       stopAutoplay();
     };
 
     const onPointerMove = (e) => {
       if (!drag.current.dragging) return;
-      const clientX = e.clientX ?? e.touches?.[0]?.clientX;
-      drag.current.currentX = clientX;
-      const delta = drag.current.currentX - drag.current.startX;
-      // move the slider by delta
-      const width = el.clientWidth;
-      const translate = -index * width + delta;
-      el.style.transform = `translateX(${translate}px)`;
-      drag.current.moved = Math.abs(delta) > 5;
+      drag.current.currentX = e.clientX ?? e.touches?.[0]?.clientX;
     };
 
-    const onPointerUp = (e) => {
+    const onPointerUp = () => {
       if (!drag.current.dragging) return;
-      drag.current.dragging = false;
       const delta = drag.current.currentX - drag.current.startX;
-      // restore transition
-      el.style.transition = "";
+      drag.current.dragging = false;
+      
       if (Math.abs(delta) > DRAG_THRESHOLD) {
-        if (delta < 0) {
-          // swiped left -> next
-          setIndex((i) => i + 1);
-        } else {
-          // swiped right -> prev
-          setIndex((i) => i - 1);
-        }
-      } else {
-        // snap back to current
-        setIndex((i) => i);
+        if (delta < 0) goNext();
+        else goPrev();
       }
       resetAutoplay();
     };
 
-    // Support mouse + touch
     el.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
-
-    // also support touch events fallback (older devices)
     el.addEventListener("touchstart", onPointerDown, { passive: true });
     window.addEventListener("touchmove", onPointerMove, { passive: true });
     window.addEventListener("touchend", onPointerUp);
@@ -162,10 +121,9 @@ const HomeDisplay = () => {
       window.removeEventListener("touchmove", onPointerMove);
       window.removeEventListener("touchend", onPointerUp);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index]);
+  }, []);
 
-  // keyboard left/right support
+  // Keyboard support
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "ArrowLeft") {
@@ -181,110 +139,182 @@ const HomeDisplay = () => {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // compute transform
-  const getTransform = () => {
-    // slider container width is 100% (we translate by index * width)
-    return `translateX(${-index * 100}%)`;
+  // Get slide positions for 3D carousel
+  const getSlidePosition = (slideIndex) => {
+    let position = slideIndex - currentIndex;
+    if (position > total / 2) position -= total;
+    if (position < -total / 2) position += total;
+    return position;
   };
 
-  // click handlers for controls
-  const handleNextClick = () => {
-    stopAutoplay();
-    goNext();
-    resetAutoplay();
-  };
-  const handlePrevClick = () => {
-    stopAutoplay();
-    goPrev();
-    resetAutoplay();
-  };
+  const getSlideStyle = (position) => {
+    const isActive = position === 0;
+    const absPos = Math.abs(position);
 
-  // render clones
-  const slides = [
-    images[total - 1], // last clone first
-    ...images,
-    images[0], // first clone last
-  ];
+    if (isActive) {
+      // Center slide - fully visible
+      return {
+        transform: "translateZ(0px) scale(1)",
+        zIndex: 10,
+        opacity: 1,
+      };
+    } else if (position < 0) {
+      // Left side slide - behind and scaled
+      const translateX = -absPos * 35;
+      const translateZ = -absPos * 250;
+      const scale = 1 - absPos * 0.25;
+      return {
+        transform: `translateX(${translateX}%) translateZ(${translateZ}px) scale(${scale})`,
+        zIndex: 10 - absPos,
+        opacity: Math.max(0.5, 0.8 - absPos * 0.3),
+      };
+    } else {
+      // Right side slide - behind and scaled
+      const translateX = position * 35;
+      const translateZ = -position * 250;
+      const scale = 1 - position * 0.25;
+      return {
+        transform: `translateX(${translateX}%) translateZ(${translateZ}px) scale(${scale})`,
+        zIndex: 10 - position,
+        opacity: Math.max(0.5, 0.8 - position * 0.3),
+      };
+    }
+  };
 
   return (
-    <div className="w-full max-w-6xl mx-auto py-2 px-4">
-      <div className="relative">
-        {/* Slider viewport */}
-        <div className="overflow-hidden rounded-xl">
-          {/* Slider track */}
-          <div
-            ref={sliderRef}
-            className="flex will-change-transform"
-            style={{
-              width: `${slides.length * 100}%`,
-              transform: getTransform(),
-              transition: isTransitioning ? "transform 400ms cubic-bezier(.22,.9,.25,1)" : "none",
+    <div className="w-full py-6 md:py-8">
+      {/* Mobile: Simple slider */}
+      <div className="md:hidden relative">
+        <div className="overflow-hidden rounded-2xl shadow-xl">
+          <div 
+            className="flex" 
+            style={{ 
+              transform: `translateX(-${currentIndex * 100}%)`, 
+              transition: isTransitioning ? "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)" : "none" 
             }}
-            // prevent images from being draggable by browser default
-            onDragStart={(e) => e.preventDefault()}
           >
-            {slides.map((src, i) => (
-              <div
-                key={i}
-                className="flex-shrink-0 w-full"
-                style={{ width: `${100 / slides.length * slides.length}%` }} // each slide 100% of viewport
-              >
-                <div className="w-full max-h-[200px] md:h-96 bg-gray-100 flex items-center justify-center">
-                  <img
-                    src={src}
-                    alt={`slide-${i}`}
-                    className="w-full max-h-[200px] object-cover"
-                    draggable={false}
-                  />
+            {images.map((src, i) => (
+              <div key={i} className="w-full flex-shrink-0">
+                <div className="w-full h-[250px] bg-gray-100 overflow-hidden">
+                  <img src={src} alt={`slide-${i}`} className="w-full h-full object-cover" draggable={false} />
                 </div>
               </div>
             ))}
           </div>
         </div>
-
-        {/* Left/Right controls */}
         <button
-          onClick={handlePrevClick}
+          onClick={() => { stopAutoplay(); goPrev(); resetAutoplay(); }}
+          className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-2 shadow-lg z-10"
           aria-label="Previous"
-          className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-800" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M12.293 15.707a1 1 0 010-1.414L15.586 11H5a1 1 0 110-2h10.586l-3.293-3.293a1 1 0 011.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clipRule="evenodd" transform="rotate(180 12 8)"/>
-          </svg>
+          <FaChevronLeft className="text-gray-800" />
         </button>
-
         <button
-          onClick={handleNextClick}
+          onClick={() => { stopAutoplay(); goNext(); resetAutoplay(); }}
+          className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-2 shadow-lg z-10"
           aria-label="Next"
-          className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-800" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M12.293 15.707a1 1 0 010-1.414L15.586 11H5a1 1 0 110-2h10.586l-3.293-3.293a1 1 0 011.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clipRule="evenodd"/>
-          </svg>
+          <FaChevronRight className="text-gray-800" />
         </button>
+      </div>
 
-        {/* Dots */}
-        <div className="flex justify-center gap-2 mt-3">
-          {images.map((_, i) => {
-            const pageIndex = i + 1; // because our real slides start at 1
-            const active = index === pageIndex || (index === 0 && pageIndex === total) || (index === total + 1 && pageIndex === 1);
-            return (
-              <button
-                key={i}
-                onClick={() => {
-                  stopAutoplay();
-                  setIndex(i + 1);
-                  resetAutoplay();
-                }}
-                className={`w-2 h-2 rounded-full ${active ? "bg-blue-600" : "bg-gray-300"}`}
-                aria-label={`Go to slide ${i + 1}`}
-              />
-            );
-          })}
+      {/* Desktop: 3D Carousel */}
+      <div className="hidden md:block relative w-full max-w-5xl mx-auto" ref={containerRef}>
+        <div
+          className="relative h-[400px] lg:h-[400px] w-full"
+          style={{
+            perspective: "1500px",
+            perspectiveOrigin: "50% 50%",
+          }}
+        >
+          <div
+            className="relative w-full h-full"
+            style={{
+              transformStyle: "preserve-3d",
+            }}
+          >
+            {images.map((src, i) => {
+              const position = getSlidePosition(i);
+              const style = getSlideStyle(position);
+              const isVisible = Math.abs(position) <= 1;
+
+              if (!isVisible) return null;
+
+              return (
+                <div
+                  key={i}
+                  className="absolute inset-0 flex items-center justify-center cursor-pointer"
+                  style={{
+                    ...style,
+                    transition: isTransitioning
+                      ? "transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.7s ease"
+                      : "none",
+                    transformOrigin: "center center",
+                    willChange: "transform, opacity",
+                  }}
+                  onClick={() => {
+                    if (position !== 0) {
+                      stopAutoplay();
+                      goToSlide(i);
+                      resetAutoplay();
+                    }
+                  }}
+                >
+                  <div className="w-4/5 h-full rounded-2xl overflow-hidden shadow-2xl border-4 border-white/20">
+                    <img
+                      src={src}
+                      alt={`slide-${i}`}
+                      className="w-full h-full object-cover"
+                      draggable={false}
+                      onDragStart={(e) => e.preventDefault()}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
+
+        {/* Navigation Buttons */}
+        <button
+          onClick={() => { stopAutoplay(); goPrev(); resetAutoplay(); }}
+          className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-4 shadow-xl hover:shadow-2xl transition-all duration-200 z-20 group"
+          aria-label="Previous"
+        >
+          <FaChevronLeft className="text-gray-800 text-xl group-hover:text-purple-600 transition-colors" />
+        </button>
+        <button
+          onClick={() => { stopAutoplay(); goNext(); resetAutoplay(); }}
+          className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-4 shadow-xl hover:shadow-2xl transition-all duration-200 z-20 group"
+          aria-label="Next"
+        >
+          <FaChevronRight className="text-gray-800 text-xl group-hover:text-purple-600 transition-colors" />
+        </button>
+      </div>
+
+      {/* Dots Indicator */}
+      <div className="flex justify-center gap-2 mt-6">
+        {images.map((_, i) => {
+          const isActive = i === currentIndex;
+          return (
+            <button
+              key={i}
+              onClick={() => {
+                stopAutoplay();
+                goToSlide(i);
+                resetAutoplay();
+              }}
+              className={`rounded-full transition-all duration-300 ${
+                isActive
+                  ? "bg-gradient-to-r from-purple-600 to-indigo-600 w-8 h-2.5"
+                  : "bg-gray-300 hover:bg-gray-400 w-2.5 h-2.5"
+              }`}
+              aria-label={`Go to slide ${i + 1}`}
+            />
+          );
+        })}
       </div>
     </div>
   );

@@ -10,7 +10,7 @@ function GameCardComponent({ id, name, img, route, isLoaded, onLoad }) {
     <Link
       to={route}
       aria-label={name}
-      className="w-full group overflow-hidden bg-white gap-1 flex-col flex transition transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-300"
+      className="w-full group overflow-hidden bg-white gap-1 flex-col flex transition-all duration-200 transform hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 active:scale-95"
     >
       <div className="w-full rounded-lg overflow-hidden aspect-square bg-gray-100 relative">
         {!isLoaded && (

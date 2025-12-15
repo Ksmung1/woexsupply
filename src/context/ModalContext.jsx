@@ -77,77 +77,60 @@ const Modal = () => {
     closeModal();
   };
 
-  const isDarkMode = false
- return (
-    <div className="fixed inset-0 flex items-center justify-center backdrop-blur-[2px]  z-50">
+  return (
+    <div 
+      className="fixed inset-0 z-[9998] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+      onClick={handleCancel}
+    >
       <div
-        className={`rounded-lg shadow-lg max-w-md w-full p-6 space-y-4 ${
-          isDarkMode ? "bg-gray-900 text-gray-100" : "bg-white text-gray-800"
-        }`}
+        className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-scale-in"
+        onClick={(e) => e.stopPropagation()}
       >
         {title && (
-          <div
-            className={`px-4 py-2 text-center font-bold text-sm tracking-wide uppercase rounded-t ${
-              isDarkMode
-                ? "bg-gradient-to-r from-yellow-600 to-yellow-700 text-white"
-                : "bg-gradient-to-r from-yellow-400 to-yellow-500 text-white"
-            }`}
-            style={{ height: "40px", lineHeight: "28px" }}
-          >
-            {title}
+          <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
+            <h3 className="text-xl font-bold text-white">{title}</h3>
           </div>
         )}
 
-        <div>{content}</div>
+        <div className="p-6">
+          <div className="text-gray-700">{content}</div>
 
-        <div className="flex justify-end space-x-3 mt-4">
-          {type === "confirm" && (
-        <>
-  {/* Cancel Button */}
-  <button
-    onClick={handleCancel}
-    disabled={confirming}
-    className={`px-5 py-2.5 rounded-lg font-medium transition-all ${
-      confirming
-        ? "opacity-50 cursor-not-allowed"
-        : isDarkMode
-        ? "border border-gray-600 text-gray-300 hover:bg-gray-800"
-        : "border border-gray-300 text-gray-700 hover:bg-gray-100"
-    }`}
-  >
-    Cancel
-  </button>
+          <div className="flex justify-end gap-3 mt-6">
+            {type === "confirm" && (
+              <>
+                <button
+                  onClick={handleCancel}
+                  disabled={confirming}
+                  className="px-6 py-2.5 rounded-lg font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirm}
+                  disabled={confirming}
+                  className="px-6 py-2.5 rounded-lg font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 min-w-[120px] justify-center"
+                >
+                  {confirming ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Processing...
+                    </>
+                  ) : (
+                    "Confirm"
+                  )}
+                </button>
+              </>
+            )}
 
-  {/* Confirm Button with Spinner */}
-  <button
-    onClick={handleConfirm}
-    disabled={confirming}
-    className={`relative min-w-[120px] px-6 py-2.5 rounded-lg font-bold text-white flex items-center justify-center gap-2.5 transition-all shadow-md ${
-      confirming
-        ? "bg-blue-500 cursor-wait"
-        : "bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 shadow-lg hover:shadow-xl"
-    }`}
-  >
-    {confirming ? (
-      <>
-        {/* Spinning Loader */}
-        <div className="w-5 h-5 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
-      </>
-    ) : (
-      "Confirm"
-    )}
-  </button>
-</>
-          )}
-
-          {type === "close" && (
-            <button
-              onClick={closeModal}
-              className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700"
-            >
-              Close
-            </button>
-          )}
+            {type === "close" && (
+              <button
+                onClick={closeModal}
+                className="px-6 py-2.5 rounded-lg font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                Close
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

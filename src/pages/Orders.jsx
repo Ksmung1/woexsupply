@@ -10,7 +10,16 @@ import {
   documentId,
 } from "firebase/firestore";
 import { db } from "../config/firebase";
-import { FaCheckCircle, FaHourglassHalf, FaTimesCircle } from "react-icons/fa";
+import { 
+  FaCheckCircle, 
+  FaHourglassHalf, 
+  FaTimesCircle, 
+  FaSearch,
+  FaShoppingBag,
+  FaFilter,
+  FaTimes,
+  FaUser
+} from "react-icons/fa";
 import { useUser } from "../context/UserContext";
 
 const Orders = () => {
@@ -293,61 +302,64 @@ const Orders = () => {
     return (
       <div
         style={style}
-        className="cursor-pointer"
-        onClick={() => {
-          setSelectedOrder(order);
-          setShowModal(true);
-        }}
+        className="px-2 py-2"
       >
         <div
-          className={`grid grid-cols-3 items-center gap-1 px-4 py-2 mb-3 rounded-sm shadow-md transition duration-300
-            ${isDarkMode ? "bg-gray-900 text-gray-200" : "bg-white text-gray-900"}
-          `}
-          style={{
-            backgroundImage: isDarkMode
-              ? "linear-gradient(to right, rgba(255, 255, 255, 0.03), transparent)"
-              : "linear-gradient(to right, rgb(254, 254, 254), transparent)",
+          className="bg-white rounded-xl border border-gray-100 p-4 cursor-pointer hover:border-purple-300 hover:shadow-lg transition-all duration-200 group"
+          onClick={() => {
+            setSelectedOrder(order);
+            setShowModal(true);
           }}
         >
-          <div className="flex flex-col">
-            <span
-              className={`font-semibold text-sm truncate ${
-                order.status === "completed"
-                  ? isDarkMode
-                    ? "text-green-400"
-                    : "text-green-800"
-                  : order.status === "pending"
-                  ? isDarkMode
-                    ? "text-yellow-400"
-                    : "text-yellow-700"
-                  : order.status === "failed"
-                  ? isDarkMode
-                    ? "text-red-400"
-                    : "text-red-700"
-                  : isDarkMode
-                  ? "text-gray-400"
-                  : "text-gray-700"
-              }`}
-            >
-              {order.item}
-            </span>
-            <span className={`text-[10px] truncate ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>
-              {order.date || "00-00-0000"}, {order.time || "00:00:00 AM"}
-            </span>
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2 mb-1">
+                {getStatusIcon(order.status)}
+                <span className={`font-bold text-sm ${getStatusColor(order.status)}`}>
+                  {order.status?.charAt(0).toUpperCase() + order.status?.slice(1) || "Unknown"}
+                </span>
+              </div>
+              <span className="font-semibold text-base text-gray-800 truncate">
+                {order.item}
+              </span>
+              <span className="text-xs text-gray-500 mt-1">
+                {order.date || "00-00-0000"} {order.time || "00:00:00 AM"}
+              </span>
+            </div>
 
-          <div className={`text-xs font-mono truncate ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
-            {order.uid || order.docId || "0"}
-          </div>
+            <div className="hidden md:block">
+              <div className="text-xs text-gray-500 mb-1">Order ID</div>
+              <div className="text-xs font-mono text-gray-700 truncate">
+                {order.orderId || order.docId || "N/A"}
+              </div>
+            </div>
 
-          <div className="flex flex-row items-center justify-between">
-            <div className={`flex justify-center ${isDarkMode ? "text-green-300" : ""}`}>{getStatusIcon(order.status)}</div>
-            <div className="flex justify-center"></div>
-            <div className={`font-bold text-right ${getPriceColor(order.status)}`}>₹{order.cost ?? 0}</div>
+            <div className="flex items-center justify-between md:justify-end gap-4">
+              <div className="text-right">
+                <div className="text-xs text-gray-500 mb-1">Amount</div>
+                <div className={`font-bold text-lg ${getPriceColor(order.status)}`}>
+                  ₹{order.cost?.toFixed(2) ?? "0.00"}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     );
+  };
+
+  const getStatusColor = (status) => {
+    const s = (status || "").toString().toLowerCase();
+    switch (s) {
+      case "completed":
+        return "text-green-700";
+      case "pending":
+        return "text-yellow-700";
+      case "failed":
+        return "text-red-700";
+      default:
+        return "text-gray-700";
+    }
   };
 
   const closeModal = () => {
@@ -358,91 +370,221 @@ const Orders = () => {
   const isBrowser = typeof window !== "undefined";
 
   return (
-    <div
-      className={`px-4 mt-10 md:px-20 lg:px-40 flex flex-col min-h-[60vh] ${isDarkMode ? "bg-gray-900 text-gray-200" : "bg-white text-gray-900"}`}
-    >
-      <h2 className="text-xl font-bold mb-4 text-center">Your Orders</h2>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-indigo-50/30 py-8">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+            <FaShoppingBag className="text-purple-600" />
+            My Orders
+          </h1>
+          <p className="text-gray-600">View and manage all your orders</p>
+        </div>
 
-      <div className="mb-4 flex justify-center gap-2 flex-wrap">
-        {["all", "pending", "completed", "failed"].map((status) => (
-          <button
-            key={status}
-            onClick={() => setStatusFilter(status)}
-            className={`px-3 py-1 rounded-full border text-sm ${statusFilter === status ? "bg-green-600 text-white" : isDarkMode ? "bg-gray-700 text-gray-300 border-gray-600" : "bg-white text-gray-600 border-gray-400"}`}
-          >
-            {status.charAt(0).toUpperCase() + status.slice(1)}
-          </button>
-        ))}
-      </div>
+        {!uid && (
+          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl p-8 md:p-12 text-center border-2 border-purple-200 shadow-xl">
+            <FaShoppingBag className="text-5xl md:text-6xl text-purple-600 mx-auto mb-4" />
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Sign in to view your orders</h2>
+            <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+              Create an account or sign in to view your order history, track deliveries, and manage your purchases.
+            </p>
+            <p className="text-sm text-gray-500">Use the floating login button to get started!</p>
+          </div>
+        )}
 
-      <div className="mb-6 flex justify-center">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Search by ID, item, status, or date"
-          className={`p-1.5 rounded-md w-full max-w-md border ${isDarkMode ? "border-gray-600 bg-gray-800 text-gray-200" : "border-gray-400 bg-white text-gray-900"}`}
-        />
-      </div>
-
-      {orders.length === 0 ? (
-        <p className="text-center text-gray-500 h-[50vh]">No orders found...</p>
-      ) : (
-        <>
-          <p className={isDarkMode ? "text-gray-300" : "text-base text-sm font-semibold"}>Click to view order details</p>
-          {isBrowser ? (
-            <List height={400} itemCount={filteredOrders.length} itemSize={90} width={"100%"}>
-              {Row}
-            </List>
-          ) : (
-            <div className="space-y-2">
-              {filteredOrders.map((o, i) => (
-                <div key={o.docId ?? i} onClick={() => { setSelectedOrder(o); setShowModal(true); }} className="cursor-pointer">
-                  <div className={`px-4 py-2 mb-2 rounded border ${isDarkMode ? "border-gray-700" : "border-gray-200"}`}>
-                    <div className="flex justify-between">
-                      <div>
-                        <div className="font-semibold">{o.item}</div>
-                        <div className="text-xs text-gray-500">{o.date} {o.time}</div>
-                      </div>
-                      <div className={`font-bold ${getPriceColor(o.status)}`}>₹{o.cost ?? 0}</div>
-                    </div>
-                  </div>
-                </div>
+        {uid && (
+          <>
+        {/* Filters and Search */}
+        <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
+          {/* Status Filters */}
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-3">
+              <FaFilter className="text-purple-600" />
+              <span className="text-sm font-semibold text-gray-700">Filter by Status</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {["all", "pending", "completed", "failed"].map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setStatusFilter(status)}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                    statusFilter === status
+                      ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </button>
               ))}
             </div>
-          )}
-        </>
-      )}
+          </div>
 
-      {showModal && selectedOrder && (
-        <div className={`fixed inset-0 flex items-center justify-center z-50 backdrop-blur-sm ${isDarkMode ? " bg-opacity-60" : " bg-opacity-40"}`} onClick={closeModal}>
-          <div className={`rounded-xl p-6 shadow-lg max-w-md w-full relative ${isDarkMode ? "bg-gray-800 text-gray-200" : "bg-white text-gray-900"}`} onClick={(e) => e.stopPropagation()}>
-            <button className={`absolute top-2 right-2 cursor-pointer ${isDarkMode ? "text-gray-300 hover:text-white" : "text-gray-600 hover:text-black"}`} onClick={closeModal} aria-label="Close order details">✖</button>
-
-            <h3 className="text-lg font-bold mb-4">Order Details</h3>
-
-            <div className="space-y-2 text-sm">
-              <p><strong>Order ID:</strong> {selectedOrder.orderId || selectedOrder.docId || "No order id"}</p>
-              <p><strong>Item:</strong> {selectedOrder.item || "—"}</p>
-              <p><strong>Status:</strong> {selectedOrder.status || "—"}</p>
-              <p><strong>Date:</strong> {selectedOrder.date || "00-00-0000"}, {selectedOrder.time || "00:00:00 AM"}</p>
-              <p><strong>Cost:</strong> ₹{selectedOrder.cost ?? 0}</p>
-              <p><strong>Payment Option:</strong> {selectedOrder.payment || "—"}</p>
-              <p><strong>User ID:</strong> {selectedOrder.userId || "0"}</p>
-              <p><strong>Server ID:</strong> {selectedOrder.zoneId || "0"}</p>
-              <p><strong>Username:</strong> {selectedOrder.username || "anonymous"}</p>
-              <p><strong>IGN:</strong> { selectedOrder.gameUsername || "—"}</p>
-              <p><strong>Payment:</strong> {selectedOrder.payment || "—"}</p>
-
-              {selectedOrder.payment === "upi" && selectedOrder.utr ? (
-                <p className="text-green-400 break-words">{selectedOrder.utr}</p>
-              ) : (
-                ''
-              )}
-            </div>
+          {/* Search */}
+          <div className="relative">
+            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Search by ID, item, status, or date..."
+              className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200 transition-all"
+            />
           </div>
         </div>
-      )}
+
+        {/* Orders List */}
+        {orders.length === 0 ? (
+          <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
+            <FaShoppingBag className="mx-auto text-6xl text-gray-300 mb-4" />
+            <p className="text-gray-500 text-lg font-medium">No orders found</p>
+            <p className="text-gray-400 text-sm mt-2">Your orders will appear here once you make a purchase</p>
+          </div>
+        ) : filteredOrders.length === 0 ? (
+          <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
+            <FaSearch className="mx-auto text-6xl text-gray-300 mb-4" />
+            <p className="text-gray-500 text-lg font-medium">No orders match your filters</p>
+            <p className="text-gray-400 text-sm mt-2">Try adjusting your search or filter criteria</p>
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl shadow-xl p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-sm text-gray-600">
+                Showing <span className="font-semibold text-gray-800">{filteredOrders.length}</span> of{" "}
+                <span className="font-semibold text-gray-800">{orders.length}</span> orders
+              </p>
+              <p className="text-xs text-gray-500">Click on any order to view details</p>
+            </div>
+            {isBrowser ? (
+              <div className="rounded-xl overflow-hidden border border-gray-100">
+                <List height={500} itemCount={filteredOrders.length} itemSize={120} width={"100%"}>
+                  {Row}
+                </List>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredOrders.map((o, i) => (
+                  <div
+                    key={o.docId ?? i}
+                    onClick={() => {
+                      setSelectedOrder(o);
+                      setShowModal(true);
+                    }}
+                    className="bg-white rounded-xl border border-gray-100 p-4 cursor-pointer hover:border-purple-300 hover:shadow-lg transition-all duration-200"
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <div className="font-semibold text-gray-800">{o.item}</div>
+                        <div className="text-xs text-gray-500">{o.date} {o.time}</div>
+                      </div>
+                      <div className={`font-bold text-lg ${getPriceColor(o.status)}`}>
+                        ₹{o.cost?.toFixed(2) ?? "0.00"}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Order Details Modal */}
+        {showModal && selectedOrder && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            onClick={closeModal}
+          >
+            <div
+              className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 p-6 relative max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                className="absolute right-4 top-4 text-2xl text-gray-400 hover:text-gray-600 transition-colors"
+                onClick={closeModal}
+                aria-label="Close order details"
+              >
+                <FaTimes />
+              </button>
+
+              <h3 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2">
+                <FaShoppingBag className="text-purple-600" />
+                Order Details
+              </h3>
+
+              <div className="space-y-4">
+                <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+                    <span className="text-sm font-semibold text-gray-600">Order ID</span>
+                    <span className="text-sm font-mono font-bold text-gray-800">
+                      {selectedOrder.orderId || selectedOrder.docId || "N/A"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+                    <span className="text-sm font-semibold text-gray-600">Item</span>
+                    <span className="text-sm font-semibold text-gray-800">{selectedOrder.item || "—"}</span>
+                  </div>
+                  <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+                    <span className="text-sm font-semibold text-gray-600">Status</span>
+                    <div className="flex items-center gap-2">
+                      {getStatusIcon(selectedOrder.status)}
+                      <span className={`text-sm font-semibold capitalize ${getStatusColor(selectedOrder.status)}`}>
+                        {selectedOrder.status || "—"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+                    <span className="text-sm font-semibold text-gray-600">Date & Time</span>
+                    <span className="text-sm text-gray-800">
+                      {selectedOrder.date || "00-00-0000"} {selectedOrder.time || "00:00:00 AM"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+                    <span className="text-sm font-semibold text-gray-600">Amount</span>
+                    <span className="text-lg font-bold text-purple-600">₹{selectedOrder.cost?.toFixed(2) ?? "0.00"}</span>
+                  </div>
+                  <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+                    <span className="text-sm font-semibold text-gray-600">Payment Method</span>
+                    <span className="text-sm text-gray-800">{selectedOrder.payment || "—"}</span>
+                  </div>
+                  <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+                    <span className="text-sm font-semibold text-gray-600">User ID</span>
+                    <span className="text-xs font-mono text-gray-700">{selectedOrder.userId || "0"}</span>
+                  </div>
+                  <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+                    <span className="text-sm font-semibold text-gray-600">Server ID</span>
+                    <span className="text-xs font-mono text-gray-700">{selectedOrder.zoneId || "0"}</span>
+                  </div>
+                  <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+                    <span className="text-sm font-semibold text-gray-600">Username</span>
+                    <span className="text-sm text-gray-800">{selectedOrder.username || "anonymous"}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold text-gray-600">In-Game Name</span>
+                    <span className="text-sm text-gray-800">{selectedOrder.gameUsername || "—"}</span>
+                  </div>
+                </div>
+
+                {selectedOrder.payment === "upi" && selectedOrder.utr && (
+                  <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+                    <div className="text-sm font-semibold text-green-800 mb-2">UTR / Transaction ID</div>
+                    <div className="text-xs font-mono text-green-700 break-all">{selectedOrder.utr}</div>
+                  </div>
+                )}
+
+                <div className="flex justify-end pt-2">
+                  <button
+                    onClick={closeModal}
+                    className="px-6 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 font-semibold text-gray-700 transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+          </>
+        )}
+      </div>
     </div>
   );
 };

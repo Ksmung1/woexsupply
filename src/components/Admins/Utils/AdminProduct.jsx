@@ -23,8 +23,8 @@ const AdminProduct = ({
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") onSelect(item);
       }}
-      className={`flex justify-between items-center p-3 rounded-2xl border shadow-md transition-all duration-200 hover:shadow-lg relative cursor-pointer
-        ${isSelected ? "ring-2 ring-offset-2 ring-blue-500" : ""}`}
+      className={`bg-white rounded-xl border-2 shadow-md transition-all duration-200 hover:shadow-xl hover:border-purple-300 relative cursor-pointer overflow-hidden
+        ${isSelected ? "ring-2 ring-purple-500 ring-offset-2 border-purple-500" : "border-gray-200"}`}
     >
       {/* API tag */}
       <span
@@ -32,83 +32,102 @@ const AdminProduct = ({
           e.stopPropagation();
           onToggleOutOfStock(item);
         }}
-        className={`absolute -top-2 right-0 text-[10px] px-2 py-[2px] rounded-sm text-white font-semibold ${
+        className={`absolute top-2 right-2 text-[10px] md:text-xs px-2 py-1 rounded-md text-white font-semibold shadow-md ${
           item.api === "yokcash"
             ? "bg-blue-500"
             : item.api === "busan"
-            ? "bg-pink-400"
+            ? "bg-pink-500"
             : "bg-green-500"
         }`}
       >
-        {item.api}
+        {item.api?.toUpperCase()}
       </span>
 
-      {/* Left-side: Image + label */}
-      <div className="flex gap-3 items-center">
-        <div className="w-10 h-10 flex items-center justify-center">
-          <img
-            className="w-full h-full object-contain rounded-lg"
-            src={imageSrc}
-            onError={(e) => {
-              e.currentTarget.src = defaultImage;
-            }}
-            alt={item.type}
-          />
+      {/* Stock badge */}
+      <span
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggleOutOfStock(item);
+        }}
+        className={`absolute top-2 left-2 text-[10px] md:text-xs px-2 py-1 rounded-md text-white font-semibold shadow-md ${
+          item.outOfStock ? "bg-red-500" : "bg-green-500"
+        }`}
+      >
+        {item.outOfStock ? "OUT OF STOCK" : "IN STOCK"}
+      </span>
+
+      {/* Content */}
+      <div className="p-4 md:p-5 pt-12 md:pt-14">
+        <div className="flex gap-3 md:gap-4 items-start mb-4">
+          {/* Image */}
+          <div className="w-16 h-16 md:w-20 md:h-20 flex-shrink-0 flex items-center justify-center bg-gray-50 rounded-lg border border-gray-200">
+            <img
+              className="w-full h-full object-contain rounded-lg"
+              src={imageSrc}
+              onError={(e) => {
+                e.currentTarget.src = defaultImage;
+              }}
+              alt={item.type}
+            />
+          </div>
+
+          {/* Label and Diamonds */}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm md:text-base font-semibold text-gray-800 mb-1 truncate">
+              {item.label}
+            </p>
+            <div className="flex items-center gap-2">
+              <span className="text-xs md:text-sm font-bold text-purple-600">
+                {item.diamonds}
+              </span>
+              <span className="text-xs text-gray-500">
+                {item.type?.includes("weekly")
+                  ? "Weekly Pass"
+                  : item.type?.includes("twilight")
+                  ? "Twilight Pass"
+                  : "Diamonds"}
+              </span>
+            </div>
+          </div>
         </div>
 
-        <div className="flex flex-col relative">
-          <span className="text-[11px] font-semibold">
-            {item.diamonds}{" "}
-            {item.type?.includes("weekly")
-              ? "Weekly Pass"
-              : item.type?.includes("twilight")
-              ? "Twilight Pass"
-              : "Diamonds"}
-          </span>
-          <p className="text-xs text-gray-500">{item.label}</p>
-
-          {/* Stock badge */}
-          <span
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleOutOfStock(item);
-            }}
-            className={`absolute -top-5 left-0 text-[10px] px-2 py-[2px] rounded-sm text-white font-semibold ${
-              item.outOfStock ? "bg-red-500" : "bg-green-500"
-            }`}
-          >
-            {item.outOfStock ? "Out Stock" : "In Stock"}
-          </span>
-        </div>
-      </div>
-
-      {/* Right-side: Pricing + Hide toggle */}
-      <div className="flex flex-col items-end gap-1">
-        <div className="text-right">
-          <p className="text-sm font-bold text-blue-600">
-            ₹{item.rupees} |{" "}
-            <span className="text-red-600 text-[12px] line-through">
-              ₹{item.falseRupees}
+        {/* Pricing */}
+        <div className="space-y-2 mb-4 pb-4 border-b border-gray-100">
+          <div className="flex items-baseline gap-2">
+            <span className="text-lg md:text-xl font-bold text-gray-800">
+              ₹{item.rupees}
             </span>
-          </p>
+            {item.falseRupees && (
+              <span className="text-xs md:text-sm text-red-500 line-through">
+                ₹{item.falseRupees}
+              </span>
+            )}
+          </div>
           {item.resellerRupees && (
-            <p className="text-xs font-medium text-gray-500">
-              Reseller: ₹{item.resellerRupees}
+            <p className="text-xs text-gray-600">
+              Reseller: <span className="font-semibold">₹{item.resellerRupees}</span>
             </p>
           )}
-          <p className="text-[10px] text-gray-500">Price: {item.price}</p>
+          {item.price && (
+            <p className="text-xs text-gray-500">
+              Price: <span className="font-medium">₹{item.price}</span>
+            </p>
+          )}
         </div>
 
+        {/* Hide/Show Button */}
         <button
           onClick={(e) => {
             e.stopPropagation();
             onHideToggle(item.id, item?.hide);
           }}
-          className={`text-xs cursor-pointer px-3 py-[4px] rounded font-medium text-white ${
-            item.hide ? "bg-orange-500" : "bg-gray-500"
+          className={`w-full text-xs md:text-sm font-semibold py-2 px-4 rounded-lg transition-all duration-200 ${
+            item.hide
+              ? "bg-orange-500 hover:bg-orange-600 text-white"
+              : "bg-gray-200 hover:bg-gray-300 text-gray-700"
           }`}
         >
-          {item.hide ? "SHOW" : "HIDE"}
+          {item.hide ? "SHOW PRODUCT" : "HIDE PRODUCT"}
         </button>
       </div>
     </div>

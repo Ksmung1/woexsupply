@@ -30,19 +30,37 @@ useEffect(() => {
 
 
 const checkApi = async () => {
-  const payload ={
-    "customer_mobile": "8877332212",
-    "user_token": "16b5fc1d365c1a173f2119037af3be55",
-    "amount": "1",
-    "order_id": "8787772321800",
-    "redirect_url": "https://localhost:5173/",
-    "remark1" : "testremark",
-    "remark2": "testremark2"
-    }
+  try {
+    const payload = {
+      customer_mobile: "8877332212",
+      user_token: "f2b294c2c19d9bfcebcaef19362405dc81cbb602958182ed93c7f4467a96a1a3",
+      amount: 1, // 👈 number
+      order_id: "webhook test",
+      redirect_url: "http://localhost:5173/", // 👈 also fix https
+      remark1: "testremark",
+      remark2: "testremark2"
+    };
 
-    const res = await axios.post(`https://paymentgateway.unaux.com/api/create-order`, payload)
-    console.log(res.data)
-    return 
+    const res = await axios.post(`http://localhost:8888/api/create-order`,  payload
+    );
+
+    console.log(res.data.result.payment_url);
+    window.location.href = res.data.result.payment_url;
+  } catch (err) {
+    console.error("STATUS:", err.response?.status);
+    console.error("DATA:", err.response?.data); // 👈 THIS tells us why
+  }
+};
+
+
+const checkStatus = async () => {
+  const payload ={
+    "user_token": "f2b294c2c19d9bfcebcaef19362405dc81cbb602958182ed93c7f4467a96a1a3",
+    "order_id": "webhook test",
+  }
+  const res = await axios.post(`https://illuminas.shop/api/check-order-status`, payload)
+  console.log(res.data)
+  return
 }
 
 
@@ -57,6 +75,7 @@ const checkApi = async () => {
             <h1 className='font-semibold'>GTU Balance:</h1>
             <p>{gtBalance}</p>
             <p onClick={()=>checkApi()}>CHECK API</p>
+            <p onClick={()=>checkStatus()}>CHECK 2</p>
           </div>
           </section>
     </div>

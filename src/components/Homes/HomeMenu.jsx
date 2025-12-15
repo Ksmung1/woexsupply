@@ -17,11 +17,11 @@ const HomeMenu = () => {
   const allGames = games;
 
   return (
-    <section className="py-6 px-4 md:px-8 lg:px-12" id="coin">
+    <section className="py-6 md:py-8" id="coin">
       {/* Popular Games */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-2xl md:text-3xl font-bold">Popular games</h3>
+      <div className="mb-8 md:mb-10">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-2xl md:text-3xl font-bold text-gray-800">Popular Games</h3>
         </div>
 
         <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-4">
@@ -38,8 +38,8 @@ const HomeMenu = () => {
 
       {/* All Games */}
       <div>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-2xl md:text-3xl font-bold">All games</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-2xl md:text-3xl font-bold text-gray-800">All Games</h3>
         </div>
 
         <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-4">
