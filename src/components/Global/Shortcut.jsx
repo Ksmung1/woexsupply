@@ -15,11 +15,11 @@ const shortcutItems = [
     routes: ["/browse"],
     icon: <EarthIcon size={24} />,
   },
-  // {
-  //   label: "Region Checker",
-  //   routes: ["/region-checker"],
-  //   icon: <CgGames size={24} />,
-  // },
+  {
+    label: "Region Checker",
+    routes: ["/region-checker"],
+    icon: <CgGames size={24} />,
+  },
   {
     label: "My orders",
     routes: ["/orders"],

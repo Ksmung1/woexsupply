@@ -28,14 +28,14 @@ const HomeShortcuts = () => {
 
   return (
     <div className="py-6 md:py-8">
-      <div className="flex max-w-sm md:max-w-xl mx-auto items-center gap-2 w-full justify-between">
+      <div className="flex max-w-sm md:max-w-xl mx-auto items-center gap-2 md:gap-10 w-full justify-between">
         {images.map((img, i) => (
           <div
             key={i}
             onClick={() => handleClick(img)}
             className="flex flex-col items-center cursor-pointer group hover:scale-105 transition-transform duration-200"
           >
-            <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-white shadow-md p-2 flex items-center justify-center group-hover:shadow-lg transition-shadow">
+            <div className=" rounded-xl bg-white shadow-md p-2 flex items-center justify-center group-hover:shadow-lg transition-shadow">
               <img src={img.src} alt={img.alt} className="w-full h-full object-contain" />
             </div>
             <p className="text-[10px] md:text-xs mt-2 font-semibold text-gray-700">{img.alt}</p>

@@ -197,7 +197,7 @@ const HomeDisplay = () => {
           >
             {images.map((src, i) => (
               <div key={i} className="w-full flex-shrink-0">
-                <div className="w-full h-[250px] bg-gray-100 overflow-hidden">
+                <div className="w-full h-[200px] bg-gray-100 overflow-hidden">
                   <img src={src} alt={`slide-${i}`} className="w-full h-full object-cover" draggable={false} />
                 </div>
               </div>

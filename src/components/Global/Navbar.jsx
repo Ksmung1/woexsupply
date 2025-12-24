@@ -14,9 +14,8 @@ import {
   FaGamepad,
   FaShieldAlt
 } from "react-icons/fa";
-import HomeSearch from "../Homes/HomeSearch";
 import logo from "../../assets/images/logo.png";
-import { Trophy } from "lucide-react";
+import { EarthIcon, Gamepad2Icon, Trophy } from "lucide-react";
 
 // Desktop navigation items
 const desktopNavItems = [
@@ -28,7 +27,8 @@ const desktopNavItems = [
 // Mobile bottom navigation items
 const mobileNavItems = [
   { label: "Home", to: "/", icon: FaHome },
-  { label: "Leaderboard", to: "/leaderboards", icon: Trophy },
+  { label: "Browse", to: "/leaderboards", icon: EarthIcon },
+  { label: "Region Checker", to: "/region", icon: Gamepad2Icon },
   { label: "Orders", to: "/orders", icon: FaShoppingBag },
   { label: "Wallet", to: "/wallet", icon: FaCoins },
 ];
@@ -92,10 +92,7 @@ const Navbar = () => {
             </button>
           </div>
 
-          {/* CENTER - Search */}
-          <div className="flex-1 flex justify-center max-w-2xl mx-4">
-            <HomeSearch />
-          </div>
+
 
           {/* RIGHT - Navigation, Balance, Profile */}
           <div className="flex items-center gap-3 min-w-[200px] justify-end">
@@ -275,10 +272,7 @@ const Navbar = () => {
             <img src={logo} className="h-6 w-auto" alt="Logo" />
           </button>
 
-          {/* Search */}
-          <div className="flex-1 min-w-0">
-            <HomeSearch />
-          </div>
+
 
           {/* Balance */}
           <button

@@ -62,7 +62,7 @@ const filteredGames = games.filter((game) =>
   const displayItems = query.trim() ? filteredGames : recentSearches;
 
   return (
-    <div className="relative max-w-md w-full py-1" ref={dropdownRef}>
+    <div className="relative w-full mt-3 py-1" ref={dropdownRef}>
       {/* Search Input */}
       <div className="relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />

@@ -46,8 +46,6 @@ const App =()=> {
           <Route path='products' element={<AdminProducts/>}/>
         </Route>
       </Routes>
-      <div className='h-20'></div>
-      <Shortcut/>
      
    </Router>
     </AlertProvider>
