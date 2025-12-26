@@ -1,21 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "../../context/UserContext";
-import { 
-  FaHome, 
-  FaCoins, 
-  FaShoppingBag, 
-  FaUser, 
+import {
+  FaHome,
+  FaCoins,
+  FaShoppingBag,
+  FaUser,
   FaBars,
-  FaSearch,
   FaTrophy,
   FaInfoCircle,
-  FaGlobe,
-  FaGamepad,
-  FaShieldAlt
+  FaShieldAlt,
 } from "react-icons/fa";
 import logo from "../../assets/images/logo.png";
-import { EarthIcon, Gamepad2Icon, Trophy } from "lucide-react";
 
 // Desktop navigation items
 const desktopNavItems = [
@@ -24,11 +20,11 @@ const desktopNavItems = [
   { label: "About", to: "/about", icon: FaInfoCircle },
 ];
 
-// Mobile bottom navigation items
+// Mobile dropdown navigation items
 const mobileNavItems = [
   { label: "Home", to: "/", icon: FaHome },
-  { label: "Browse", to: "/leaderboards", icon: EarthIcon },
-  { label: "Region Checker", to: "/region", icon: Gamepad2Icon },
+  { label: "Leaderboards", to: "/leaderboards", icon: FaTrophy },
+  { label: "About", to: "/about", icon: FaInfoCircle },
   { label: "Orders", to: "/orders", icon: FaShoppingBag },
   { label: "Wallet", to: "/wallet", icon: FaCoins },
 ];
@@ -92,8 +88,6 @@ const Navbar = () => {
             </button>
           </div>
 
-
-
           {/* RIGHT - Navigation, Balance, Profile */}
           <div className="flex items-center gap-3 min-w-[200px] justify-end">
             {/* Desktop Navigation */}
@@ -124,7 +118,9 @@ const Navbar = () => {
               className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105"
             >
               <FaCoins size={16} />
-              <span className="text-sm">₹{parseFloat(user?.balance || 0).toFixed(2)}</span>
+              <span className="text-sm">
+                ₹{parseFloat(user?.balance || 0).toFixed(2)}
+              </span>
             </button>
 
             {/* Profile Menu */}
@@ -235,59 +231,89 @@ const Navbar = () => {
         </div>
       </header>
 
-      {/* MOBILE BOTTOM NAVIGATION - Only visible on mobile */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg">
-        <div className="flex items-center justify-around h-16 px-2">
-          {mobileNavItems.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.to);
-            return (
-              <button
-                key={item.to}
-                onClick={() => navigate(item.to)}
-                className={`flex flex-col items-center justify-center flex-1 h-full transition-all duration-200 ${
-                  active
-                    ? "text-purple-600"
-                    : "text-gray-500 hover:text-purple-500"
-                }`}
-              >
-                <Icon size={20} className={active ? "mb-1" : ""} />
-                <span className={`text-[10px] font-medium ${active ? "font-semibold" : ""}`}>
-                  {item.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </nav>
-
-      {/* MOBILE TOP BAR - Logo, Search, Balance */}
+      {/* MOBILE TOP BAR - Menu, Logo, Balance */}
       <header className="md:hidden fixed top-0 left-0 right-0 z-40 bg-white shadow-md">
         <div className="h-14 flex items-center justify-between px-3 gap-2">
-          {/* Logo */}
-          <button
-            onClick={() => navigate("/")}
-            className="flex-shrink-0"
-          >
-            <img src={logo} className="h-6 w-auto" alt="Logo" />
-          </button>
+          {/* Left side - Menu Dropdown */}
+          <div ref={menuRef} className="relative">
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              aria-label="Menu"
+            >
+              <FaBars size={20} className="text-gray-700" />
+            </button>
+            <button onClick={() => navigate("/")} className="flex-shrink-0">
+              <img src={logo} className="h-6 w-auto" alt="Logo" />
+            </button>
+            {menuOpen && (
+              <div className="absolute left-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50">
+                <div className="py-2">
+                  {mobileNavItems.map((item) => {
+                    const Icon = item.icon;
+                    const active = isActive(item.to);
+                    return (
+                      <button
+                        key={item.to}
+                        onClick={() => {
+                          navigate(item.to);
+                          setMenuOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-3 text-sm flex items-center gap-3 transition-colors ${
+                          active
+                            ? "bg-purple-50 text-purple-600 font-semibold"
+                            : "text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        <Icon size={18} />
+                        <span>{item.label}</span>
+                      </button>
+                    );
+                  })}
+                  <div className="border-t border-gray-100 my-1"></div>
+                  <button
+                    onClick={() => {
+                      handleProfileClick();
+                      setMenuOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-3 text-sm flex items-center gap-3 text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <FaUser size={18} />
+                    <span>{user ? "Profile" : "Sign In"}</span>
+                  </button>
+                  {user?.role === "admin" && (
+                    <button
+                      onClick={() => {
+                        navigate("/admin");
+                        setMenuOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-3 text-sm flex items-center gap-3 text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      <FaShieldAlt size={18} />
+                      <span>Admin Panel</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
 
-
-
-          {/* Balance */}
+          {/* Right side - Balance */}
           <button
             onClick={() => navigate("/wallet")}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold shadow-sm flex-shrink-0"
           >
             <FaCoins size={14} />
-            <span className="text-xs">₹{parseFloat(user?.balance || 0).toFixed(0)}</span>
+            <span className="text-xs">
+              ₹{parseFloat(user?.balance || 0).toFixed(0)}
+            </span>
           </button>
         </div>
       </header>
 
       {/* Spacer for fixed headers */}
       <div className="h-16 md:block hidden" />
-      <div className="h-14 md:hidden block" />
+      <div className="h-14 md:hidden" />
     </>
   );
 };

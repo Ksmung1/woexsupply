@@ -62,7 +62,7 @@ const EditModal = ({
       return;
     }
     try {
-      if (onDelete) await onDelete(selectedItem.id);
+    if (onDelete) await onDelete(selectedItem.id);
     } catch (error) {
       showError(error?.message || "Failed to delete item");
     }
@@ -79,7 +79,7 @@ const EditModal = ({
             <div>
               <h3 className="text-xl md:text-2xl font-bold text-white">
                 Edit Product {collectionName ? `— ${collectionName}` : ""}
-              </h3>
+          </h3>
               <p className="text-sm text-purple-100 mt-1">ID: {selectedItem.id}</p>
             </div>
             <button
@@ -88,75 +88,75 @@ const EditModal = ({
               className="p-2 rounded-lg hover:bg-white/20 transition-colors text-white"
             >
               <FiX size={24} />
-            </button>
+          </button>
           </div>
         </div>
 
         {/* Content */}
         <div className="p-6 md:p-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-            {fields.map(({ label, field, type, placeholder }) => (
+          {fields.map(({ label, field, type, placeholder }) => (
               <div key={field} className="flex flex-col gap-2">
                 <label className="font-semibold text-sm text-gray-700">{label}</label>
-                <input
-                  type={type}
-                  value={selectedItem[field] ?? ""}
-                  onChange={(e) => onChange(field, e.target.value)}
-                  placeholder={placeholder}
+              <input
+                type={type}
+                value={selectedItem[field] ?? ""}
+                onChange={(e) => onChange(field, e.target.value)}
+                placeholder={placeholder}
                   className="w-full border-2 border-gray-200 px-4 py-2.5 rounded-lg text-sm bg-white text-gray-900 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
-                />
-              </div>
-            ))}
+              />
+            </div>
+          ))}
           </div>
 
           {/* Group and API */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mt-4">
             <div className="flex flex-col gap-2">
               <label className="font-semibold text-sm text-gray-700">Group</label>
-              <div className="flex items-center gap-3">
-                <select
-                  value={selectedItem.group ?? ""}
-                  onChange={(e) => onChange("group", e.target.value)}
+            <div className="flex items-center gap-3">
+              <select
+                value={selectedItem.group ?? ""}
+                onChange={(e) => onChange("group", e.target.value)}
                   className="flex-1 border-2 border-gray-200 px-4 py-2.5 rounded-lg text-sm bg-white text-gray-900 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
-                >
-                  <option value="">Select Group</option>
-                  {groups.map((g) => (
-                    <option key={g.key} value={g.key}>
-                      {g.label ?? g.key}
-                    </option>
-                  ))}
-                </select>
-                {selectedItem.group && (() => {
-                  const sel = groups.find((g) => g.key === selectedItem.group);
+              >
+                <option value="">Select Group</option>
+                {groups.map((g) => (
+                  <option key={g.key} value={g.key}>
+                    {g.label ?? g.key}
+                  </option>
+                ))}
+              </select>
+              {selectedItem.group && (() => {
+                const sel = groups.find((g) => g.key === selectedItem.group);
                   return sel && sel.image ? (
                     <img src={sel.image} alt={sel.label ?? sel.key} className="h-12 w-12 rounded-lg border-2 border-gray-200 object-cover" />
                   ) : null;
-                })()}
-              </div>
+              })()}
             </div>
+          </div>
 
             <div className="flex flex-col gap-2">
               <label className="font-semibold text-sm text-gray-700">API</label>
-              {apiOptions && apiOptions.length > 0 ? (
-                <select
-                  value={selectedItem.api ?? apiOptions[0].value}
-                  onChange={(e) => onChange("api", e.target.value)}
+            {apiOptions && apiOptions.length > 0 ? (
+              <select
+                value={selectedItem.api ?? apiOptions[0].value}
+                onChange={(e) => onChange("api", e.target.value)}
                   className="w-full border-2 border-gray-200 px-4 py-2.5 rounded-lg text-sm bg-white text-gray-900 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
-                >
-                  {apiOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label ?? opt.value}
-                    </option>
-                  ))}
-                </select>
-              ) : (
+              >
+                {apiOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label ?? opt.value}
+                  </option>
+                ))}
+              </select>
+            ) : (
                 <input
                   type="text"
                   value={selectedItem.api ?? "yokcash"}
                   readOnly
                   className="w-full border-2 border-gray-200 px-4 py-2.5 rounded-lg text-sm bg-gray-100 text-gray-600 cursor-not-allowed"
                 />
-              )}
+            )}
             </div>
           </div>
 

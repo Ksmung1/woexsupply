@@ -415,7 +415,7 @@ const Profile = () => {
               <p className="text-gray-600">Manage your account and view your activity</p>
             </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Left: Profile card */}
         <div className="col-span-1 bg-white border border-gray-200 rounded-xl p-6 shadow-lg">
           {loadingUser ? (

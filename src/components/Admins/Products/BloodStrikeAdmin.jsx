@@ -196,30 +196,30 @@ const BloodStrikeAdmin = ({ collectionName  }) => {
           <p className="text-sm md:text-base text-gray-600">{collectionName}</p>
         </div>
 
-        {/* Filter Tabs */}
+      {/* Filter Tabs */}
         <div className="mb-6 md:mb-8">
           <div className="flex flex-wrap gap-2 md:gap-3">
-            {Object.entries(groupLabels).map(([key, label]) => (
-              <button
-                key={key}
-                onClick={() => {
-                  setActiveGroup(key);
-                  setSelectedItem(null);
-                }}
+        {Object.entries(groupLabels).map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => {
+              setActiveGroup(key);
+              setSelectedItem(null);
+            }}
                 className={`px-4 py-2 md:px-5 md:py-2.5 rounded-lg text-sm md:text-base font-semibold transition-all duration-200 ${
                   activeGroup === key
                     ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg"
                     : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
                 }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      </div>
 
         {/* Products Grid */}
-        {loading ? (
+      {loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
               <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -234,22 +234,22 @@ const BloodStrikeAdmin = ({ collectionName  }) => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {filteredItems.map((item) => (
-              <AdminProduct
-                key={item.id}
-                item={item}
-                isSelected={selectedItem?.id === item.id}
-                onSelect={(it) => setSelectedItem((prev) => (prev?.id === it.id ? null : it))}
-                onToggleOutOfStock={toggleOutOfStock}
-                onHideToggle={handleHide}
-                typeImageMap={typeImageMap}
-                defaultImage={image}
-              />
-            ))}
-          </div>
-        )}
+          {filteredItems.map((item) => (
+            <AdminProduct
+              key={item.id}
+              item={item}
+              isSelected={selectedItem?.id === item.id}
+              onSelect={(it) => setSelectedItem((prev) => (prev?.id === it.id ? null : it))}
+              onToggleOutOfStock={toggleOutOfStock}
+              onHideToggle={handleHide}
+              typeImageMap={typeImageMap}
+              defaultImage={image}
+            />
+          ))}
+        </div>
+      )}
 
-        <EditModal
+      <EditModal
         show={!!selectedItem}
         onClose={() => setSelectedItem(null)}
         selectedItem={selectedItem}

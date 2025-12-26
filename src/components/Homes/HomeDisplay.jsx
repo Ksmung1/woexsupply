@@ -184,7 +184,7 @@ const HomeDisplay = () => {
   };
 
   return (
-    <div className="w-full py-6 md:py-8">
+    <div className="w-full py-3 pb-0 md:py-5">
       {/* Mobile: Simple slider */}
       <div className="md:hidden relative">
         <div className="overflow-hidden rounded-2xl shadow-xl">
@@ -295,7 +295,7 @@ const HomeDisplay = () => {
       </div>
 
       {/* Dots Indicator */}
-      <div className="flex justify-center gap-2 mt-6">
+      <div className="flex justify-center gap-2 mt-2">
         {images.map((_, i) => {
           const isActive = i === currentIndex;
           return (

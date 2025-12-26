@@ -54,78 +54,78 @@ const AddModal = ({
         <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4 sticky top-0 z-10">
           <div className="flex justify-between items-center">
             <h3 className="text-xl md:text-2xl font-bold text-white">
-              Add New Product{collectionName ? ` — ${collectionName}` : ""}
-            </h3>
+            Add New Product{collectionName ? ` — ${collectionName}` : ""}
+          </h3>
             <button
               aria-label="Close add product"
               onClick={onClose}
               className="p-2 rounded-lg hover:bg-white/20 transition-colors text-white"
             >
               <FiX size={24} />
-            </button>
-          </div>
+          </button>
+        </div>
         </div>
 
         {/* Content */}
         <div className="p-6 md:p-8">
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-            {fields.map(({ label, field, type, placeholder }) => (
+          {fields.map(({ label, field, type, placeholder }) => (
               <div key={field} className="flex flex-col gap-2">
                 <label className="font-semibold text-sm text-gray-700">{label}</label>
-                <input
-                  type={type}
-                  value={newItem[field] ?? initialValues[field] ?? ""}
-                  onChange={(e) => handleNewChange(field, e.target.value)}
-                  placeholder={placeholder}
+              <input
+                type={type}
+                value={newItem[field] ?? initialValues[field] ?? ""}
+                onChange={(e) => handleNewChange(field, e.target.value)}
+                placeholder={placeholder}
                   className="w-full border-2 border-gray-200 px-4 py-2.5 rounded-lg text-sm bg-white text-gray-900 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
-                />
-              </div>
-            ))}
+              />
+            </div>
+          ))}
           </div>
 
           {/* Groups and API */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mt-4">
-            <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2">
               <label className="font-semibold text-sm text-gray-700">Group</label>
-              <div className="flex items-center gap-3">
-                <select
-                  value={newItem.group ?? ""}
-                  onChange={(e) => handleNewChange("group", e.target.value)}
-                  className="flex-1 border-2 border-gray-200 px-4 py-2.5 rounded-lg text-sm bg-white text-gray-900 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
-                >
-                  <option value="">Select Group</option>
-                  {groups.map((g) => (
-                    <option key={g.key} value={g.key}>
-                      {g.label ?? g.key}
-                    </option>
-                  ))}
-                </select>
-                {newItem.group && (
-                  (() => {
-                    const selected = groups.find((g) => g.key === newItem.group);
-                    return selected && selected.image ? (
-                      <img src={selected.image} alt={selected.label ?? selected.key} className="h-12 w-12 rounded-lg border-2 border-gray-200 object-cover" />
-                    ) : null;
-                  })()
-                )}
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <label className="font-semibold text-sm text-gray-700">API</label>
+            <div className="flex items-center gap-3">
               <select
-                value={newItem.api ?? apiOptions[0]?.value ?? ""}
-                onChange={(e) => handleNewChange("api", e.target.value)}
-                className="w-full border-2 border-gray-200 px-4 py-2.5 rounded-lg text-sm bg-white text-gray-900 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
+                value={newItem.group ?? ""}
+                onChange={(e) => handleNewChange("group", e.target.value)}
+                  className="flex-1 border-2 border-gray-200 px-4 py-2.5 rounded-lg text-sm bg-white text-gray-900 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
               >
-                {apiOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label ?? opt.value}
+                <option value="">Select Group</option>
+                {groups.map((g) => (
+                  <option key={g.key} value={g.key}>
+                    {g.label ?? g.key}
                   </option>
                 ))}
               </select>
+              {newItem.group && (
+                (() => {
+                  const selected = groups.find((g) => g.key === newItem.group);
+                  return selected && selected.image ? (
+                      <img src={selected.image} alt={selected.label ?? selected.key} className="h-12 w-12 rounded-lg border-2 border-gray-200 object-cover" />
+                  ) : null;
+                })()
+              )}
             </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+              <label className="font-semibold text-sm text-gray-700">API</label>
+            <select
+              value={newItem.api ?? apiOptions[0]?.value ?? ""}
+              onChange={(e) => handleNewChange("api", e.target.value)}
+                className="w-full border-2 border-gray-200 px-4 py-2.5 rounded-lg text-sm bg-white text-gray-900 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
+            >
+              {apiOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label ?? opt.value}
+                </option>
+              ))}
+            </select>
+          </div>
           </div>
 
           {/* JSON Upload */}

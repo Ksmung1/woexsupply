@@ -50,7 +50,7 @@ const About = () => {
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 mb-4">
             About Us
           </h1>
-          <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-lg md:text-xl text-gray-600 mx-auto">
             Your trusted partner for game credits, recharges, and digital gaming solutions.
             We're committed to providing the best gaming experience for players worldwide.
           </p>
@@ -162,7 +162,7 @@ const About = () => {
           <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
             Have Questions?
           </h2>
-          <p className="text-lg text-gray-600 mb-6 max-w-2xl mx-auto">
+          <p className="text-lg text-gray-600 mb-6  mx-auto">
             We're here to help! Reach out to our support team anytime, and we'll be happy to assist you.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

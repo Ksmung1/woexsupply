@@ -118,15 +118,15 @@ export const AlertProvider = ({ children }) => {
           const config = typeConfig[toast.type] || typeConfig.info;
           const Icon = config.icon;
 
-          return (
+  return (
             <div
               key={toast.id}
               className={`${config.bg} border-2 rounded-xl shadow-2xl p-4 flex items-start gap-3 animate-slide-in-right min-w-[300px] max-w-md`}
-            >
+          >
               <Icon className={`${config.iconColor} text-xl flex-shrink-0 mt-0.5`} />
               <div className={`flex-1 ${config.text} font-medium text-sm`}>
                 {toast.message}
-              </div>
+            </div>
               <button
                 onClick={() => removeToast(toast.id)}
                 className={`${config.iconColor} hover:opacity-70 transition-opacity flex-shrink-0`}
@@ -136,15 +136,15 @@ export const AlertProvider = ({ children }) => {
             </div>
           );
         })}
-      </div>
+        </div>
 
       {/* Confirm Modal */}
-      {confirmData.visible && (
+  {confirmData.visible && (
         <div 
           className="fixed inset-0 z-[9998] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
           onClick={cancelConfirm}
         >
-          <div
+    <div
             className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-scale-in"
             onClick={(e) => e.stopPropagation()}
           >
@@ -161,13 +161,13 @@ export const AlertProvider = ({ children }) => {
 
               {/* Buttons */}
               <div className="flex justify-end gap-3">
-                <button
-                  onClick={cancelConfirm}
+        <button
+          onClick={cancelConfirm}
                   disabled={confirmData.confirming}
                   className="px-6 py-2.5 rounded-lg font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Cancel
-                </button>
+        >
+          Cancel
+        </button>
                 <button
                   onClick={confirmData.onConfirm}
                   disabled={confirmData.confirming}
@@ -183,10 +183,10 @@ export const AlertProvider = ({ children }) => {
                   )}
                 </button>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
+      </div>
+    </div>
+  </div>
+)}
 
     </AlertContext.Provider>
   );

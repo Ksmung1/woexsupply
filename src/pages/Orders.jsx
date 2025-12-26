@@ -306,13 +306,13 @@ const Orders = () => {
       >
         <div
           className="bg-white rounded-xl border border-gray-100 p-4 cursor-pointer hover:border-purple-300 hover:shadow-lg transition-all duration-200 group"
-          onClick={() => {
-            setSelectedOrder(order);
-            setShowModal(true);
-          }}
-        >
+        onClick={() => {
+          setSelectedOrder(order);
+          setShowModal(true);
+        }}
+      >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-            <div className="flex flex-col">
+          <div className="flex flex-col">
               <div className="flex items-center gap-2 mb-1">
                 {getStatusIcon(order.status)}
                 <span className={`font-bold text-sm ${getStatusColor(order.status)}`}>
@@ -320,19 +320,19 @@ const Orders = () => {
                 </span>
               </div>
               <span className="font-semibold text-base text-gray-800 truncate">
-                {order.item}
-              </span>
+              {order.item}
+            </span>
               <span className="text-xs text-gray-500 mt-1">
                 {order.date || "00-00-0000"} {order.time || "00:00:00 AM"}
-              </span>
-            </div>
+            </span>
+          </div>
 
             <div className="hidden md:block">
               <div className="text-xs text-gray-500 mb-1">Order ID</div>
               <div className="text-xs font-mono text-gray-700 truncate">
                 {order.orderId || order.docId || "N/A"}
               </div>
-            </div>
+          </div>
 
             <div className="flex items-center justify-between md:justify-end gap-4">
               <div className="text-right">
@@ -403,37 +403,37 @@ const Orders = () => {
               <span className="text-sm font-semibold text-gray-700">Filter by Status</span>
             </div>
             <div className="flex flex-wrap gap-2">
-              {["all", "pending", "completed", "failed"].map((status) => (
-                <button
-                  key={status}
-                  onClick={() => setStatusFilter(status)}
+        {["all", "pending", "completed", "failed"].map((status) => (
+          <button
+            key={status}
+            onClick={() => setStatusFilter(status)}
                   className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
                     statusFilter === status
                       ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
-                >
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
-                </button>
-              ))}
+          >
+            {status.charAt(0).toUpperCase() + status.slice(1)}
+          </button>
+        ))}
             </div>
-          </div>
+      </div>
 
           {/* Search */}
           <div className="relative">
             <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
               placeholder="Search by ID, item, status, or date..."
               className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200 transition-all"
-            />
+        />
           </div>
-        </div>
+      </div>
 
         {/* Orders List */}
-        {orders.length === 0 ? (
+      {orders.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
             <FaShoppingBag className="mx-auto text-6xl text-gray-300 mb-4" />
             <p className="text-gray-500 text-lg font-medium">No orders found</p>
@@ -454,15 +454,15 @@ const Orders = () => {
               </p>
               <p className="text-xs text-gray-500">Click on any order to view details</p>
             </div>
-            {isBrowser ? (
+          {isBrowser ? (
               <div className="rounded-xl overflow-hidden border border-gray-100">
                 <List height={500} itemCount={filteredOrders.length} itemSize={120} width={"100%"}>
-                  {Row}
-                </List>
+              {Row}
+            </List>
               </div>
-            ) : (
+          ) : (
               <div className="space-y-3">
-                {filteredOrders.map((o, i) => (
+              {filteredOrders.map((o, i) => (
                   <div
                     key={o.docId ?? i}
                     onClick={() => {
@@ -478,17 +478,17 @@ const Orders = () => {
                       </div>
                       <div className={`font-bold text-lg ${getPriceColor(o.status)}`}>
                         ₹{o.cost?.toFixed(2) ?? "0.00"}
-                      </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
+                </div>
+              ))}
+            </div>
+          )}
           </div>
-        )}
+      )}
 
         {/* Order Details Modal */}
-        {showModal && selectedOrder && (
+      {showModal && selectedOrder && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
             onClick={closeModal}
@@ -578,10 +578,10 @@ const Orders = () => {
                     Close
                   </button>
                 </div>
-              </div>
             </div>
           </div>
-        )}
+        </div>
+      )}
           </>
         )}
       </div>

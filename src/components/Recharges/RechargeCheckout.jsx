@@ -28,7 +28,7 @@ const RechargeCheckout = ({
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [orderDetails, setOrderDetails] = useState(null);
-  const [product, setProduct] = useState('')
+  const [product, setProduct] = useState("");
   const { showAlert } = useAlert();
   const { openModal } = useModal();
   const navigate = useNavigate();
@@ -69,7 +69,7 @@ const RechargeCheckout = ({
 
   function generateRandomOrderId(length = 10) {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let orderId = "MLBB-";
+    let orderId = "MLBB-s";
     for (let i = 0; i < length; i++) {
       orderId += chars.charAt(Math.floor(Math.random() * chars.length));
     }
@@ -81,15 +81,15 @@ const RechargeCheckout = ({
   useEffect(() => {
     setNewOrderId(generateRandomOrderId());
   }, [isSelectedPayment, username]);
-  const location = useLocation()
+  const location = useLocation();
   useEffect(() => {
-  if (selectedItem) {
-    const el = document.getElementById("form");
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (selectedItem) {
+      const el = document.getElementById("form");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     }
-  }
-}, [selectedItem]);
+  }, [selectedItem]);
 
   useEffect(() => {
     const path = location.pathname;
@@ -133,28 +133,36 @@ const RechargeCheckout = ({
       cost: parsedAmount,
       date: datePart,
       time: timePart,
+      item: selectedItem.label, // Required field for Firestore
       selectedItem,
       api: selectedItem.api,
-      stockPrice: selectedItem.price
+      stockPrice: selectedItem.price,
     };
 
     try {
       showAlert("Redirecting to payment...");
-      const { data } = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/payment/start-order`,
-        {
-          ...orderData,
-          ksmApi: import.meta.env.VITE_APP_KSM_API,
-        }
-      );
+      console.log("Starting order");
 
-      if (data.success && data.payment_url) {
-        window.location.href = data.payment_url;
+      const backendUrl =
+        import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_PAYMENT_URL;
+      const gatewayRes = await axios.post(
+        `${backendUrl}/payment/start-order`,
+        orderData
+      );
+      console.log("done");
+
+      console.log("Payment Response:", gatewayRes.data);
+
+      // Redirect to payment page with QR code
+      if (gatewayRes.data.result?.result?.payment_url) {
+        window.location.href = gatewayRes.data.result.result.payment_url;
+      } else if (gatewayRes.data.redirect_url) {
+        window.location.href = gatewayRes.data.redirect_url;
       } else {
-        showAlert(`Payment failed: ${data.message || "Try again"}`);
+        showAlert("Payment initialization failed. Please try again.");
       }
     } catch (err) {
-      console.error(err);
+      console.error("Payment error:", err.response?.data || err.message);
       showAlert("Failed to start payment. Try again.");
     }
   };
@@ -227,7 +235,7 @@ const RechargeCheckout = ({
 
         try {
           const url = import.meta.env.VITE_BACKEND_URL;
-          const ksmApi = import.meta.env.VITE_KSM_API_KEY
+          const ksmApi = import.meta.env.VITE_KSM_API_KEY;
           const payload = {
             userId,
             zoneId,
@@ -244,14 +252,15 @@ const RechargeCheckout = ({
             idtrx: newOrderId,
             api: selectedItem.api || "smile",
             product: "MLBB Recharge",
-            stockPrice: selectedItem.price
+            stockPrice: selectedItem.price,
           };
 
-          const endpoint = selectedItem.api === 'smile' ?
-          `${url}/smile/create-order` :
-          `${url}/gamestopup/create-order`
+          const endpoint =
+            selectedItem.api === "smile"
+              ? `${url}/smile/create-order`
+              : `${url}/gamestopup/create-order`;
 
-          const { data } = await axios.post(endpoint,payload);
+          const { data } = await axios.post(endpoint, payload);
 
           if (
             data?.status === 200 &&

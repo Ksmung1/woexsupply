@@ -61,15 +61,15 @@ const AdminProduct = ({
         <div className="flex gap-3 md:gap-4 items-start mb-4">
           {/* Image */}
           <div className="w-16 h-16 md:w-20 md:h-20 flex-shrink-0 flex items-center justify-center bg-gray-50 rounded-lg border border-gray-200">
-            <img
-              className="w-full h-full object-contain rounded-lg"
-              src={imageSrc}
-              onError={(e) => {
-                e.currentTarget.src = defaultImage;
-              }}
-              alt={item.type}
-            />
-          </div>
+          <img
+            className="w-full h-full object-contain rounded-lg"
+            src={imageSrc}
+            onError={(e) => {
+              e.currentTarget.src = defaultImage;
+            }}
+            alt={item.type}
+          />
+        </div>
 
           {/* Label and Diamonds */}
           <div className="flex-1 min-w-0">
@@ -81,15 +81,15 @@ const AdminProduct = ({
                 {item.diamonds}
               </span>
               <span className="text-xs text-gray-500">
-                {item.type?.includes("weekly")
-                  ? "Weekly Pass"
-                  : item.type?.includes("twilight")
-                  ? "Twilight Pass"
-                  : "Diamonds"}
-              </span>
+            {item.type?.includes("weekly")
+              ? "Weekly Pass"
+              : item.type?.includes("twilight")
+              ? "Twilight Pass"
+              : "Diamonds"}
+          </span>
             </div>
-          </div>
         </div>
+      </div>
 
         {/* Pricing */}
         <div className="space-y-2 mb-4 pb-4 border-b border-gray-100">
@@ -99,8 +99,8 @@ const AdminProduct = ({
             </span>
             {item.falseRupees && (
               <span className="text-xs md:text-sm text-red-500 line-through">
-                ₹{item.falseRupees}
-              </span>
+              ₹{item.falseRupees}
+            </span>
             )}
           </div>
           {item.resellerRupees && (
