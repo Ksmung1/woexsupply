@@ -296,7 +296,7 @@ const Wallet = () => {
             <div className="flex items-center justify-end gap-2">
               <span className="text-lg">{statusIcon(t.status)}</span>
               <div className="font-bold text-lg text-gray-800">
-                ₹{t.amount?.toFixed?.(2) ?? t.amount}
+                ₹{Math.round(parseFloat(t.amount || 0))}
               </div>
             </div>
           </div>
@@ -347,7 +347,7 @@ const Wallet = () => {
                     </div>
                     <div className="flex items-baseline gap-3 mb-4">
                       <div className="text-4xl md:text-5xl font-bold">
-                        ₹{parseFloat(user?.balance || 0).toFixed(2)}
+                        ₹{Math.round(parseFloat(user?.balance || 0))}
                       </div>
                       <img
                         src={coinImg}
@@ -500,7 +500,7 @@ const Wallet = () => {
             <div className="text-center py-4">
               <div className="mb-4">
                 <div className="text-4xl font-bold text-purple-600 mb-2">
-                  ₹{orderToCreate?.amount?.toFixed(2)}
+                  ₹{Math.round(parseFloat(orderToCreate?.amount || 0))}
                 </div>
                 <p className="text-sm text-gray-600">
                   You will be redirected to complete the payment securely.
@@ -536,7 +536,7 @@ const Wallet = () => {
                       Amount
                     </span>
                     <span className="text-lg font-bold text-purple-600">
-                      ₹{selectedTx.amount?.toFixed?.(2) ?? selectedTx.amount}
+                      ₹{Math.round(parseFloat(selectedTx.amount || 0))}
                     </span>
                   </div>
                   <div className="flex items-center justify-between pb-3 border-b border-gray-200">

@@ -3,16 +3,17 @@ import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "../context/UserContext";
 import { signOut } from "firebase/auth";
 import { auth } from "../config/firebase";
-import { 
-  FaTachometerAlt, 
-  FaShoppingBag, 
-  FaUsers, 
-  FaBox, 
+import {
+  FaTachometerAlt,
+  FaShoppingBag,
+  FaUsers,
+  FaBox,
   FaSignOutAlt,
   FaShieldAlt,
   FaSpinner,
   FaBars,
-  FaTimes
+  FaTimes,
+  FaEnvelope,
 } from "react-icons/fa";
 
 const AdminLayout = () => {
@@ -24,7 +25,7 @@ const AdminLayout = () => {
   useEffect(() => {
     // Redirect if not admin
     if (!user || !isAdmin) {
-      navigate('/');
+      navigate("/");
     }
   }, [user, isAdmin, navigate]);
 
@@ -36,9 +37,9 @@ const AdminLayout = () => {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      navigate('/');
+      navigate("/");
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error("Error signing out:", error);
     }
   };
 
@@ -59,6 +60,7 @@ const AdminLayout = () => {
     { to: "/admin/orders", label: "Orders", icon: FaShoppingBag },
     { to: "/admin/users", label: "Users", icon: FaUsers },
     { to: "/admin/products", label: "Products", icon: FaBox },
+    { to: "/admin/messages", label: "Messages", icon: FaEnvelope },
   ];
 
   const isActive = (path) => {
@@ -89,7 +91,9 @@ const AdminLayout = () => {
               <FaShieldAlt className="text-white text-lg" />
             </div>
             <div className="hidden sm:block">
-              <h1 className="text-lg lg:text-xl font-bold text-gray-900">Admin Panel</h1>
+              <h1 className="text-lg lg:text-xl font-bold text-gray-900">
+                Admin Panel
+              </h1>
               <p className="text-xs text-gray-500">Control Center</p>
             </div>
           </div>
@@ -118,8 +122,14 @@ const AdminLayout = () => {
                     : "text-gray-700 hover:bg-gray-100 hover:text-purple-600"
                 }`}
               >
-                <Icon className={`flex-shrink-0 ${active ? "text-white" : "text-gray-500"}`} />
-                <span className="font-medium text-sm lg:text-base">{item.label}</span>
+                <Icon
+                  className={`flex-shrink-0 ${
+                    active ? "text-white" : "text-gray-500"
+                  }`}
+                />
+                <span className="font-medium text-sm lg:text-base">
+                  {item.label}
+                </span>
               </Link>
             );
           })}
@@ -134,7 +144,7 @@ const AdminLayout = () => {
             </p>
           </div>
           <button
-            onClick={()=>navigate('/')}
+            onClick={() => navigate("/")}
             className="w-full flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2 lg:py-3 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors font-medium text-sm lg:text-base"
           >
             <FaSignOutAlt />
@@ -157,7 +167,7 @@ const AdminLayout = () => {
                 <FaBars className="text-gray-600 text-lg" />
               </button>
               <h2 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
-                {navItems.find(item => isActive(item.to))?.label || "Admin"}
+                {navItems.find((item) => isActive(item.to))?.label || "Admin"}
               </h2>
             </div>
             <div className="flex items-center gap-2 sm:gap-4">

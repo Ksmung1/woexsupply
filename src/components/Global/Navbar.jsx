@@ -10,7 +10,10 @@ import {
   FaTrophy,
   FaInfoCircle,
   FaShieldAlt,
+  FaEnvelope,
 } from "react-icons/fa";
+import { db } from "../../config/firebase";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
 import logo from "../../assets/images/logo.png";
 
 // Desktop navigation items
@@ -26,7 +29,7 @@ const mobileNavItems = [
   { label: "Leaderboards", to: "/leaderboards", icon: FaTrophy },
   { label: "About", to: "/about", icon: FaInfoCircle },
   { label: "Orders", to: "/orders", icon: FaShoppingBag },
-  { label: "Wallet", to: "/wallet", icon: FaCoins },
+  { label: "Messages", to: "/messages", icon: FaEnvelope },
 ];
 
 const Navbar = () => {
@@ -36,6 +39,7 @@ const Navbar = () => {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const menuRef = useRef(null);
   const profileRef = useRef(null);
 
@@ -58,6 +62,33 @@ const Navbar = () => {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  // Track unread messages
+  useEffect(() => {
+    if (!user?.uid) {
+      setUnreadCount(0);
+      return;
+    }
+
+    const messagesRef = collection(db, "messages");
+    const q = query(
+      messagesRef,
+      where("recipientId", "==", user.uid),
+      where("read", "==", false)
+    );
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        setUnreadCount(snapshot.size);
+      },
+      (error) => {
+        console.error("Error fetching unread messages:", error);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [user?.uid]);
 
   // Active route checker
   const isActive = (to) => {
@@ -99,7 +130,7 @@ const Navbar = () => {
                   <button
                     key={item.to}
                     onClick={() => navigate(item.to)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 relative ${
                       active
                         ? "bg-purple-50 text-purple-600 shadow-sm"
                         : "text-gray-700 hover:bg-gray-50 hover:text-purple-600"
@@ -110,6 +141,21 @@ const Navbar = () => {
                   </button>
                 );
               })}
+              {/* Messages Link with Notification */}
+              <button
+                onClick={() => navigate("/messages")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 relative ${
+                  isActive("/messages")
+                    ? "bg-purple-50 text-purple-600 shadow-sm"
+                    : "text-gray-700 hover:bg-gray-50 hover:text-purple-600"
+                }`}
+              >
+                <FaEnvelope size={16} />
+                <span>Messages</span>
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                )}
+              </button>
             </nav>
 
             {/* Balance Display */}
@@ -119,7 +165,7 @@ const Navbar = () => {
             >
               <FaCoins size={16} />
               <span className="text-sm">
-                ₹{parseFloat(user?.balance || 0).toFixed(2)}
+                ₹{Math.round(parseFloat(user?.balance || 0))}
               </span>
             </button>
 
@@ -252,6 +298,8 @@ const Navbar = () => {
                   {mobileNavItems.map((item) => {
                     const Icon = item.icon;
                     const active = isActive(item.to);
+                    const hasNotification =
+                      item.to === "/messages" && unreadCount > 0;
                     return (
                       <button
                         key={item.to}
@@ -259,7 +307,7 @@ const Navbar = () => {
                           navigate(item.to);
                           setMenuOpen(false);
                         }}
-                        className={`w-full text-left px-4 py-3 text-sm flex items-center gap-3 transition-colors ${
+                        className={`w-full text-left px-4 py-3 text-sm flex items-center gap-3 transition-colors relative ${
                           active
                             ? "bg-purple-50 text-purple-600 font-semibold"
                             : "text-gray-700 hover:bg-gray-50"
@@ -267,6 +315,9 @@ const Navbar = () => {
                       >
                         <Icon size={18} />
                         <span>{item.label}</span>
+                        {hasNotification && (
+                          <span className="absolute right-4 top-1/2 -translate-y-1/2 w-2 h-2 bg-red-500 rounded-full"></span>
+                        )}
                       </button>
                     );
                   })}

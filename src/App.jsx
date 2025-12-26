@@ -17,9 +17,11 @@ import AdminLayout from "./layouts/AdminLayout";
 import MainLayout from "./layouts/MainLayout";
 import AdminProducts from "./components/Admins/AdminProducts";
 import AdminUsers from "./components/Admins/AdminUsers";
+import AdminMessages from "./components/Admins/AdminMessages";
 import NotFound from "./pages/NotFound";
 import About from "./pages/About";
 import Payment from "./pages/Payment";
+import Messages from "./pages/Messages";
 const App = () => {
   return (
     <UserProvider>
@@ -31,6 +33,7 @@ const App = () => {
                 <Route index element={<Home />}></Route>
                 <Route path="orders" element={<Orders />} />
                 <Route path="wallet" element={<Wallet />} />
+                <Route path="messages" element={<Messages />} />
                 <Route path="login" element={<Authentication />} />
                 <Route path="about" element={<About />} />
                 <Route path="leaderboards" element={<Profile />} />
@@ -48,6 +51,7 @@ const App = () => {
                 <Route path="orders" element={<AdminOrders />} />
                 <Route path="users" element={<AdminUsers />} />
                 <Route path="products" element={<AdminProducts />} />
+                <Route path="messages" element={<AdminMessages />} />
               </Route>
             </Routes>
           </Router>
