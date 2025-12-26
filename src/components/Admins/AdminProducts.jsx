@@ -6,6 +6,8 @@ import BloodStrikeAdmin from "./Products/BloodStrikeAdmin";
 import HonkaiAdmin from "./Products/HonkaiAdmin";
 import GenshinAdmin from "./Products/GenshinAdmin";
 import SuperSusAdmin from "./Products/SuperSusAdmin";
+import CharismaAdmin from "./Products/CharismaAdmin";
+import SkinAdmin from "./Products/SkinAdmin";
 
 const componentMap = {
   mlbb: MobileLegendsAdmin,
@@ -14,27 +16,46 @@ const componentMap = {
   bs: BloodStrikeAdmin,
   hsr: HonkaiAdmin,
   gi: GenshinAdmin,
+  charisma: CharismaAdmin,
+  skin: SkinAdmin,
 };
 
 const AdminProducts = () => {
   const gamesArray = Array.isArray(games) ? games : [];
-  const defaultGameKey = gamesArray[0]?.tag ?? null;
+  // Filter out charisma and skin from games array to avoid duplicates
+  const filteredGames = gamesArray.filter(
+    (game) => game.tag !== "charisma" && game.tag !== "skin"
+  );
+  // Add manual product tabs
+  const manualProducts = [
+    {
+      tag: "charisma",
+      name: "Charisma",
+      collectionName: "charismaproductlist",
+    },
+    { tag: "skin", name: "Skin", collectionName: "skinproductlist" },
+  ];
+  const allProducts = [...filteredGames, ...manualProducts];
+  const defaultGameKey = allProducts[0]?.tag ?? null;
   const [selected, setSelected] = useState(defaultGameKey);
 
   const getComponentFor = (game) => {
     const key = game?.tag;
-    return componentMap[key] ?? (() => (
-      <div className="p-4">
-        No admin UI for <strong>{game?.name ?? "Unknown"}</strong>
-      </div>
-    ));
+    return (
+      componentMap[key] ??
+      (() => (
+        <div className="p-4">
+          No admin UI for <strong>{game?.name ?? "Unknown"}</strong>
+        </div>
+      ))
+    );
   };
 
-  if (!gamesArray.length) {
+  if (!allProducts.length) {
     return (
       <div className="py-4 px-4">
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-          <p>No games configured.</p>
+          <p>No products configured.</p>
         </div>
       </div>
     );
@@ -44,7 +65,7 @@ const AdminProducts = () => {
     <div className="py-2 sm:py-4 px-2 sm:px-4">
       {/* Tabs */}
       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-        {gamesArray.map((g, idx) => {
+        {allProducts.map((g, idx) => {
           const key = g.tag ?? `game-${idx}`;
           const isActive = key === selected;
           return (
@@ -57,14 +78,14 @@ const AdminProducts = () => {
                   : "bg-white text-gray-700 border border-gray-200 hover:shadow-sm hover:bg-gray-50"
               }`}
             >
-              {key.toUpperCase()}
+              {g.name || key.toUpperCase()}
             </button>
           );
         })}
       </div>
 
       {/* Panels */}
-      {gamesArray.map((g, idx) => {
+      {allProducts.map((g, idx) => {
         const key = g.tag ?? `game-${idx}`;
         const PanelComponent = getComponentFor(g);
         const isActive = key === selected;

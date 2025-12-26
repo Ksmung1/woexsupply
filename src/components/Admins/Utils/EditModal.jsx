@@ -17,6 +17,7 @@ import { useAlert } from "../../../context/AlertContext";
  * - collectionName?: string
  * - groups?: Array<{ key: string, label?: string, image?: string }>
  * - apiOptions?: Array<{ value: string, label?: string }>
+ * - hideGroupsAndApi?: boolean (hide Groups and API sections)
  * - fields?: Array<{ label, field, type, placeholder }>
  * - confirmBeforeDelete?: boolean
  */
@@ -31,6 +32,7 @@ const EditModal = ({
   collectionName,
   groups = [],
   apiOptions = [{ value: "yokcash", label: "Yokcash" }, { value: "busan", label: "Busan" }, { value: "smile", label: "Smile" }],
+  hideGroupsAndApi = false,
   fields = [
     { label: "Label", field: "label", type: "text", placeholder: "Label" },
     { label: "Diamonds", field: "diamonds", type: "text", placeholder: "Diamonds" },
@@ -109,56 +111,62 @@ const EditModal = ({
           ))}
           </div>
 
-          {/* Group and API */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mt-4">
-            <div className="flex flex-col gap-2">
-              <label className="font-semibold text-sm text-gray-700">Group</label>
-            <div className="flex items-center gap-3">
-              <select
-                value={selectedItem.group ?? ""}
-                onChange={(e) => onChange("group", e.target.value)}
-                  className="flex-1 border-2 border-gray-200 px-4 py-2.5 rounded-lg text-sm bg-white text-gray-900 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
-              >
-                <option value="">Select Group</option>
-                {groups.map((g) => (
-                  <option key={g.key} value={g.key}>
-                    {g.label ?? g.key}
-                  </option>
-                ))}
-              </select>
-              {selectedItem.group && (() => {
-                const sel = groups.find((g) => g.key === selectedItem.group);
-                  return sel && sel.image ? (
-                    <img src={sel.image} alt={sel.label ?? sel.key} className="h-12 w-12 rounded-lg border-2 border-gray-200 object-cover" />
-                  ) : null;
-              })()}
-            </div>
-          </div>
+          {/* Group and API - only show if not hidden */}
+          {!hideGroupsAndApi && (groups.length > 0 || apiOptions.length > 0) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mt-4">
+              {groups.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <label className="font-semibold text-sm text-gray-700">Group</label>
+                  <div className="flex items-center gap-3">
+                    <select
+                      value={selectedItem.group ?? ""}
+                      onChange={(e) => onChange("group", e.target.value)}
+                      className="flex-1 border-2 border-gray-200 px-4 py-2.5 rounded-lg text-sm bg-white text-gray-900 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
+                    >
+                      <option value="">Select Group</option>
+                      {groups.map((g) => (
+                        <option key={g.key} value={g.key}>
+                          {g.label ?? g.key}
+                        </option>
+                      ))}
+                    </select>
+                    {selectedItem.group && (() => {
+                      const sel = groups.find((g) => g.key === selectedItem.group);
+                      return sel && sel.image ? (
+                        <img src={sel.image} alt={sel.label ?? sel.key} className="h-12 w-12 rounded-lg border-2 border-gray-200 object-cover" />
+                      ) : null;
+                    })()}
+                  </div>
+                </div>
+              )}
 
-            <div className="flex flex-col gap-2">
-              <label className="font-semibold text-sm text-gray-700">API</label>
-            {apiOptions && apiOptions.length > 0 ? (
-              <select
-                value={selectedItem.api ?? apiOptions[0].value}
-                onChange={(e) => onChange("api", e.target.value)}
-                  className="w-full border-2 border-gray-200 px-4 py-2.5 rounded-lg text-sm bg-white text-gray-900 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
-              >
-                {apiOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label ?? opt.value}
-                  </option>
-                ))}
-              </select>
-            ) : (
-                <input
-                  type="text"
-                  value={selectedItem.api ?? "yokcash"}
-                  readOnly
-                  className="w-full border-2 border-gray-200 px-4 py-2.5 rounded-lg text-sm bg-gray-100 text-gray-600 cursor-not-allowed"
-                />
-            )}
+              {apiOptions.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <label className="font-semibold text-sm text-gray-700">API</label>
+                  {apiOptions && apiOptions.length > 0 ? (
+                    <select
+                      value={selectedItem.api ?? apiOptions[0].value}
+                      onChange={(e) => onChange("api", e.target.value)}
+                      className="w-full border-2 border-gray-200 px-4 py-2.5 rounded-lg text-sm bg-white text-gray-900 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
+                    >
+                      {apiOptions.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label ?? opt.value}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      value={selectedItem.api ?? "yokcash"}
+                      readOnly
+                      className="w-full border-2 border-gray-200 px-4 py-2.5 rounded-lg text-sm bg-gray-100 text-gray-600 cursor-not-allowed"
+                    />
+                  )}
+                </div>
+              )}
             </div>
-          </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-6 border-t border-gray-200">

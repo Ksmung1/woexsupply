@@ -1,8 +1,11 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { CiShop } from "react-icons/ci";
 import { CgGames } from "react-icons/cg";
-import { EarthIcon, ShoppingBagIcon, Wallet } from "lucide-react";
+import { EarthIcon, ShoppingBagIcon, MessageCircle } from "lucide-react";
+import { useUser } from "../../context/UserContext";
+import { db } from "../../config/firebase";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
 
 const shortcutItems = [
   {
@@ -26,16 +29,45 @@ const shortcutItems = [
     icon: <ShoppingBagIcon size={24} />,
   },
   {
-    label: "My wallet",
-    routes: ["/wallet"],
-    icon: <Wallet size={24} />,
+    label: "Messages",
+    routes: ["/messages"],
+    icon: <MessageCircle size={24} />,
   },
 ];
 
 function Shortcut() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useUser();
+  const [unreadCount, setUnreadCount] = useState(0);
   const isDarkMode = false;
+
+  // Track unread messages
+  useEffect(() => {
+    if (!user?.uid) {
+      setUnreadCount(0);
+      return;
+    }
+
+    const messagesRef = collection(db, "messages");
+    const q = query(
+      messagesRef,
+      where("recipientId", "==", user.uid),
+      where("read", "==", false)
+    );
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        setUnreadCount(snapshot.size);
+      },
+      (error) => {
+        console.error("Error fetching unread messages:", error);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [user?.uid]);
 
   const handleClick = (route) => {
     if (location.pathname !== route) navigate(route);
@@ -44,11 +76,12 @@ function Shortcut() {
   return (
     <div
       className={`fixed bottom-0 left-0 right-0 flex justify-between items-center 
-      py-2 border-t z-10 h-16 sm:px-40
+      py-2 border-t z-10 h-16 md:hidden
       ${isDarkMode ? "bg-gray-900 border-gray-700 text-gray-300" : "bg-white border-gray-300 text-gray-700"}`}
     >
       {shortcutItems.map(({ label, routes, icon }) => {
         const isActive = routes.includes(location.pathname);
+        const hasNotification = routes.includes("/messages") && unreadCount > 0;
 
         return (
           <button
@@ -56,7 +89,7 @@ function Shortcut() {
             onClick={() => handleClick(routes[0])}
             className={`flex flex-col flex-1 items-center justify-center 
             cursor-pointer select-none text-xs transition-all duration-200 
-            py-1
+            py-1 relative
             ${isActive
               ? isDarkMode
                 ? "text-blue-400 font-semibold"
@@ -66,7 +99,12 @@ function Shortcut() {
               : "text-gray-600 hover:text-blue-500"
             }`}
           >
-            <span className="mb-1">{icon}</span>
+            <span className="mb-1 relative">
+              {icon}
+              {hasNotification && (
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              )}
+            </span>
             <p className="text-[11px]">{label}</p>
           </button>
         );

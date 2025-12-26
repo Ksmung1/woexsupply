@@ -12,8 +12,9 @@ const AdminProduct = ({
   // Smart type resolver
   const resolvedType = (item.type || "").toLowerCase();
 
+  // Use item.image if available, otherwise fall back to typeImageMap or defaultImage
   const imageSrc =
-    typeImageMap[resolvedType] || typeImageMap[item.type] || defaultImage;
+    item.image || typeImageMap[resolvedType] || typeImageMap[item.type] || defaultImage;
 
   return (
     <div

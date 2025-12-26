@@ -134,7 +134,7 @@ const Admin = () => {
                   </div>
                 ) : (
                   <p className="text-2xl sm:text-3xl font-bold text-gray-900 truncate">
-                    ₹{smileBalance.toLocaleString()}
+                    {smileBalance.toLocaleString()}
                   </p>
                 )}
               </div>
@@ -159,7 +159,7 @@ const Admin = () => {
                   </div>
                 ) : (
                   <p className="text-2xl sm:text-3xl font-bold text-gray-900 truncate">
-                    ₹{gtBalance.toLocaleString()}
+                    {gtBalance.toLocaleString()}
                   </p>
                 )}
               </div>

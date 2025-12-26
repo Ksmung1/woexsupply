@@ -11,6 +11,7 @@ import {
   FaInfoCircle,
   FaShieldAlt,
   FaEnvelope,
+  FaClipboardList,
 } from "react-icons/fa";
 import { db } from "../../config/firebase";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
@@ -29,7 +30,7 @@ const mobileNavItems = [
   { label: "Leaderboards", to: "/leaderboards", icon: FaTrophy },
   { label: "About", to: "/about", icon: FaInfoCircle },
   { label: "Orders", to: "/orders", icon: FaShoppingBag },
-  { label: "Messages", to: "/messages", icon: FaEnvelope },
+  { label: "Queues", to: "/queues", icon: FaClipboardList },
 ];
 
 const Navbar = () => {
@@ -211,6 +212,16 @@ const Navbar = () => {
                     </button>
                     <button
                       onClick={() => {
+                        navigate("/queues");
+                        setProfileMenuOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                    >
+                      <FaClipboardList size={14} />
+                      <span>Queues</span>
+                    </button>
+                    <button
+                      onClick={() => {
                         navigate("/wallet");
                         setProfileMenuOpen(false);
                       }}
@@ -298,8 +309,6 @@ const Navbar = () => {
                   {mobileNavItems.map((item) => {
                     const Icon = item.icon;
                     const active = isActive(item.to);
-                    const hasNotification =
-                      item.to === "/messages" && unreadCount > 0;
                     return (
                       <button
                         key={item.to}
@@ -307,7 +316,7 @@ const Navbar = () => {
                           navigate(item.to);
                           setMenuOpen(false);
                         }}
-                        className={`w-full text-left px-4 py-3 text-sm flex items-center gap-3 transition-colors relative ${
+                        className={`w-full text-left px-4 py-3 text-sm flex items-center gap-3 transition-colors ${
                           active
                             ? "bg-purple-50 text-purple-600 font-semibold"
                             : "text-gray-700 hover:bg-gray-50"
@@ -315,9 +324,6 @@ const Navbar = () => {
                       >
                         <Icon size={18} />
                         <span>{item.label}</span>
-                        {hasNotification && (
-                          <span className="absolute right-4 top-1/2 -translate-y-1/2 w-2 h-2 bg-red-500 rounded-full"></span>
-                        )}
                       </button>
                     );
                   })}
