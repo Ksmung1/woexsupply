@@ -2,6 +2,7 @@ import HomeDisplay from "../components/Homes/HomeDisplay";
 import HomeMenu from "../components/Homes/HomeMenu";
 import Footer from "../components/Homes/Footer";
 import HomeSearch from "../components/Homes/HomeSearch";
+import BrowseSection from "../components/Homes/BrowseSection";
 
 const Home = () => {
   return (
@@ -11,6 +12,7 @@ const Home = () => {
           <HomeSearch />
           <HomeDisplay />
         </div>
+        <BrowseSection />
         <HomeMenu />
         <HomeDisplay />
       </div>

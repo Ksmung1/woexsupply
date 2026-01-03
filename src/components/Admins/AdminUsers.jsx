@@ -23,6 +23,8 @@ export default function AdminUsers() {
   const [error, setError] = useState(null);
   const [roleFilter, setRoleFilter] = useState("all"); // "all", "customer", "reseller"
   const [updatingRole, setUpdatingRole] = useState(null); // Track which user's role is being updated
+  const [updatingBalance, setUpdatingBalance] = useState(null); // Track which user's balance is being updated
+  const [balanceInputs, setBalanceInputs] = useState({}); // Track balance input values
 
   // debounce input to avoid too many queries
   const [debounced, setDebounced] = useState(search);
@@ -46,8 +48,23 @@ export default function AdminUsers() {
         q,
         (snap) => {
           const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+          // Sort users alphabetically by username/name (includes all users, even those without roles)
+          list.sort((a, b) => {
+            const nameA = (a.username || a.name || "").toLowerCase();
+            const nameB = (b.username || b.name || "").toLowerCase();
+            return nameA.localeCompare(nameB);
+          });
+          // Ensure all users are included (users without roles are treated as customers)
           setUsers(list);
           setDisplay(list);
+          // Initialize balance inputs
+          const initialBalances = {};
+          list.forEach((u) => {
+            if (u.id || u.uid) {
+              initialBalances[u.id ?? u.uid] = u.balance ?? 0;
+            }
+          });
+          setBalanceInputs(initialBalances);
           setLoading(false);
         },
         (err) => {
@@ -76,8 +93,23 @@ export default function AdminUsers() {
 
         const snap = await getDocs(q);
         const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        // Sort users alphabetically by username/name (includes all users, even those without roles)
+        list.sort((a, b) => {
+          const nameA = (a.username || a.name || "").toLowerCase();
+          const nameB = (b.username || b.name || "").toLowerCase();
+          return nameA.localeCompare(nameB);
+        });
+        // All users are included, including those without roles (treated as customers)
         setUsers(list);
         setDisplay(list);
+        // Initialize balance inputs
+        const initialBalances = {};
+        list.forEach((u) => {
+          if (u.id || u.uid) {
+            initialBalances[u.id ?? u.uid] = u.balance ?? 0;
+          }
+        });
+        setBalanceInputs(initialBalances);
       } catch (err) {
         console.error("search users error:", err);
         setError("Search failed. Falling back to client-side filtering.");
@@ -86,13 +118,29 @@ export default function AdminUsers() {
           const colRef = collection(db, USERS_COLLECTION);
           const allSnap = await getDocs(query(colRef, orderBy("username")));
           const all = allSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+          // Sort users alphabetically by username/name (includes all users, even those without roles)
+          all.sort((a, b) => {
+            const nameA = (a.username || a.name || "").toLowerCase();
+            const nameB = (b.username || b.name || "").toLowerCase();
+            return nameA.localeCompare(nameB);
+          });
+          // All users are included, including those without roles (treated as customers)
           setUsers(all);
           const filtered = all.filter((u) =>
             String(u.username ?? "")
               .toLowerCase()
               .includes(debounced.toLowerCase())
           );
+          // Filtered results also include users without roles
           setDisplay(filtered);
+          // Initialize balance inputs
+          const initialBalances = {};
+          all.forEach((u) => {
+            if (u.id || u.uid) {
+              initialBalances[u.id ?? u.uid] = u.balance ?? 0;
+            }
+          });
+          setBalanceInputs(initialBalances);
         } catch (fallbackErr) {
           console.error("fallback fetch error:", fallbackErr);
         }
@@ -107,17 +155,18 @@ export default function AdminUsers() {
 
   // client-side filter when user types quickly (immediate UX) and role filter
   useEffect(() => {
-    let filtered = users;
+    let filtered = [...users]; // Create a copy to avoid mutating original
 
-    // Apply role filter
+    // Apply role filter (users without roles are treated as customers and included)
     if (roleFilter !== "all") {
       filtered = filtered.filter((u) => {
-        const userRole = u.role || "customer"; // Default to "customer" if no role
+        // Treat users without roles (null, undefined, empty) as customers
+        const userRole = u.role || "customer";
         return userRole === roleFilter;
       });
     }
 
-    // Apply search filter
+    // Apply search filter (includes all users, even those without roles)
     if (debounced) {
       const lower = debounced.toLowerCase();
       filtered = filtered.filter((u) =>
@@ -126,6 +175,13 @@ export default function AdminUsers() {
           .includes(lower)
       );
     }
+
+    // Ensure alphabetical sorting is maintained (all users including those without roles)
+    filtered.sort((a, b) => {
+      const nameA = (a.username || a.name || "").toLowerCase();
+      const nameB = (b.username || b.name || "").toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
 
     setDisplay(filtered);
   }, [debounced, users, roleFilter]);
@@ -147,6 +203,44 @@ export default function AdminUsers() {
     } finally {
       setUpdatingRole(null);
     }
+  };
+
+  // Update user balance
+  const updateBalance = async (userId, newBalance) => {
+    if (updatingBalance === userId) return; // Prevent double clicks
+
+    const parsedBalance = parseFloat(newBalance);
+    if (isNaN(parsedBalance)) {
+      setError("Invalid balance amount.");
+      return;
+    }
+
+    setUpdatingBalance(userId);
+    try {
+      const userRef = doc(db, USERS_COLLECTION, userId);
+      await updateDoc(userRef, {
+        balance: parsedBalance,
+      });
+      // Clear the input value after successful update
+      setBalanceInputs((prev) => {
+        const updated = { ...prev };
+        delete updated[userId];
+        return updated;
+      });
+    } catch (err) {
+      console.error("Error updating user balance:", err);
+      setError("Failed to update user balance.");
+    } finally {
+      setUpdatingBalance(null);
+    }
+  };
+
+  // Handle balance input change
+  const handleBalanceChange = (userId, value) => {
+    setBalanceInputs((prev) => ({
+      ...prev,
+      [userId]: value,
+    }));
   };
 
   const formatUserDate = (val) => {
@@ -247,6 +341,9 @@ export default function AdminUsers() {
                 Email
               </th>
               <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Balance
+              </th>
+              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Role
               </th>
               <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -260,11 +357,18 @@ export default function AdminUsers() {
 
           <tbody className="divide-y divide-gray-100">
             {display.map((u, i) => {
+              // Treat users without roles as customers
               const userRole = u.role || "customer";
               const isUpdating = updatingRole === (u.id ?? u.uid);
+              const isUpdatingBalance = updatingBalance === (u.id ?? u.uid);
+              const currentBalance = balanceInputs[u.id ?? u.uid] !== undefined 
+                ? balanceInputs[u.id ?? u.uid] 
+                : (u.balance ?? 0);
+              const userId = u.id ?? u.uid;
+              
               return (
                 <tr
-                  key={u.id ?? u.uid ?? i}
+                  key={userId ?? i}
                   className="hover:bg-gray-50 transition-colors"
                 >
                   <td className="px-3 py-2">
@@ -285,18 +389,47 @@ export default function AdminUsers() {
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        value={currentBalance}
+                        onChange={(e) => handleBalanceChange(userId, e.target.value)}
+                        onBlur={(e) => {
+                          const newValue = parseFloat(e.target.value);
+                          if (!isNaN(newValue) && newValue !== parseFloat(u.balance ?? 0)) {
+                            updateBalance(userId, e.target.value);
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.target.blur();
+                          }
+                        }}
+                        disabled={isUpdatingBalance}
+                        className="w-24 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      />
+                      {isUpdatingBalance && (
+                        <FaSpinner className="animate-spin text-purple-600 text-xs" />
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-3 py-2">
+                    <div className="flex items-center gap-2">
                       <span className="text-xs text-gray-600">
-                        {userRole === "reseller" ? "Reseller" : "Customer"}
+                        {userRole === "reseller" 
+                          ? "Reseller" 
+                          : userRole === "admin" 
+                          ? "Admin" 
+                          : "Customer"}
                       </span>
                       <button
-                        onClick={() => toggleUserRole(u.id ?? u.uid, userRole)}
-                        disabled={isUpdating}
+                        onClick={() => toggleUserRole(userId, userRole)}
+                        disabled={isUpdating || userRole === "admin"}
                         className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
                           userRole === "reseller"
                             ? "bg-purple-600"
                             : "bg-gray-300"
                         } ${
-                          isUpdating
+                          isUpdating || userRole === "admin"
                             ? "opacity-50 cursor-not-allowed"
                             : "cursor-pointer"
                         }`}
@@ -330,9 +463,9 @@ export default function AdminUsers() {
                   <td className="px-3 py-2">
                     <span
                       className="text-xs font-mono text-gray-500 truncate block max-w-[180px]"
-                      title={u.id ?? u.uid ?? ""}
+                      title={userId ?? ""}
                     >
-                      {u.id ?? u.uid ?? "—"}
+                      {userId ?? "—"}
                     </span>
                   </td>
                 </tr>
@@ -342,7 +475,7 @@ export default function AdminUsers() {
             {display.length === 0 && !loading && (
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={7}
                   className="px-3 py-6 text-center text-xs text-gray-500"
                 >
                   No users found.
@@ -361,11 +494,18 @@ export default function AdminUsers() {
           </div>
         ) : (
           display.map((u, i) => {
+            // Treat users without roles as customers
             const userRole = u.role || "customer";
             const isUpdating = updatingRole === (u.id ?? u.uid);
+            const isUpdatingBalance = updatingBalance === (u.id ?? u.uid);
+            const currentBalance = balanceInputs[u.id ?? u.uid] !== undefined 
+              ? balanceInputs[u.id ?? u.uid] 
+              : (u.balance ?? 0);
+            const userId = u.id ?? u.uid;
+            
             return (
               <div
-                key={u.id ?? u.uid ?? i}
+                key={userId ?? i}
                 className="bg-white rounded-lg border border-gray-200 p-3 hover:shadow-sm transition-shadow"
               >
                 <div className="flex items-center gap-2 mb-2">
@@ -384,19 +524,51 @@ export default function AdminUsers() {
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
+                      <span className="text-gray-500">Balance:</span>
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="number"
+                          value={currentBalance}
+                          onChange={(e) => handleBalanceChange(userId, e.target.value)}
+                          onBlur={(e) => {
+                            const newValue = parseFloat(e.target.value);
+                            if (!isNaN(newValue) && newValue !== parseFloat(u.balance ?? 0)) {
+                              updateBalance(userId, e.target.value);
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.target.blur();
+                            }
+                          }}
+                          disabled={isUpdatingBalance}
+                          className="w-20 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        />
+                        {isUpdatingBalance && (
+                          <FaSpinner className="animate-spin text-purple-600 text-xs" />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
                       <span className="text-gray-500">Role:</span>
                       <span className="text-xs text-gray-700">
-                        {userRole === "reseller" ? "Reseller" : "Customer"}
+                        {userRole === "reseller" 
+                          ? "Reseller" 
+                          : userRole === "admin" 
+                          ? "Admin" 
+                          : "Customer"}
                       </span>
                       <button
-                        onClick={() => toggleUserRole(u.id ?? u.uid, userRole)}
-                        disabled={isUpdating}
+                        onClick={() => toggleUserRole(userId, userRole)}
+                        disabled={isUpdating || userRole === "admin"}
                         className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-1 ${
                           userRole === "reseller"
                             ? "bg-purple-600"
                             : "bg-gray-300"
                         } ${
-                          isUpdating
+                          isUpdating || userRole === "admin"
                             ? "opacity-50 cursor-not-allowed"
                             : "cursor-pointer"
                         }`}
@@ -431,7 +603,7 @@ export default function AdminUsers() {
                   <div>
                     <span className="text-gray-500">UID:</span>
                     <span className="text-gray-500 font-mono ml-1 text-[10px] truncate block">
-                      {u.id ?? u.uid ?? "—"}
+                      {userId ?? "—"}
                     </span>
                   </div>
                 </div>

@@ -15,6 +15,8 @@ import {
   FaTimes,
   FaEnvelope,
   FaClipboardList,
+  FaGamepad,
+  FaStore,
 } from "react-icons/fa";
 
 const AdminLayout = () => {
@@ -61,6 +63,8 @@ const AdminLayout = () => {
     { to: "/admin/orders", label: "Orders", icon: FaShoppingBag },
     { to: "/admin/queues", label: "Queues", icon: FaClipboardList },
     { to: "/admin/users", label: "Users", icon: FaUsers },
+    { to: "/admin/accounts", label: "Accounts", icon: FaGamepad },
+    { to: "/admin/game-accounts", label: "Game Accounts", icon: FaStore },
     { to: "/admin/products", label: "Products", icon: FaBox },
     { to: "/admin/messages", label: "Messages", icon: FaEnvelope },
   ];

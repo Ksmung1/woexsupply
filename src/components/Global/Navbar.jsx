@@ -12,6 +12,7 @@ import {
   FaShieldAlt,
   FaEnvelope,
   FaClipboardList,
+  FaGamepad,
 } from "react-icons/fa";
 import { db } from "../../config/firebase";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
@@ -30,6 +31,7 @@ const mobileNavItems = [
   { label: "Leaderboards", to: "/leaderboards", icon: FaTrophy },
   { label: "About", to: "/about", icon: FaInfoCircle },
   { label: "Orders", to: "/orders", icon: FaShoppingBag },
+  { label: "Accounts", to: "/accounts", icon: FaGamepad },
   { label: "Queues", to: "/queues", icon: FaClipboardList },
 ];
 
@@ -209,6 +211,16 @@ const Navbar = () => {
                     >
                       <FaShoppingBag size={14} />
                       <span>My Orders</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate("/accounts");
+                        setProfileMenuOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                    >
+                      <FaGamepad size={14} />
+                      <span>My Accounts</span>
                     </button>
                     <button
                       onClick={() => {
