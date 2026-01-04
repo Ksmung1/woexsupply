@@ -19,10 +19,11 @@ const Payment = () => {
   const navigate = useNavigate();
   const { user } = useUser();
   const { showSuccess, showError } = useAlert();
-
+  const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
   const type = searchParams.get("type") || "topup"; // "topup" or "game" or "manual"
   const orderId = searchParams.get("order_id") || searchParams.get("orderId");
 
+  
   const [orderData, setOrderData] = useState(null);
   const [status, setStatus] = useState("pending"); // pending, success, failed, checking
   const [loading, setLoading] = useState(true);
@@ -297,6 +298,21 @@ const Payment = () => {
     }
   };
 
+  const openPaytm = () => {
+    if (!orderData?.merchantUPI || !orderData?.amount) return;
+  
+    const intent = `paytmmp://pay?pa=${encodeURIComponent(
+      orderData.merchantUPI
+    )}&pn=${encodeURIComponent(
+      orderData.merchantName || "Merchant"
+    )}&am=${orderData.amount}&cu=INR&tn=${encodeURIComponent(
+      "Order " + orderId
+    )}&tr=${orderId}`;
+  
+    window.location.href = intent;
+  };
+  
+
   const getStatusText = () => {
     switch (status) {
       case "success":
@@ -321,21 +337,9 @@ const Payment = () => {
       case "failed":
         return "Your payment could not be processed. Please try again or contact support if the issue persists.";
       case "checking":
-        return "We're verifying your payment. This may take a few moments. You can safely leave this page - payment will be verified automatically in the background.";
+        return "We're verifying your payment. This may take a few moments.";
       default:
-        return "Scan the QR code below to complete your payment. You can leave this page after paying - your payment will be verified automatically by our system.";
-    }
-  };
-
-  const copyUPI = () => {
-    if (orderData?.upiString) {
-      navigator.clipboard.writeText(orderData.upiString);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } else if (orderData?.merchantUPI) {
-      navigator.clipboard.writeText(orderData.merchantUPI);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+        return "Scan the QR code below to complete your payment.";
     }
   };
 
@@ -352,51 +356,66 @@ const Payment = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-indigo-50/30 py-8">
-      <div className="max-w-2xl mx-auto px-4 md:px-6 lg:px-8">
-        <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8">
+      <div className="max-w-3xl shadow-black/20 border-gray-200 border shadow-2xl mx-auto px-4 md:px-6 lg:px-6">
+        <div className="bg-white rounded-2xl shadow-xl p-4 md:p-5">
           {/* Status Icon and Text */}
-          <div className="text-center mb-6">
-            {getStatusIcon()}
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mt-4 mb-2">
+          <div className="text-center mb-2">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
               {getStatusText()}
             </h1>
-            <p className="text-gray-600 text-sm md:text-base">
-              {getStatusDescription()}
-            </p>
           </div>
 
-          {/* QR Code Display (for pending payments) */}
-          {orderData &&
-            (status === "pending" ||
-              status === "checking" ||
-              status === "available") &&
-            orderData.qrCode && (
-              <div className="border-t border-gray-200 pt-6 mb-6">
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                    Scan QR Code to Pay
-                  </h3>
-                  <div className="inline-block p-4 bg-white rounded-xl shadow-lg border-2 border-gray-200">
-                    <img
-                      src={orderData.qrCode}
-                      alt="UPI QR Code"
-                      className="w-64 h-64 mx-auto"
-                    />
-                  </div>
+{/* QR Code Display (for pending payments) */}
+{orderData &&
+  (status === "pending" || status === "checking") &&
+  orderData.qrCode && (
+    <div className="border-t border-gray-200 pt-6 mb-6">
+      <div className="text-center">
+        <h3 className="text-lg font-semibold text-gray-800 mb-2">
+          Scan QR Code to Pay
+        </h3>
 
-                  {orderData.amount && (
-                    <p className="mt-4 text-lg font-bold text-gray-800">
-                      Amount: ₹{orderData.amount}
-                    </p>
-                  )}
-                  <p className="mt-2 text-xs text-gray-500">
-                    Payment will be verified automatically. You can safely leave
-                    this page after paying - our system will check your payment
-                    status in the background.
-                  </p>
-                </div>
-              </div>
-            )}
+        <div className="inline-block p-2 bg-white rounded-xl shadow-lg border-2 border-gray-200">
+          <img
+            src={orderData.qrCode}
+            alt="UPI QR Code"
+            className="w-44 h-44 mx-auto"
+          />
+        </div>
+
+        {orderData.amount && (
+          <p className="mt-4 text-lg font-bold text-gray-800">
+            Amount: ₹{orderData.amount}
+          </p>
+        )}
+
+{/* Official Paytm Intent Button */}
+{isMobile && orderData?.merchantUPI && (
+  <div className="mt-4 w-full mx-auto flex justify-center">
+    <button
+      onClick={openPaytm}
+      className="w-50 flex items-center justify-center gap-2 bg-[#00baf2] hover:bg-[#00a1d6] text-white font-semibold py-3 rounded-lg transition"
+    >
+      <img
+        src="https://tse1.mm.bing.net/th/id/OIP.4Czaum8sTdcx4p5gytXDMQHaEK?pid=Api&P=0&h=180"
+        alt="Paytm"
+        className="h-5"
+      />
+      Pay with Paytm
+    </button>
+  </div>
+)}
+
+
+        {!isMobile && (
+          <p className="mt-4 text-sm text-gray-500">
+            Open this page on your phone to pay using Paytm or UPI apps
+          </p>
+        )}
+      </div>
+    </div>
+  )}
+
 
           {/* Order Details */}
           {orderData && (
