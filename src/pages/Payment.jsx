@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { collection, doc, getDoc, onSnapshot } from "firebase/firestore";
+import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { db } from "../config/firebase";
 import { useUser } from "../context/UserContext";
 import { useAlert } from "../context/AlertContext";
@@ -20,8 +20,8 @@ const Payment = () => {
   const { user } = useUser();
   const { showSuccess, showError } = useAlert();
 
-  const orderId = searchParams.get("order_id") || searchParams.get("orderId");
   const type = searchParams.get("type") || "topup"; // "topup" or "game" or "manual"
+  const orderId = searchParams.get("order_id") || searchParams.get("orderId");
 
   const [orderData, setOrderData] = useState(null);
   const [status, setStatus] = useState("pending"); // pending, success, failed, checking
@@ -41,7 +41,14 @@ const Payment = () => {
     }
 
     // Determine collection based on type
-    const collectionName = type === "game" ? "orders" : "topups";
+    const collectionName =
+      type === "game"
+        ? "orders"
+        : type === "manual"
+        ? "queues"
+        : type === "account"
+        ? "gameAccounts"
+        : "topups";
     const orderRef = doc(db, collectionName, orderId);
 
     // Initial fetch
@@ -55,7 +62,11 @@ const Payment = () => {
           setLoading(false);
 
           // If already successful, show success
-          if (data.status === "success" || data.status === "completed") {
+          if (
+            data.status === "success" ||
+            data.status === "completed" ||
+            data.status === "closed"
+          ) {
             handleSuccess(data);
           } else if (data.status === "failed") {
             setStatus("failed");
@@ -103,11 +114,7 @@ const Payment = () => {
                 clearInterval(intervalRef.current);
                 intervalRef.current = null;
               }
-              console.log(
-                `[Payment] ✅ Payment successful, redirecting to ${
-                  type === "game" ? "orders" : "wallet"
-                }`
-              );
+              console.log(`[Payment] ✅ Payment successful, redirecting...`);
               // Only handle success once to prevent duplicate alerts
               if (!successHandledRef.current) {
                 successHandledRef.current = true;
@@ -266,10 +273,14 @@ const Payment = () => {
     setTimeout(() => {
       if (type === "game") {
         navigate("/orders");
+      } else if (type === "manual") {
+        navigate("/queues");
+      } else if (type === "account") {
+        navigate("/accounts");
       } else {
         navigate("/wallet");
       }
-    }, 3000);
+    }, 1000);
   };
 
   const getStatusIcon = () => {
@@ -356,7 +367,9 @@ const Payment = () => {
 
           {/* QR Code Display (for pending payments) */}
           {orderData &&
-            (status === "pending" || status === "checking") &&
+            (status === "pending" ||
+              status === "checking" ||
+              status === "available") &&
             orderData.qrCode && (
               <div className="border-t border-gray-200 pt-6 mb-6">
                 <div className="text-center">
