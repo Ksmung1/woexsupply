@@ -88,9 +88,6 @@ const Payment = () => {
     };
 
     fetchOrder();
-    const generateTr = () =>
-      `ORD${Date.now()}${Math.floor(Math.random() * 100000)}`;
-    const [tr] = useState(generateTr);
     
 
     // Real-time listener for order updates
@@ -156,6 +153,10 @@ const Payment = () => {
       }
     };
   }, [orderId, type]);
+  const generateTr = () =>
+    `ORD${Date.now()}${Math.floor(Math.random() * 100000)}`;
+  const [tr] = useState(generateTr);
+
 
   const startStatusCheck = (orderDataParam) => {
     // Clear any existing interval first
