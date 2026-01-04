@@ -88,6 +88,10 @@ const Payment = () => {
     };
 
     fetchOrder();
+    const generateTr = () =>
+      `ORD${Date.now()}${Math.floor(Math.random() * 100000)}`;
+    const [tr] = useState(generateTr);
+    
 
     // Real-time listener for order updates
     const unsubscribe = onSnapshot(
@@ -298,19 +302,20 @@ const Payment = () => {
     }
   };
 
-  const openPaytm = () => {
+  const openUpiIntent = () => {
     if (!orderData?.merchantUPI || !orderData?.amount) return;
   
-    const intent = `paytmmp://pay?pa=${encodeURIComponent(
+    const upiIntent = `upi://pay?pa=${encodeURIComponent(
       orderData.merchantUPI
     )}&pn=${encodeURIComponent(
       orderData.merchantName || "Merchant"
     )}&am=${orderData.amount}&cu=INR&tn=${encodeURIComponent(
-      "Order " + orderId
-    )}&tr=${orderId}`;
+      "Order " + tr
+    )}&tr=${tr}`;
   
-    window.location.href = intent;
+    window.location.href = upiIntent;
   };
+  
   
 
   const getStatusText = () => {
@@ -389,29 +394,22 @@ const Payment = () => {
           </p>
         )}
 
-{/* Official Paytm Intent Button */}
 {isMobile && orderData?.merchantUPI && (
   <div className="mt-4 w-full mx-auto flex justify-center">
     <button
-      onClick={openPaytm}
-      className="w-50 flex items-center justify-center gap-2 bg-[#00baf2] hover:bg-[#00a1d6] text-white font-semibold py-3 rounded-lg transition"
+      onClick={openUpiIntent}
+      className="w-64 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition"
     >
-      <img
-        src="https://tse1.mm.bing.net/th/id/OIP.4Czaum8sTdcx4p5gytXDMQHaEK?pid=Api&P=0&h=180"
-        alt="Paytm"
-        className="h-5"
-      />
-      Pay with Paytm
+      Pay with UPI Apps
     </button>
   </div>
 )}
 
 
-        {!isMobile && (
-          <p className="mt-4 text-sm text-gray-500">
-            Open this page on your phone to pay using Paytm or UPI apps
-          </p>
-        )}
+<p className="text-xs text-gray-500 mt-2 text-center">
+  Works with Paytm, Google Pay, PhonePe, BHIM
+</p>
+
       </div>
     </div>
   )}
