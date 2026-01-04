@@ -114,7 +114,7 @@ const SkinCheckout = ({
       selectedItem,
       payment: "upi",
       status: "pending",
-      type: "skin", // Mark as skin order
+      type: "manual", // Mark as skin order
       isManual: true, // Mark as manual order - backend will create queue
     };
 
@@ -224,7 +224,7 @@ const SkinCheckout = ({
             item: selectedItem.label,
             payment: "coin",
             status: "pending",
-            type: "skin", // Mark as skin order
+            type: "manual", // Mark as skin order
             isManual: true, // Mark as manual order
             createdAt: serverTimestamp(),
           };

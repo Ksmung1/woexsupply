@@ -120,7 +120,7 @@ const CharismaCheckout = ({
       selectedItem,
       payment: "upi",
       status: "pending",
-      type: "charisma", // Mark as charisma order
+      type: "manual", // Mark as charisma order
       isManual: true, // Mark as manual order - backend will create queue
     };
 
@@ -230,7 +230,7 @@ const CharismaCheckout = ({
             item: selectedItem.label,
             payment: "coin",
             status: "pending",
-            type: "charisma", // Mark as charisma order
+            type: "manual", // Mark as charisma order
             isManual: true, // Mark as manual order
             createdAt: serverTimestamp(),
           };

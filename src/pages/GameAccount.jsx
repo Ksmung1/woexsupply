@@ -197,144 +197,82 @@ const BuyModal = ({ game, onClose, onSuccess }) => {
         .padStart(2, "0")}-${now.getFullYear()}`;
       const timePart = now.toLocaleTimeString("en-US", { hour12: true });
 
+      const purchaseUpdate = {
+        status: "pending",
+        boughtBy: {
+          uid: user.uid,
+          username: user.name || user.username || "",
+          phoneNumber: phoneNumber.trim(),
+        },
+        paymentMethod,
+        orderId,
+        rupees: parsedAmount,
+        date: datePart,
+        time: timePart,
+        purchasedAt: serverTimestamp(),
+      };
+
       if (paymentMethod === "coin") {
-        // Check balance
         if (parsedBalance < parsedAmount) {
           showAlert("Not enough balance.");
           setIsProcessing(false);
           return;
         }
-
-        // Deduct balance
+      
         const userRef = doc(db, "users", user.uid);
         const userDoc = await getDoc(userRef);
-        if (userDoc.exists()) {
-          const currentBalance = parseFloat(userDoc.data().balance || 0);
-          if (currentBalance < parsedAmount) {
-            showAlert("Not enough balance.");
-            setIsProcessing(false);
-            return;
-          }
-
-          await updateDoc(userRef, {
-            balance: currentBalance - parsedAmount,
-          });
+      
+        if (!userDoc.exists()) {
+          showAlert("User not found.");
+          setIsProcessing(false);
+          return;
         }
-
-        // Create account purchase record
-        const accountData = {
-          id: orderId,
-          gameAccountId: game.id,
-          gameLabel: game.label,
-          phoneNumber: phoneNumber.trim(),
-          rupees: parsedAmount,
-          payment: "coin",
-          status: "pending",
-          uid: user.uid,
-          username: user.name || user.username || "",
-          date: datePart,
-          time: timePart,
-          createdAt: serverTimestamp(),
-          images: game.images || [],
-        };
-
-        const accountRef = doc(db, "accounts", orderId);
-        await setDoc(accountRef, accountData);
-
-        // Mark game account as pending - ensure this happens
+      
+        const currentBalance = parseFloat(userDoc.data().balance || 0);
+        if (currentBalance < parsedAmount) {
+          showAlert("Not enough balance.");
+          setIsProcessing(false);
+          return;
+        }
+      
+        // Deduct balance
+        await updateDoc(userRef, {
+          balance: currentBalance - parsedAmount,
+        });
+      
+        // Update game account directly
         const gameRef = doc(db, "gameAccounts", game.id);
-        try {
-          await updateDoc(gameRef, {
-            status: "pending",
-          });
-          console.log(
-            `[GameAccount] Marked game account ${game.id} as pending`
-          );
-        } catch (updateError) {
-          console.error(
-            `[GameAccount] Error updating game account status:`,
-            updateError
-          );
-          // Still show success to user, but log the error
-          // The account purchase record is already created
-        }
-
+        await updateDoc(gameRef, purchaseUpdate);
+      
         showAlert("Purchase successful! Admin will process your order.");
         onSuccess();
         onClose();
-      } else if (paymentMethod === "upi") {
-        // Redirect to payment page first to get orderId
+      }
+      else if (paymentMethod === "upi") {
         const backendUrl = import.meta.env.VITE_BACKEND_URL;
+      
         const orderData = {
-          id: orderId,
-          userId: "", // Not needed for game accounts
           uid: user.uid,
-          zoneId: "", // Not needed for game accounts
-          product: "Game Account",
-          productId: game.id,
-          username: user.name || user.username || "",
-          gameUsername: "", // Not needed for game accounts
+          id: game.id,
           cost: parsedAmount,
-          date: datePart,
-          time: timePart,
-          item: game.label,
-          selectedItem: game,
-          api: "smile",
-          stockPrice: parsedAmount,
         };
-
+      
         try {
           showAlert("Redirecting to payment...");
+      
           const gatewayRes = await axios.post(
-            `${backendUrl}/payment/start-order`,
+            `${backendUrl}/payment/start-account`,
             orderData
           );
-
-          // Create account purchase record with orderId link
-          const accountData = {
-            id: orderId,
-            orderId: orderId, // Link to order
-            gameAccountId: game.id,
-            gameLabel: game.label,
-            phoneNumber: phoneNumber.trim(),
-            rupees: parsedAmount,
-            payment: "upi",
-            status: "pending",
-            uid: user.uid,
-            username: user.name || user.username || "",
-            date: datePart,
-            time: timePart,
-            createdAt: serverTimestamp(),
-            images: game.images || [],
-          };
-
-          const accountRef = doc(db, "accounts", orderId);
-          await setDoc(accountRef, accountData);
-
-          // Mark game account as pending - ensure this happens before redirect
-          const gameRef = doc(db, "gameAccounts", game.id);
-          try {
-            await updateDoc(gameRef, {
-              status: "pending",
-            });
-            console.log(
-              `[GameAccount] Marked game account ${game.id} as pending (UPI payment)`
-            );
-          } catch (updateError) {
-            console.error(
-              `[GameAccount] Error updating game account status:`,
-              updateError
-            );
-            // Still proceed with payment redirect, but log the error
-            // The account purchase record is already created
-          }
-
-          if (gatewayRes.data.result?.result?.payment_url) {
-            window.location.href = gatewayRes.data.result.result.payment_url;
-          } else if (gatewayRes.data.redirect_url) {
-            window.location.href = gatewayRes.data.redirect_url;
+      
+          const paymentUrl =
+            gatewayRes.data?.result?.result?.payment_url ||
+            gatewayRes.data?.redirect_url;
+      
+          if (paymentUrl) {
+            window.location.href = paymentUrl;
           } else {
-            showAlert("Payment initialization failed. Please try again.");
+            showAlert("Payment initialization failed.");
             setIsProcessing(false);
           }
         } catch (err) {
@@ -343,6 +281,8 @@ const BuyModal = ({ game, onClose, onSuccess }) => {
           setIsProcessing(false);
         }
       }
+      
+      
     } catch (error) {
       console.error("Purchase error:", error);
       showAlert("Purchase failed. Please try again.");
@@ -629,7 +569,7 @@ const GameAccount = () => {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2  gap-6">
               {games.map((game) => {
                 const currentImageIndex = selectedImageIndex[game.id] ?? 0;
                 const currentImage =

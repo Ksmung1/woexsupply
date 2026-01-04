@@ -12,7 +12,6 @@ const Home = () => {
           <HomeSearch />
           <HomeDisplay />
         </div>
-        <BrowseSection />
         <HomeMenu />
         <HomeDisplay />
       </div>

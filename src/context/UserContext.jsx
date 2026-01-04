@@ -8,9 +8,11 @@ export const UserContext = createContext(null);
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let unsubscribeUserDoc = () => {};
+    setLoading(true);
 
     const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
@@ -32,6 +34,8 @@ export const UserProvider = ({ children }) => {
           }
         } catch (err) {
           console.error("Error fetching user document:", err);
+        } finally {
+          setLoading(false);
         }
 
         unsubscribeUserDoc = onSnapshot(
@@ -50,6 +54,7 @@ export const UserProvider = ({ children }) => {
         setUser(null);
         setIsAdmin(false);
         localStorage.removeItem("user");
+        setLoading(false);
       }
     });
 
@@ -60,7 +65,7 @@ export const UserProvider = ({ children }) => {
   }, []);
 
   return (
-    <UserContext.Provider value={{ user, setUser, isAdmin }}>
+    <UserContext.Provider value={{ user, setUser, isAdmin, loading }}>
       {children}
     </UserContext.Provider>
   );

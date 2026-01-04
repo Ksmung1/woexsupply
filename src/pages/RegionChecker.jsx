@@ -47,7 +47,7 @@ const RegionChecker = () => {
 
   return (
     <div
-      className={`min-h-screen flex items-center justify-center p-4 transition-all duration-500 ${
+      className={`min-h-screen mt-2 md:mt-0 flex items-start md:items-center justify-center p-4 transition-all duration-500 ${
         isDarkMode
           ? "bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900"
           : "bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50"
@@ -72,8 +72,8 @@ const RegionChecker = () => {
         <div
           className={`backdrop-blur-xl rounded-2xl shadow-2xl border transition-all duration-500 hover:shadow-3xl transform hover:-translate-y-1 ${
             isDarkMode
-              ? "bg-white/10 border-white/20 shadow-black/50"
-              : "bg-white/80 border-white/40 shadow-black/10"
+              ? "bg-white/10 border-gray-900 shadow-black/50"
+              : "bg-white/80 border-gray-300 shadow-black/30"
           }`}
         >
           {/* Header */}

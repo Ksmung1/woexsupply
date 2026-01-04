@@ -324,6 +324,10 @@ const AdminGameAccounts = () => {
 
     showSuccess(`Uploading ${imageFiles.length} image(s)...`);
 
+    // Set loading state for all bulk uploads
+    const bulkUploadKey = isNew ? "new-bulk-upload" : "edit-bulk-upload";
+    setUploadingImages((prev) => ({ ...prev, [bulkUploadKey]: true }));
+
     const uploadedUrls = [];
     const uploadPromises = imageFiles.map(async (file, idx) => {
       try {
@@ -382,6 +386,13 @@ const AdminGameAccounts = () => {
     } catch (error) {
       console.error("Error uploading multiple images:", error);
       showError("Failed to upload some images");
+    } finally {
+      // Clear bulk upload loading state
+      setUploadingImages((prev) => {
+        const newState = { ...prev };
+        delete newState[bulkUploadKey];
+        return newState;
+      });
     }
   };
 
@@ -713,12 +724,28 @@ const AdminGameAccounts = () => {
                       >
                         <div className="flex gap-3 mb-2">
                           {preview && (
-                            <div className="w-20 h-20 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
+                            <div className="w-20 h-20 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0 relative">
                               <img
                                 src={preview}
                                 alt={`Preview ${idx + 1}`}
                                 className="w-full h-full object-cover"
                               />
+                              {isUploading && (
+                                <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center">
+                                  <div className="text-center">
+                                    <FaSpinner className="animate-spin w-6 h-6 text-white mx-auto mb-1" />
+                                    <span className="text-xs text-white font-medium">Uploading...</span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {isUploading && !preview && (
+                            <div className="w-20 h-20 rounded-lg border-2 border-dashed border-blue-400 bg-blue-50 flex items-center justify-center flex-shrink-0">
+                              <div className="text-center">
+                                <FaSpinner className="animate-spin w-6 h-6 text-blue-600 mx-auto mb-1" />
+                                <span className="text-xs text-blue-600 font-medium">Uploading...</span>
+                              </div>
                             </div>
                           )}
                           <div className="flex-1 space-y-2">
@@ -730,8 +757,13 @@ const AdminGameAccounts = () => {
                               }
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                               placeholder="Image URL or upload file below"
+                              disabled={isUploading}
                             />
-                            <label className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg cursor-pointer text-sm font-medium text-gray-700 transition-colors">
+                            <label className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-sm font-medium transition-colors ${
+                              isUploading 
+                                ? "bg-blue-100 text-blue-700 cursor-wait" 
+                                : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                            }`}>
                               <FiUpload className="w-4 h-4" />
                               <span>
                                 {isUploading ? "Uploading..." : "Upload Image"}
@@ -764,14 +796,35 @@ const AdminGameAccounts = () => {
                     );
                   })}
                   <div className="space-y-2">
-                    <label className="flex flex-col items-center justify-center w-full px-4 py-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 cursor-pointer transition-colors">
-                      <FiUpload className="w-8 h-8 text-gray-400 mb-2" />
-                      <span className="text-sm font-medium text-gray-600">
-                        Upload Images (Multiple Selection Allowed)
-                      </span>
-                      <span className="text-xs text-gray-500 mt-1">
-                        Click to select multiple images or drag and drop
-                      </span>
+                    {uploadingImages["new-bulk-upload"] && (
+                      <div className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-50 border-2 border-blue-200 rounded-lg">
+                        <FaSpinner className="animate-spin w-5 h-5 text-blue-600" />
+                        <span className="text-sm font-medium text-blue-700">Uploading images to Firebase...</span>
+                      </div>
+                    )}
+                    <label className={`flex flex-col items-center justify-center w-full px-4 py-6 border-2 border-dashed rounded-lg transition-colors ${
+                      uploadingImages["new-bulk-upload"]
+                        ? "border-blue-400 bg-blue-50 cursor-wait"
+                        : "border-gray-300 hover:border-blue-500 cursor-pointer"
+                    }`}>
+                      {uploadingImages["new-bulk-upload"] ? (
+                        <>
+                          <FaSpinner className="animate-spin w-8 h-8 text-blue-600 mb-2" />
+                          <span className="text-sm font-medium text-blue-700">
+                            Uploading Images...
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <FiUpload className="w-8 h-8 text-gray-400 mb-2" />
+                          <span className="text-sm font-medium text-gray-600">
+                            Upload Images (Multiple Selection Allowed)
+                          </span>
+                          <span className="text-xs text-gray-500 mt-1">
+                            Click to select multiple images or drag and drop
+                          </span>
+                        </>
+                      )}
                       <input
                         type="file"
                         accept="image/*"
@@ -784,6 +837,7 @@ const AdminGameAccounts = () => {
                           e.target.value = ""; // Reset input
                         }}
                         className="hidden"
+                        disabled={uploadingImages["new-bulk-upload"]}
                       />
                     </label>
                     <button
@@ -939,12 +993,28 @@ const AdminGameAccounts = () => {
                       >
                         <div className="flex gap-3 mb-2">
                           {preview && (
-                            <div className="w-20 h-20 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
+                            <div className="w-20 h-20 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0 relative">
                               <img
                                 src={preview}
                                 alt={`Preview ${idx + 1}`}
                                 className="w-full h-full object-cover"
                               />
+                              {isUploading && (
+                                <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center">
+                                  <div className="text-center">
+                                    <FaSpinner className="animate-spin w-6 h-6 text-white mx-auto mb-1" />
+                                    <span className="text-xs text-white font-medium">Uploading...</span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {isUploading && !preview && (
+                            <div className="w-20 h-20 rounded-lg border-2 border-dashed border-blue-400 bg-blue-50 flex items-center justify-center flex-shrink-0">
+                              <div className="text-center">
+                                <FaSpinner className="animate-spin w-6 h-6 text-blue-600 mx-auto mb-1" />
+                                <span className="text-xs text-blue-600 font-medium">Uploading...</span>
+                              </div>
                             </div>
                           )}
                           <div className="flex-1 space-y-2">
@@ -956,8 +1026,13 @@ const AdminGameAccounts = () => {
                               }
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                               placeholder="Image URL or upload file below"
+                              disabled={isUploading}
                             />
-                            <label className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg cursor-pointer text-sm font-medium text-gray-700 transition-colors">
+                            <label className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-sm font-medium transition-colors ${
+                              isUploading 
+                                ? "bg-blue-100 text-blue-700 cursor-wait" 
+                                : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                            }`}>
                               <FiUpload className="w-4 h-4" />
                               <span>
                                 {isUploading ? "Uploading..." : "Upload Image"}
@@ -990,14 +1065,35 @@ const AdminGameAccounts = () => {
                     );
                   })}
                   <div className="space-y-2">
-                    <label className="flex flex-col items-center justify-center w-full px-4 py-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 cursor-pointer transition-colors">
-                      <FiUpload className="w-8 h-8 text-gray-400 mb-2" />
-                      <span className="text-sm font-medium text-gray-600">
-                        Upload Images (Multiple Selection Allowed)
-                      </span>
-                      <span className="text-xs text-gray-500 mt-1">
-                        Click to select multiple images or drag and drop
-                      </span>
+                    {uploadingImages["edit-bulk-upload"] && (
+                      <div className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-50 border-2 border-blue-200 rounded-lg">
+                        <FaSpinner className="animate-spin w-5 h-5 text-blue-600" />
+                        <span className="text-sm font-medium text-blue-700">Uploading images to Firebase...</span>
+                      </div>
+                    )}
+                    <label className={`flex flex-col items-center justify-center w-full px-4 py-6 border-2 border-dashed rounded-lg transition-colors ${
+                      uploadingImages["edit-bulk-upload"]
+                        ? "border-blue-400 bg-blue-50 cursor-wait"
+                        : "border-gray-300 hover:border-blue-500 cursor-pointer"
+                    }`}>
+                      {uploadingImages["edit-bulk-upload"] ? (
+                        <>
+                          <FaSpinner className="animate-spin w-8 h-8 text-blue-600 mb-2" />
+                          <span className="text-sm font-medium text-blue-700">
+                            Uploading Images...
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <FiUpload className="w-8 h-8 text-gray-400 mb-2" />
+                          <span className="text-sm font-medium text-gray-600">
+                            Upload Images (Multiple Selection Allowed)
+                          </span>
+                          <span className="text-xs text-gray-500 mt-1">
+                            Click to select multiple images or drag and drop
+                          </span>
+                        </>
+                      )}
                       <input
                         type="file"
                         accept="image/*"
@@ -1010,6 +1106,7 @@ const AdminGameAccounts = () => {
                           e.target.value = ""; // Reset input
                         }}
                         className="hidden"
+                        disabled={uploadingImages["edit-bulk-upload"]}
                       />
                     </label>
                     <button

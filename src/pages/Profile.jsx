@@ -1,28 +1,41 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { doc, onSnapshot, getDocs, query, collection, where, updateDoc, documentId, getDoc } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
+import {
+  doc,
+  onSnapshot,
+  getDocs,
+  query,
+  collection,
+  where,
+  updateDoc,
+  documentId,
+  getDoc,
+} from "firebase/firestore";
 import { db } from "../config/firebase";
 import { useUser } from "../context/UserContext";
 import { format } from "date-fns";
-import { FaUser, FaTrophy, FaMedal, FaCoins, FaShoppingBag } from "react-icons/fa";
-
-/**
- * Profile.jsx
- *
- * - Shows user photo, name, email, createdAt
- * - If phone missing, allows input + save
- * - Counts total orders (user.orders array; shows 0 if none)
- * - Sums totalSpent by looking up the orders collection for matching IDs and summing amounts
- * - Responsive, Tailwind-based UI
- *
- * NOTES:
- * - This expects your user document to live at "users/{uid}" and contain:
- *     - name, email, photoURL, createdAt (timestamp), phone (optional), orders: string[] (order IDs)
- * - Orders collection is expected at "orders" with documents where doc.id matches the IDs in user.orders
- *   and each order doc has fields like: success (boolean) and total / amount / cost (number).
- */
+import {
+  FaUser,
+  FaTrophy,
+  FaMedal,
+  FaCoins,
+  FaShoppingBag,
+  FaEnvelope,
+  FaPhone,
+  FaCalendar,
+  FaEdit,
+  FaCheck,
+  FaTimes,
+  FaSpinner,
+  FaCrown,
+  FaChartLine,
+  FaGamepad,
+  FaClipboardList,
+} from "react-icons/fa";
 
 const Profile = () => {
-  const { user: ctxUser, setUser: setCtxUser } = useUser(); // from your UserContext
+  const navigate = useNavigate();
+  const { user: ctxUser, setUser: setCtxUser } = useUser();
   const uid = ctxUser?.uid ?? ctxUser?.id ?? null;
 
   const [userDoc, setUserDoc] = useState(null);
@@ -33,17 +46,19 @@ const Profile = () => {
   const [ordersLoading, setOrdersLoading] = useState(false);
 
   const [phoneInput, setPhoneInput] = useState("");
+  const [isEditingPhone, setIsEditingPhone] = useState(false);
   const [savingPhone, setSavingPhone] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   // Leaderboards state
   const [topSpenders, setTopSpenders] = useState([]);
   const [topOrderCount, setTopOrderCount] = useState([]);
   const [loadingLeaderboards, setLoadingLeaderboards] = useState(true);
-  const [activeTab, setActiveTab] = useState("spenders"); // "spenders" or "orders"
+  const [activeTab, setActiveTab] = useState("spenders");
   const [lastUpdated, setLastUpdated] = useState(null);
 
-  // subscribe to user document
+  // Subscribe to user document
   useEffect(() => {
     if (!uid) {
       setUserDoc(null);
@@ -58,11 +73,9 @@ const Profile = () => {
         if (snap.exists()) {
           const data = { uid: snap.id, ...snap.data() };
           setUserDoc(data);
-          // prefill phone input when doc arrives (but don't overwrite if user typed)
           setPhoneInput((cur) => (cur ? cur : data.phone ?? ""));
           setLoadingUser(false);
         } else {
-          // no doc found
           setUserDoc(null);
           setPhoneInput("");
           setLoadingUser(false);
@@ -78,7 +91,7 @@ const Profile = () => {
     return () => unsub();
   }, [uid]);
 
-  // compute ordersCount & totalSpent by fetching orders collection for user's order IDs
+  // Compute ordersCount & totalSpent (including game accounts and charisma, excluding topups)
   useEffect(() => {
     let active = true;
     const compute = async () => {
@@ -86,8 +99,7 @@ const Profile = () => {
       setOrdersCount(0);
       setTotalSpent(0);
 
-      const orderIds = Array.isArray(userDoc?.orders) ? userDoc.orders : [];
-      if (!orderIds.length) {
+      if (!uid) {
         setOrdersCount(0);
         setTotalSpent(0);
         setOrdersLoading(false);
@@ -95,28 +107,122 @@ const Profile = () => {
       }
 
       try {
-        // Firestore 'in' queries accept max 10 items. We'll chunk if necessary.
-        const chunks = [];
-        for (let i = 0; i < orderIds.length; i += 10) {
-          chunks.push(orderIds.slice(i, i + 10));
-        }
-
         let matchedCount = 0;
         let matchedTotal = 0;
 
-        for (const chunk of chunks) {
-          const q = query(collection(db, "orders"), where(documentId(), "in", chunk));
-          const snapshot = await getDocs(q);
-          snapshot.forEach((docSnap) => {
-            const o = docSnap.data();
-            // consider order success flag; default to true if missing
-            const success = o?.success === undefined ? true : !!o?.success;
-            if (success) {
+        // 1. Get game account purchases from accounts collection
+        try {
+          const accountsQuery = query(
+            collection(db, "accounts"),
+            where("uid", "==", uid),
+            where("status", "in", ["pending", "sold"])
+          );
+          const accountsSnapshot = await getDocs(accountsQuery);
+          accountsSnapshot.forEach((docSnap) => {
+            const accountData = docSnap.data();
+            const amount = Number(accountData?.rupees ?? 0) || 0;
+            if (amount > 0) {
               matchedCount++;
-              const amount = Number(o?.total ?? o?.amount ?? o?.cost ?? 0) || 0;
               matchedTotal += amount;
             }
           });
+        } catch (err) {
+          console.error("Profile: error fetching accounts", err);
+        }
+
+        // 2. Get charisma purchases from orders collection (type === "charisma" OR isManual === true)
+        try {
+          // Query for charisma orders (type === "charisma")
+          const charismaQuery = query(
+            collection(db, "orders"),
+            where("uid", "==", uid),
+            where("type", "==", "charisma")
+          );
+          const charismaSnapshot = await getDocs(charismaQuery);
+          const countedOrderIds = new Set();
+
+          charismaSnapshot.forEach((docSnap) => {
+            const orderData = docSnap.data();
+            const status = orderData?.status;
+            // Only count completed/successful orders
+            if (status === "completed" || status === "success") {
+              countedOrderIds.add(docSnap.id);
+              const amount =
+                Number(
+                  orderData?.total ?? orderData?.amount ?? orderData?.cost ?? 0
+                ) || 0;
+              if (amount > 0) {
+                matchedCount++;
+                matchedTotal += amount;
+              }
+            }
+          });
+
+          // Query for manual orders (isManual === true) that aren't already counted
+          const manualQuery = query(
+            collection(db, "orders"),
+            where("uid", "==", uid),
+            where("isManual", "==", true)
+          );
+          const manualSnapshot = await getDocs(manualQuery);
+
+          manualSnapshot.forEach((docSnap) => {
+            // Skip if already counted as charisma
+            if (countedOrderIds.has(docSnap.id)) return;
+
+            const orderData = docSnap.data();
+            const status = orderData?.status;
+            // Only count completed/successful orders
+            if (status === "completed" || status === "success") {
+              const amount =
+                Number(
+                  orderData?.total ?? orderData?.amount ?? orderData?.cost ?? 0
+                ) || 0;
+              if (amount > 0) {
+                matchedCount++;
+                matchedTotal += amount;
+              }
+            }
+          });
+        } catch (err) {
+          console.error("Profile: error fetching charisma orders", err);
+        }
+
+        // 3. Get regular orders (excluding topups and charisma/manual orders)
+        // Regular orders are those in user.orders array that don't have type="charisma" or isManual=true
+        const orderIds = Array.isArray(userDoc?.orders) ? userDoc.orders : [];
+        if (orderIds.length > 0) {
+          const chunks = [];
+          for (let i = 0; i < orderIds.length; i += 10) {
+            chunks.push(orderIds.slice(i, i + 10));
+          }
+
+          for (const chunk of chunks) {
+            const q = query(
+              collection(db, "orders"),
+              where(documentId(), "in", chunk)
+            );
+            const snapshot = await getDocs(q);
+            snapshot.forEach((docSnap) => {
+              const o = docSnap.data();
+              // Exclude charisma and manual orders (already counted above)
+              if (o?.type === "charisma" || o?.isManual === true) {
+                return;
+              }
+
+              const status = o?.status;
+              const success =
+                o?.success === undefined
+                  ? status === "completed" || status === "success"
+                  : !!o?.success;
+              if (success) {
+                matchedCount++;
+                const amount =
+                  Number(o?.total ?? o?.amount ?? o?.cost ?? 0) || 0;
+                matchedTotal += amount;
+              }
+            });
+          }
         }
 
         if (!active) return;
@@ -135,17 +241,17 @@ const Profile = () => {
     return () => {
       active = false;
     };
-  }, [userDoc]);
+  }, [userDoc, uid]);
 
-  // phone save handler
+  // Phone save handler
   const savePhone = async () => {
     setError("");
+    setSuccess("");
     if (!uid) {
       setError("No user logged in.");
       return;
     }
     const phone = (phoneInput || "").trim();
-    // basic validation: digits, +, -, spaces allowed; require 6+ digits
     const digits = phone.replace(/[^\d]/g, "");
     if (digits.length < 6) {
       setError("Please enter a valid phone number (at least 6 digits).");
@@ -156,10 +262,12 @@ const Profile = () => {
     try {
       const userRef = doc(db, "users", uid);
       await updateDoc(userRef, { phone });
-      // optimistic update in context (if available)
       if (setCtxUser) {
         setCtxUser((prev) => ({ ...(prev || {}), phone }));
       }
+      setSuccess("Phone number updated successfully!");
+      setIsEditingPhone(false);
+      setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
       console.error("Profile: error saving phone", err);
       setError("Failed to save phone number. Please try again.");
@@ -173,8 +281,9 @@ const Profile = () => {
     const fetchLeaderboards = async () => {
       setLoadingLeaderboards(true);
       try {
-        // Fetch top spenders
-        const spendersDoc = await getDoc(doc(db, "leaderboards", "topSpenders"));
+        const spendersDoc = await getDoc(
+          doc(db, "leaderboards", "topSpenders")
+        );
         if (spendersDoc.exists()) {
           const data = spendersDoc.data();
           setTopSpenders(data.data || []);
@@ -183,8 +292,9 @@ const Profile = () => {
           }
         }
 
-        // Fetch top order count
-        const ordersDoc = await getDoc(doc(db, "leaderboards", "topOrderCount"));
+        const ordersDoc = await getDoc(
+          doc(db, "leaderboards", "topOrderCount")
+        );
         if (ordersDoc.exists()) {
           setTopOrderCount(ordersDoc.data().data || []);
         }
@@ -197,7 +307,6 @@ const Profile = () => {
 
     fetchLeaderboards();
 
-    // Set up real-time listener for leaderboards updates
     const unsubscribeSpenders = onSnapshot(
       doc(db, "leaderboards", "topSpenders"),
       (snap) => {
@@ -229,105 +338,397 @@ const Profile = () => {
   const createdAtDisplay = useMemo(() => {
     const ts = userDoc?.createdAt;
     if (!ts) return "—";
-    // handle Firestore Timestamp or ISO string or Date
     try {
-      const d = ts?.toDate ? ts.toDate() : typeof ts === "string" ? new Date(ts) : new Date(ts);
+      const d = ts?.toDate
+        ? ts.toDate()
+        : typeof ts === "string"
+        ? new Date(ts)
+        : new Date(ts);
       return format(d, "PPP");
     } catch {
       return "—";
     }
   }, [userDoc]);
 
-  // UI
+  // Get user rank
+  const userRank = useMemo(() => {
+    if (!uid) return null;
+    const list = activeTab === "spenders" ? topSpenders : topOrderCount;
+    const index = list.findIndex((u) => u.uid === uid);
+    return index >= 0 ? index + 1 : null;
+  }, [uid, topSpenders, topOrderCount, activeTab]);
+
+  if (!uid) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-pink-50 flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-8 text-center">
+          <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center">
+            <FaUser className="text-white text-4xl" />
+          </div>
+          <h2 className="text-3xl font-bold text-gray-800 mb-3">
+            Sign In Required
+          </h2>
+          <p className="text-gray-600 mb-6">
+            Please sign in to view your profile and access all features.
+          </p>
+          <button
+            onClick={() => navigate("/authentication-selection")}
+            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+          >
+            Sign In Now
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-indigo-50/30 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-indigo-50/30 py-6 md:py-8">
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-2 flex items-center gap-3">
-            <FaTrophy className="text-purple-600" />
-            Leaderboards
+        {/* Header Section */}
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+            <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center">
+              <FaUser className="text-white text-lg md:text-xl" />
+            </div>
+            <span>My Profile</span>
           </h1>
-          <p className="text-gray-600">Top players and spenders on our platform</p>
+          <p className="text-gray-600 text-sm md:text-base">
+            Manage your account and track your activity
+          </p>
         </div>
 
-        {/* Leaderboards Section - Always visible */}
-        <div className="mb-8">
-          <div className="bg-white rounded-2xl shadow-xl p-6">
-            {/* Header with last updated */}
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-xl font-bold text-gray-800">Global Leaderboards</h2>
-                {lastUpdated && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    Last updated: {format(lastUpdated.toDate ? lastUpdated.toDate() : new Date(lastUpdated), "PPp")}
+        {/* Profile Card Section */}
+        {loadingUser ? (
+          <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
+            <div className="animate-pulse space-y-4">
+              <div className="w-32 h-32 bg-gray-200 rounded-full mx-auto" />
+              <div className="h-6 bg-gray-200 rounded w-48 mx-auto" />
+              <div className="h-4 bg-gray-200 rounded w-64 mx-auto" />
+            </div>
+          </div>
+        ) : userDoc ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            {/* Profile Card */}
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 hover:shadow-2xl transition-all duration-300 border border-gray-100">
+                <div className="flex flex-col items-center text-center">
+                  {/* Avatar */}
+                  <div className="relative mb-4">
+                    <div className="w-28 h-28 md:w-32 md:h-32 rounded-full overflow-hidden ring-4 ring-purple-100 shadow-lg">
+                      {userDoc.photoURL ? (
+                        <img
+                          src={userDoc.photoURL}
+                          alt={userDoc.name || userDoc.email || "avatar"}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-white text-3xl md:text-4xl font-bold">
+                          {(userDoc.name || userDoc.email || "U")
+                            .charAt(0)
+                            .toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    {userDoc.role === "admin" && (
+                      <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-red-500 rounded-full flex items-center justify-center shadow-lg">
+                        <FaCrown className="text-white text-sm" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Name & Email */}
+                  <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
+                    {userDoc.name || "No name"}
+                  </h2>
+                  <p className="text-sm text-gray-500 mb-4 flex items-center justify-center gap-2">
+                    <FaEnvelope className="text-xs" />
+                    {userDoc.email || "No email"}
                   </p>
-                )}
+
+                  {/* Member Since */}
+                  <div className="w-full mb-4 p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl">
+                    <div className="flex items-center justify-center gap-2 text-xs text-gray-600 mb-1">
+                      <FaCalendar className="text-purple-600" />
+                      <span>Member since</span>
+                    </div>
+                    <div className="text-sm font-semibold text-gray-800">
+                      {createdAtDisplay}
+                    </div>
+                  </div>
+
+                  {/* Phone Number */}
+                  <div className="w-full">
+                    <label className="text-xs font-semibold text-gray-700 block mb-2 flex items-center gap-2">
+                      <FaPhone className="text-purple-600" />
+                      <span>Phone Number</span>
+                    </label>
+                    {!isEditingPhone && userDoc.phone ? (
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-200">
+                        <span className="text-sm font-medium text-gray-800">
+                          {userDoc.phone}
+                        </span>
+                        <button
+                          onClick={() => {
+                            setIsEditingPhone(true);
+                            setPhoneInput(userDoc.phone || "");
+                            setError("");
+                            setSuccess("");
+                          }}
+                          className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                        >
+                          <FaEdit className="text-sm" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <input
+                          value={phoneInput}
+                          onChange={(e) => {
+                            setPhoneInput(e.target.value);
+                            setError("");
+                          }}
+                          placeholder="Enter mobile number"
+                          className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            disabled={savingPhone}
+                            onClick={savePhone}
+                            className="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold py-2 px-4 rounded-xl hover:from-purple-700 hover:to-indigo-700 disabled:opacity-60 transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+                          >
+                            {savingPhone ? (
+                              <FaSpinner className="animate-spin" />
+                            ) : (
+                              <>
+                                <FaCheck />
+                                <span>Save</span>
+                              </>
+                            )}
+                          </button>
+                          <button
+                            disabled={savingPhone}
+                            onClick={() => {
+                              setIsEditingPhone(false);
+                              setPhoneInput(userDoc.phone || "");
+                              setError("");
+                            }}
+                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors disabled:opacity-60"
+                          >
+                            <FaTimes />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    {error && (
+                      <div className="mt-2 text-xs text-red-600 bg-red-50 p-2 rounded-lg">
+                        {error}
+                      </div>
+                    )}
+                    {success && (
+                      <div className="mt-2 text-xs text-green-600 bg-green-50 p-2 rounded-lg">
+                        {success}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Tabs */}
-            <div className="flex gap-2 mb-6 border-b border-gray-200">
-              <button
-                onClick={() => setActiveTab("spenders")}
-                className={`px-6 py-3 font-semibold transition-all duration-200 border-b-2 ${
-                  activeTab === "spenders"
-                    ? "border-purple-600 text-purple-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                <FaCoins className="inline mr-2" />
-                Top Spenders
-              </button>
-              <button
-                onClick={() => setActiveTab("orders")}
-                className={`px-6 py-3 font-semibold transition-all duration-200 border-b-2 ${
-                  activeTab === "orders"
-                    ? "border-purple-600 text-purple-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                <FaShoppingBag className="inline mr-2" />
-                Most Orders
-              </button>
-            </div>
+            {/* Stats Cards */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Stats Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                  <div className="flex items-center justify-between mb-3">
+                    <FaShoppingBag className="text-2xl opacity-80" />
+                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                      <FaChartLine className="text-xl" />
+                    </div>
+                  </div>
+                  <div className="text-sm opacity-90 mb-1">Total Orders</div>
+                  <div className="text-3xl font-bold">
+                    {ordersLoading ? (
+                      <FaSpinner className="animate-spin inline" />
+                    ) : (
+                      ordersCount.toLocaleString()
+                    )}
+                  </div>
+                </div>
 
-            {/* Leaderboard Content */}
-            {loadingLeaderboards ? (
-              <div className="flex justify-center items-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+                <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                  <div className="flex items-center justify-between mb-3">
+                    <FaCoins className="text-2xl opacity-80" />
+                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                      <FaChartLine className="text-xl" />
+                    </div>
+                  </div>
+                  <div className="text-sm opacity-90 mb-1">Total Spent</div>
+                  <div className="text-3xl font-bold">
+                    {ordersLoading ? (
+                      <FaSpinner className="animate-spin inline" />
+                    ) : (
+                      `₹${Number(totalSpent).toLocaleString()}`
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-indigo-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                  <div className="flex items-center justify-between mb-3">
+                    <FaTrophy className="text-2xl opacity-80" />
+                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                      <FaMedal className="text-xl" />
+                    </div>
+                  </div>
+                  <div className="text-sm opacity-90 mb-1">Your Rank</div>
+                  <div className="text-3xl font-bold">
+                    {userRank ? `#${userRank}` : "—"}
+                  </div>
+                </div>
               </div>
-            ) : (
-              <div className="space-y-3">
-                {(activeTab === "spenders" ? topSpenders : topOrderCount).map((user, index) => {
+
+              {/* Quick Actions */}
+              <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
+                <h3 className="text-lg font-bold text-gray-800 mb-4">
+                  Quick Actions
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <button
+                    onClick={() => navigate("/orders")}
+                    className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 transition-all duration-200 border border-purple-100"
+                  >
+                    <FaShoppingBag className="text-purple-600 text-xl" />
+                    <span className="text-sm font-semibold text-gray-700">
+                      Orders
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => navigate("/accounts")}
+                    className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 transition-all duration-200 border border-blue-100"
+                  >
+                    <FaGamepad className="text-blue-600 text-xl" />
+                    <span className="text-sm font-semibold text-gray-700">
+                      Accounts
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => navigate("/queues")}
+                    className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 transition-all duration-200 border border-green-100"
+                  >
+                    <FaClipboardList className="text-green-600 text-xl" />
+                    <span className="text-sm font-semibold text-gray-700">
+                      Queues
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => navigate("/wallet")}
+                    className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-yellow-50 to-orange-50 hover:from-yellow-100 hover:to-orange-100 transition-all duration-200 border border-yellow-100"
+                  >
+                    <FaCoins className="text-yellow-600 text-xl" />
+                    <span className="text-sm font-semibold text-gray-700">
+                      Wallet
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
+            <p className="text-gray-600">No profile data available.</p>
+          </div>
+        )}
+
+        {/* Leaderboards Section */}
+        <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-gray-100">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+            <div>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+                <FaTrophy className="text-yellow-500" />
+                Global Leaderboards
+              </h2>
+              {lastUpdated && (
+                <p className="text-xs md:text-sm text-gray-500">
+                  Last updated:{" "}
+                  {format(
+                    lastUpdated.toDate
+                      ? lastUpdated.toDate()
+                      : new Date(lastUpdated),
+                    "PPp"
+                  )}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex gap-2 mb-6 border-b border-gray-200 overflow-x-auto">
+            <button
+              onClick={() => setActiveTab("spenders")}
+              className={`px-4 md:px-6 py-3 font-semibold transition-all duration-200 border-b-2 whitespace-nowrap ${
+                activeTab === "spenders"
+                  ? "border-purple-600 text-purple-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <FaCoins className="inline mr-2" />
+              Top Spenders
+            </button>
+            <button
+              onClick={() => setActiveTab("orders")}
+              className={`px-4 md:px-6 py-3 font-semibold transition-all duration-200 border-b-2 whitespace-nowrap ${
+                activeTab === "orders"
+                  ? "border-purple-600 text-purple-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <FaShoppingBag className="inline mr-2" />
+              Most Orders
+            </button>
+          </div>
+
+          {/* Leaderboard Content */}
+          {loadingLeaderboards ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {(activeTab === "spenders" ? topSpenders : topOrderCount).map(
+                (user, index) => {
                   const isCurrentUser = uid && user.uid === uid;
                   const rank = index + 1;
                   const medalColor =
-                    rank === 1 ? "from-yellow-400 to-yellow-600" :
-                    rank === 2 ? "from-gray-300 to-gray-500" :
-                    rank === 3 ? "from-orange-400 to-orange-600" :
-                    "from-purple-100 to-indigo-100";
+                    rank === 1
+                      ? "from-yellow-400 to-yellow-600"
+                      : rank === 2
+                      ? "from-gray-300 to-gray-500"
+                      : rank === 3
+                      ? "from-orange-400 to-orange-600"
+                      : "from-purple-100 to-indigo-100";
 
                   return (
                     <div
                       key={user.uid || index}
-                      className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-200 ${
+                      className={`flex items-center gap-3 md:gap-4 p-4 rounded-xl border-2 transition-all duration-200 ${
                         isCurrentUser
-                          ? "bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-400 shadow-lg"
-                          : "bg-white border-gray-200 hover:shadow-md"
+                          ? "bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-400 shadow-lg scale-105"
+                          : "bg-white border-gray-200 hover:shadow-md hover:scale-[1.02]"
                       }`}
                     >
                       {/* Rank */}
-                      <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${medalColor} flex items-center justify-center text-white font-bold text-lg shadow-md`}>
+                      <div
+                        className={`w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-r ${medalColor} flex items-center justify-center text-white font-bold text-sm md:text-lg shadow-md flex-shrink-0`}
+                      >
                         {rank <= 3 ? (
-                          <FaMedal className="text-2xl" />
+                          <FaMedal className="text-xl md:text-2xl" />
                         ) : (
                           rank
                         )}
                       </div>
 
                       {/* Avatar */}
-                      <div className="w-14 h-14 rounded-full overflow-hidden ring-2 ring-gray-200">
+                      <div className="w-12 h-12 md:w-14 md:h-14 rounded-full overflow-hidden ring-2 ring-gray-200 flex-shrink-0">
                         {user.photoURL ? (
                           <img
                             src={user.photoURL}
@@ -335,7 +736,7 @@ const Profile = () => {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-white font-bold text-xl">
+                          <div className="w-full h-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-white font-bold text-lg md:text-xl">
                             {(user.name || "A").charAt(0).toUpperCase()}
                           </div>
                         )}
@@ -343,214 +744,65 @@ const Profile = () => {
 
                       {/* User Info */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-bold text-gray-800 truncate">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-bold text-gray-800 truncate text-sm md:text-base">
                             {user.name || "Anonymous"}
-                            {isCurrentUser && (
-                              <span className="ml-2 text-xs bg-purple-600 text-white px-2 py-0.5 rounded-full">
-                                You
-                              </span>
-                            )}
                           </h3>
+                          {isCurrentUser && (
+                            <span className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded-full whitespace-nowrap">
+                              You
+                            </span>
+                          )}
                         </div>
                         {user.email && (
-                          <p className="text-sm text-gray-500 truncate">{user.email}</p>
+                          <p className="text-xs md:text-sm text-gray-500 truncate">
+                            {user.email}
+                          </p>
                         )}
                       </div>
 
                       {/* Stats */}
-                      <div className="text-right">
+                      <div className="text-right flex-shrink-0">
                         {activeTab === "spenders" ? (
                           <>
-                            <div className="text-2xl font-bold text-purple-600">
+                            <div className="text-lg md:text-2xl font-bold text-purple-600">
                               ₹{Number(user.totalSpent || 0).toLocaleString()}
                             </div>
                             <div className="text-xs text-gray-500">
-                              {user.orderCount || 0} {user.orderCount === 1 ? "order" : "orders"}
+                              {user.orderCount || 0}{" "}
+                              {user.orderCount === 1 ? "order" : "orders"}
                             </div>
                           </>
                         ) : (
                           <>
-                            <div className="text-2xl font-bold text-indigo-600">
+                            <div className="text-lg md:text-2xl font-bold text-indigo-600">
                               {user.orderCount || 0}
                             </div>
                             <div className="text-xs text-gray-500">
-                              ₹{Number(user.totalSpent || 0).toLocaleString()} spent
+                              ₹{Number(user.totalSpent || 0).toLocaleString()}{" "}
+                              spent
                             </div>
                           </>
                         )}
                       </div>
                     </div>
                   );
-                })}
+                }
+              )}
 
-                {((activeTab === "spenders" ? topSpenders : topOrderCount).length === 0) && (
-                  <div className="text-center py-12 text-gray-500">
-                    <FaTrophy className="text-4xl mx-auto mb-4 text-gray-300" />
-                    <p>No leaderboard data available yet.</p>
-                    <p className="text-sm mt-2">Leaderboards update every hour.</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Profile Section - Only show if logged in */}
-        {!uid && (
-          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl p-8 text-center border-2 border-purple-200">
-            <FaUser className="text-5xl text-purple-600 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Sign in to view your profile</h2>
-            <p className="text-gray-600 mb-4">Create an account to track your orders, spending, and see your ranking!</p>
-          </div>
-        )}
-
-        {uid && (
-          <>
-            <div className="mb-8">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2 flex items-center gap-3">
-                <FaUser className="text-purple-600" />
-                Your Profile
-              </h2>
-              <p className="text-gray-600">Manage your account and view your activity</p>
-            </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Left: Profile card */}
-        <div className="col-span-1 bg-white border border-gray-200 rounded-xl p-6 shadow-lg">
-          {loadingUser ? (
-            <div className="animate-pulse space-y-3">
-              <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto" />
-              <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto" />
-              <div className="h-3 bg-gray-200 rounded w-5/6 mx-auto" />
-            </div>
-          ) : userDoc ? (
-            <div className="flex flex-col items-center text-center gap-3">
-              <div className="w-28 h-28 rounded-full overflow-hidden ring-1 ring-gray-100">
-                {userDoc.photoURL ? (
-                  <img
-                    src={userDoc.photoURL}
-                    alt={userDoc.name || userDoc.email || "avatar"}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-2xl font-bold">
-                    {(userDoc.name || userDoc.email || "U").charAt(0).toUpperCase()}
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">{userDoc.name || "No name"}</h2>
-                <p className="text-sm text-gray-500">{userDoc.email || "No email"}</p>
-              </div>
-
-              <div className="w-full mt-2">
-                <div className="text-xs text-gray-500">Member since</div>
-                <div className="text-sm font-medium text-gray-800">{createdAtDisplay}</div>
-              </div>
-
-              <div className="w-full mt-3">
-                <label className="text-xs text-gray-500 block mb-1">Mobile number</label>
-                {userDoc.phone ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="text-sm font-medium">{userDoc.phone}</div>
-                    <button
-                      onClick={() => setPhoneInput(userDoc.phone || "")}
-                      className="text-xs text-blue-600 underline"
-                    >
-                      Edit
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex gap-2">
-                    <input
-                      value={phoneInput}
-                      onChange={(e) => setPhoneInput(e.target.value)}
-                      placeholder="Enter mobile number"
-                      className="flex-1 border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
-                    />
-                    <button
-                      disabled={savingPhone}
-                      onClick={savePhone}
-                      className="bg-blue-600 text-white px-3 py-2 rounded-md text-sm hover:bg-blue-700 disabled:opacity-60"
-                    >
-                      {savingPhone ? "Saving..." : "Save"}
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {error && <div className="text-xs text-red-600 mt-2">{error}</div>}
-            </div>
-          ) : (
-            <div className="text-center text-sm text-gray-600 py-8">No profile data available.</div>
-          )}
-        </div>
-
-        {/* Right top: Stats */}
-        <div className="col-span-2 bg-white border border-gray-200 rounded-xl p-6 shadow-lg flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Account summary</h3>
-            <div className="text-sm text-gray-500">Welcome back</div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="p-4 rounded-xl border border-gray-200 bg-gradient-to-br from-purple-50 to-indigo-50 text-center hover:shadow-md transition-shadow">
-              <div className="text-sm text-gray-600 font-medium">Total Orders</div>
-              <div className="mt-2 text-2xl font-bold text-purple-700">
-                {ordersLoading ? "…" : ordersCount}
-              </div>
-            </div>
-
-            <div className="p-4 rounded-xl border border-gray-200 bg-gradient-to-br from-green-50 to-emerald-50 text-center hover:shadow-md transition-shadow">
-              <div className="text-sm text-gray-600 font-medium">Total Spent</div>
-              <div className="mt-2 text-2xl font-bold text-green-700">
-                {ordersLoading ? "…" : `₹${Number(totalSpent).toLocaleString()}`}
-              </div>
-            </div>
-
-            <div className="p-4 rounded-xl border border-gray-200 bg-gradient-to-br from-blue-50 to-cyan-50 text-center hover:shadow-md transition-shadow">
-              <div className="text-sm text-gray-600 font-medium">Phone Number</div>
-              <div className="mt-2 text-lg font-semibold text-blue-700">{userDoc?.phone ?? "Not set"}</div>
-            </div>
-          </div>
-
-          {/* Recent orders preview (optional) */}
-          <div className="mt-4">
-            <h4 className="text-sm font-semibold mb-2">Recent orders</h4>
-            <div className="space-y-2">
-              {/* We only have an orders count and fetched total - if you want full order listing,
-                  you can fetch the snapshots above and store them. For now we show the ids if present */}
-              {userDoc?.orders?.length ? (
-                userDoc.orders.slice(0, 6).map((id) => (
-                  <div key={id} className="flex items-center justify-between bg-white p-3 rounded-md border">
-                    <div className="text-sm text-gray-700 truncate">{id}</div>
-                    <div className="text-sm text-gray-500">view</div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-sm text-gray-500">No orders yet.</div>
+              {(activeTab === "spenders" ? topSpenders : topOrderCount)
+                .length === 0 && (
+                <div className="text-center py-12 text-gray-500">
+                  <FaTrophy className="text-4xl mx-auto mb-4 text-gray-300" />
+                  <p>No leaderboard data available yet.</p>
+                  <p className="text-sm mt-2">
+                    Leaderboards update every hour.
+                  </p>
+                </div>
               )}
             </div>
-          </div>
-
-          <div className="mt-4 flex items-center gap-3">
-
-            <button
-              onClick={() => {
-                // navigate to orders page if you have one
-                window.location.href = "/orders";
-              }}
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-semibold hover:from-purple-700 hover:to-indigo-700 shadow-md hover:shadow-lg transition-all"
-            >
-              View All Orders
-            </button>
-          </div>
+          )}
         </div>
-        </div>
-        </>
-        )}
       </div>
     </div>
   );

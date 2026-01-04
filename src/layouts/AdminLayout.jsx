@@ -3,6 +3,7 @@ import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "../context/UserContext";
 import { signOut } from "firebase/auth";
 import { auth } from "../config/firebase";
+import LoadingPage from "../components/Global/LoadingPage";
 import {
   FaTachometerAlt,
   FaShoppingBag,
@@ -10,27 +11,30 @@ import {
   FaBox,
   FaSignOutAlt,
   FaShieldAlt,
-  FaSpinner,
   FaBars,
   FaTimes,
   FaEnvelope,
   FaClipboardList,
   FaGamepad,
   FaStore,
+  FaWallet,
 } from "react-icons/fa";
 
 const AdminLayout = () => {
-  const { user, isAdmin } = useUser();
+  const { user, isAdmin, loading } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    // Redirect if not admin
-    if (!user || !isAdmin) {
-      navigate("/");
+    // Wait for loading to complete before checking permissions
+    if (!loading) {
+      // Redirect if not admin
+      if (!user || !isAdmin) {
+        navigate("/");
+      }
     }
-  }, [user, isAdmin, navigate]);
+  }, [user, isAdmin, loading, navigate]);
 
   // Close sidebar when route changes on mobile
   useEffect(() => {
@@ -46,12 +50,17 @@ const AdminLayout = () => {
     }
   };
 
+  // Show loading page until user data is fetched from DB
+  if (loading) {
+    return <LoadingPage />;
+  }
+
   // Show loading or nothing if not admin
   if (!user || !isAdmin) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-100">
         <div className="text-center">
-          <FaSpinner className="animate-spin text-purple-600 text-4xl mx-auto mb-4" />
+          <div className="w-16 h-16 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Checking permissions...</p>
         </div>
       </div>
@@ -61,6 +70,7 @@ const AdminLayout = () => {
   const navItems = [
     { to: "/admin", label: "Dashboard", icon: FaTachometerAlt },
     { to: "/admin/orders", label: "Orders", icon: FaShoppingBag },
+    { to: "/admin/topups", label: "Topups", icon: FaWallet },
     { to: "/admin/queues", label: "Queues", icon: FaClipboardList },
     { to: "/admin/users", label: "Users", icon: FaUsers },
     { to: "/admin/accounts", label: "Accounts", icon: FaGamepad },

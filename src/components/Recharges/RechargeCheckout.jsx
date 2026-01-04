@@ -135,6 +135,7 @@ const RechargeCheckout = ({
       time: timePart,
       item: selectedItem.label, // Required field for Firestore
       selectedItem,
+      type: "game",
       api: selectedItem.api,
       stockPrice: selectedItem.price,
     };

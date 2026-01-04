@@ -8,30 +8,28 @@ import {
   updateDoc,
   doc,
 } from "firebase/firestore";
-import { FaCheckCircle, FaTimesCircle, FaHourglassHalf, FaSpinner } from "react-icons/fa";
+import {
+  FaCheckCircle,
+  FaTimesCircle,
+  FaHourglassHalf,
+  FaSpinner,
+} from "react-icons/fa";
 
 const formatDate = (val) => {
   if (!val) return "—";
-  let date;
-  if (typeof val?.toDate === "function") {
-    date = val.toDate();
-  } else {
-    try {
-      date = new Date(val);
-    } catch {
-      return String(val);
-    }
-  }
-  const now = new Date();
-  const diffMs = now - date;
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
+  const date =
+    typeof val?.toDate === "function" ? val.toDate() : new Date(val);
+  if (isNaN(date)) return "—";
 
-  if (diffMins < 1) return "Just now";
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
+  const diff = Date.now() - date.getTime();
+  const mins = Math.floor(diff / 60000);
+  const hrs = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  if (hrs < 24) return `${hrs}h ago`;
+  if (days < 7) return `${days}d ago`;
   return date.toLocaleDateString();
 };
 
@@ -43,21 +41,26 @@ export default function AdminAccounts() {
 
   useEffect(() => {
     setLoading(true);
-    setError(null);
 
-    const colRef = collection(db, "accounts");
-    const q = query(colRef, orderBy("createdAt", "desc"));
+    const q = query(
+      collection(db, "gameAccounts"),
+      orderBy("paymentMeta.createdAt", "desc")
+    );
 
     const unsub = onSnapshot(
       q,
       (snap) => {
-        const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-        setAccounts(list);
+        setAccounts(
+          snap.docs.map((d) => ({
+            id: d.id,
+            ...d.data(),
+          }))
+        );
         setLoading(false);
       },
       (err) => {
-        console.error("AdminAccounts onSnapshot error:", err);
-        setError("Failed to load accounts.");
+        console.error(err);
+        setError("Failed to load accounts");
         setLoading(false);
       }
     );
@@ -65,248 +68,153 @@ export default function AdminAccounts() {
     return () => unsub();
   }, []);
 
-  const updateAccountStatus = async (accountId, newStatus) => {
+  const updateStatus = async (accountId, newStatus) => {
     setSavingId(accountId);
     setError(null);
 
     const prev = accounts;
     setAccounts((cur) =>
-      cur.map((a) => (a.id === accountId ? { ...a, status: newStatus } : a))
+      cur.map((a) =>
+        a.id === accountId ? { ...a, status: newStatus } : a
+      )
     );
 
     try {
-      const ref = doc(db, "accounts", accountId);
-      await updateDoc(ref, { status: newStatus });
-
-      // If marking as Sold or Available, also update the game account status
-      if (newStatus === "Sold" || newStatus === "Available") {
-        const account = accounts.find((a) => a.id === accountId);
-        if (account && account.gameAccountId) {
-          const gameRef = doc(db, "gameAccounts", account.gameAccountId);
-          await updateDoc(gameRef, { status: newStatus });
-        }
-      }
+      await updateDoc(doc(db, "gameAccounts", accountId), {
+        status: newStatus,
+      });
     } catch (err) {
-      console.error("Failed to update account status", err);
-      setError("Failed to update status. Changes reverted.");
+      console.error(err);
       setAccounts(prev);
+      setError("Failed to update status");
     } finally {
       setSavingId(null);
     }
   };
 
-  const handleMarkSold = (account) => {
-    updateAccountStatus(account.id, "Sold");
-  };
-
-  const handleMarkAvailable = (account) => {
-    updateAccountStatus(account.id, "Available");
-  };
-
   const getStatusIcon = (status) => {
-    const s = String(status || "pending").toLowerCase();
-    if (s === "completed" || s === "sold") {
-      return <FaCheckCircle className="text-green-600 text-lg" />;
-    }
-    if (s === "failed") {
-      return <FaTimesCircle className="text-red-600 text-lg" />;
-    }
-    return <FaHourglassHalf className="text-yellow-600 text-lg" />;
-  };
-
-  const getStatusColor = (status) => {
-    const s = String(status || "pending").toLowerCase();
-    if (s === "completed" || s === "sold") {
-      return "text-green-700 bg-green-50";
-    }
-    if (s === "failed") {
-      return "text-red-700 bg-red-50";
-    }
-    return "text-yellow-700 bg-yellow-50";
+    const s = String(status).toLowerCase();
+    if (s === "sold") return <FaCheckCircle className="text-green-600" />;
+    if (s === "failed")
+      return <FaTimesCircle className="text-red-600" />;
+    return <FaHourglassHalf className="text-yellow-600" />;
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <FaSpinner className="animate-spin text-purple-600 text-4xl" />
-      </div>
-    );
-  }
-
-  if (error && accounts.length === 0) {
-    return (
-      <div className="py-4 px-4">
-        <div className="bg-red-50 border-l-4 border-red-400 p-4">
-          <p className="text-red-700">{error}</p>
-        </div>
+      <div className="flex justify-center py-12">
+        <FaSpinner className="animate-spin text-4xl text-purple-600" />
       </div>
     );
   }
 
   return (
     <div className="py-4 px-2 sm:px-4">
-      <div className="mb-4 sm:mb-6">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
-          Game Account Purchases
-        </h2>
-        <p className="text-sm text-gray-600 mt-1">
-          Manage game account purchases and their status
-        </p>
-      </div>
+      <h2 className="text-xl font-bold mb-4">Game Account Purchases</h2>
 
       {error && (
-        <div className="mb-4 bg-yellow-50 border-l-4 border-yellow-400 p-4">
-          <p className="text-yellow-700 text-sm">{error}</p>
+        <div className="mb-4 bg-red-50 border-l-4 border-red-400 p-4">
+          <p className="text-red-700 text-sm">{error}</p>
         </div>
       )}
 
       {accounts.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-6 text-center">
-          <p className="text-gray-600">No account purchases yet.</p>
+        <div className="bg-white p-6 rounded shadow text-center">
+          No purchases yet.
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Game Account
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    WhatsApp Number
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Amount
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Payment
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {accounts.map((account) => (
-                  <tr key={account.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {account.gameLabel || "N/A"}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        ID: {account.gameAccountId || "N/A"}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {account.phoneNumber || account.contact || "N/A"}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        Buyer: {account.username || "N/A"}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="text-sm font-semibold text-gray-900">
-                        ₹{account.rupees || 0}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                          account.payment === "coin"
-                            ? "bg-purple-100 text-purple-800"
-                            : "bg-blue-100 text-blue-800"
-                        }`}
-                      >
-                        {account.payment === "coin" ? "Coin" : "UPI"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(account.status)}
-                        <span
-                          className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
-                            account.status
-                          )}`}
+        <div className="bg-white rounded shadow overflow-x-auto">
+          <table className="min-w-full divide-y">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs">Game</th>
+                <th className="px-4 py-3 text-left text-xs">Buyer</th>
+                <th className="px-4 py-3 text-left text-xs">Amount</th>
+                <th className="px-4 py-3 text-left text-xs">Payment</th>
+                <th className="px-4 py-3 text-left text-xs">Status</th>
+                <th className="px-4 py-3 text-left text-xs">Date</th>
+                <th className="px-4 py-3 text-left text-xs">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {accounts.map((a) => (
+                <tr key={a.id}>
+                  <td className="px-4 py-3">
+                    <div className="font-medium">
+                      {a.gameLabel || "N/A"}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      ID: {a.id}
+                    </div>
+                  </td>
+
+                  <td className="px-4 py-3">
+                    <div>{a.boughtBy?.phoneNumber || "—"}</div>
+                    <div className="text-xs text-gray-500">
+                      {a.boughtBy?.username || "—"}
+                    </div>
+                  </td>
+
+                  <td className="px-4 py-3 font-semibold">
+                    ₹{a.paymentMeta?.amount || 0}
+                  </td>
+
+                  <td className="px-4 py-3">
+                    <span className="px-2 py-1 text-xs rounded bg-blue-100 text-blue-800">
+                      {a.boughtBy?.paymentMethod?.toUpperCase()}
+                    </span>
+                  </td>
+
+                  <td className="px-4 py-3 flex items-center gap-2">
+                    {getStatusIcon(a.status)}
+                    <span className="text-xs font-semibold">
+                      {a.status?.toUpperCase()}
+                    </span>
+                  </td>
+
+                  <td className="px-4 py-3 text-sm text-gray-500">
+                    {formatDate(a.boughtBy?.purchasedAt)}
+                  </td>
+
+                  <td className="px-4 py-3">
+                    <div className="flex gap-2">
+                      {a.status !== "sold" && (
+                        <button
+                          onClick={() => updateStatus(a.id, "sold")}
+                          disabled={savingId === a.id}
+                          className="px-3 py-1 bg-green-600 text-white rounded text-xs"
                         >
-                          {String(account.status || "pending").toUpperCase()}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(account.createdAt)}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
-                      <div className="flex gap-2">
-                        {account.status === "pending" && (
-                          <>
-                            <button
-                              onClick={() => handleMarkSold(account)}
-                              disabled={savingId === account.id}
-                              className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
-                            >
-                              {savingId === account.id ? (
-                                <FaSpinner className="animate-spin inline" />
-                              ) : (
-                                "Mark Sold"
-                              )}
-                            </button>
-                            <button
-                              onClick={() => handleMarkAvailable(account)}
-                              disabled={savingId === account.id}
-                              className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
-                            >
-                              {savingId === account.id ? (
-                                <FaSpinner className="animate-spin inline" />
-                              ) : (
-                                "Mark Available"
-                              )}
-                            </button>
-                          </>
-                        )}
-                        {account.status === "Sold" && (
-                          <button
-                            onClick={() => handleMarkAvailable(account)}
-                            disabled={savingId === account.id}
-                            className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
-                          >
-                            {savingId === account.id ? (
-                              <FaSpinner className="animate-spin inline" />
-                            ) : (
-                              "Mark Available"
-                            )}
-                          </button>
-                        )}
-                        {account.status === "Available" && (
-                          <button
-                            onClick={() => handleMarkSold(account)}
-                            disabled={savingId === account.id}
-                            className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
-                          >
-                            {savingId === account.id ? (
-                              <FaSpinner className="animate-spin inline" />
-                            ) : (
-                              "Mark Sold"
-                            )}
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                          {savingId === a.id ? (
+                            <FaSpinner className="animate-spin inline" />
+                          ) : (
+                            "Mark Sold"
+                          )}
+                        </button>
+                      )}
+
+                      {a.status !== "available" && (
+                        <button
+                          onClick={() =>
+                            updateStatus(a.id, "available")
+                          }
+                          disabled={savingId === a.id}
+                          className="px-3 py-1 bg-blue-600 text-white rounded text-xs"
+                        >
+                          {savingId === a.id ? (
+                            <FaSpinner className="animate-spin inline" />
+                          ) : (
+                            "Mark Available"
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
   );
 }
-

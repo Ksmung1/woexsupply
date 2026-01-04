@@ -17,12 +17,14 @@ import {
 import { db } from "../../config/firebase";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import logo from "../../assets/images/logo.png";
+import { Earth, EarthIcon } from "lucide-react";
 
 // Desktop navigation items
 const desktopNavItems = [
   { label: "Home", to: "/", icon: FaHome },
   { label: "Leaderboards", to: "/leaderboards", icon: FaTrophy },
   { label: "About", to: "/about", icon: FaInfoCircle },
+  { label: "Browse", to: "/browse", icon: EarthIcon },
 ];
 
 // Mobile dropdown navigation items

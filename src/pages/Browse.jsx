@@ -23,7 +23,7 @@ const Browse = () => {
           {/* Game Accounts Card */}
           <div
             onClick={() => navigate("/game-acc")}
-            className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer transform hover:-translate-y-2 border-2 border-transparent hover:border-purple-500"
+            className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer transform hover:-translate-y-2 border-2 border-gray-200 hover:border-purple-500"
           >
             <div className="relative p-8 flex flex-col items-center justify-center min-h-[200px]">
               {/* Icon */}
@@ -43,7 +43,7 @@ const Browse = () => {
           {/* Region Checker Card */}
           <div
             onClick={() => navigate("/region-checker")}
-            className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer transform hover:-translate-y-2 border-2 border-transparent hover:border-blue-500"
+            className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer transform hover:-translate-y-2 border-2 border-gray-200 hover:border-purple-500"
           >
             <div className="relative p-8 flex flex-col items-center justify-center min-h-[200px]">
               {/* Icon */}
@@ -66,4 +66,3 @@ const Browse = () => {
 };
 
 export default Browse;
-

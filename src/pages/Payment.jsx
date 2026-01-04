@@ -21,7 +21,7 @@ const Payment = () => {
   const { showSuccess, showError } = useAlert();
 
   const orderId = searchParams.get("order_id") || searchParams.get("orderId");
-  const type = searchParams.get("type") || "topup"; // "topup" or "game"
+  const type = searchParams.get("type") || "topup"; // "topup" or "game" or "manual"
 
   const [orderData, setOrderData] = useState(null);
   const [status, setStatus] = useState("pending"); // pending, success, failed, checking

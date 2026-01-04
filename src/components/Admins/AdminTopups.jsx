@@ -10,13 +10,12 @@ import {
 } from "firebase/firestore";
 
 /**
- * AdminOrders (updated)
- * - Shows a table of ALL orders (realtime)
- * - Two actions per order:
+ * AdminTopups
+ * - Shows a table of ALL topups (realtime)
+ * - Two actions per topup:
  *    1) Toggle (Completed <-> Pending)
  *    2) Mark Failed
- *
- * - Uses optimistic UI + rollback on error.
+ * - Sorted by date (newest first)
  */
 
 const formatDate = (val) => {
@@ -44,8 +43,8 @@ const formatDate = (val) => {
   return date.toLocaleDateString();
 };
 
-export default function AdminOrders() {
-  const [orders, setOrders] = useState([]);
+export default function AdminTopups() {
+  const [topups, setTopups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState(null);
   const [error, setError] = useState(null);
@@ -54,22 +53,19 @@ export default function AdminOrders() {
     setLoading(true);
     setError(null);
 
-    const colRef = collection(db, "orders");
+    const colRef = collection(db, "topups");
     const q = query(colRef, orderBy("createdAt", "desc"));
 
     const unsub = onSnapshot(
       q,
       (snap) => {
-        const list = snap.docs
-          .map((d) => ({ id: d.id, ...d.data() }))
-          // Filter out game account orders (product === "Game Account")
-          .filter((order) => order.product !== "Game Account");
-        setOrders(list);
+        const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        setTopups(list);
         setLoading(false);
       },
       (err) => {
-        console.error("AdminOrders onSnapshot error:", err);
-        setError("Failed to load orders.");
+        console.error("AdminTopups onSnapshot error:", err);
+        setError("Failed to load topups.");
         setLoading(false);
       }
     );
@@ -77,41 +73,41 @@ export default function AdminOrders() {
     return () => unsub();
   }, []);
 
-  const updateStatus = async (orderId, newStatus) => {
-    setSavingId(orderId);
+  const updateStatus = async (topupId, newStatus) => {
+    setSavingId(topupId);
     setError(null);
 
-    const prev = orders;
-    setOrders((cur) => cur.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o)));
+    const prev = topups;
+    setTopups((cur) => cur.map((t) => (t.id === topupId ? { ...t, status: newStatus } : t)));
 
     try {
-      const ref = doc(db, "orders", orderId);
+      const ref = doc(db, "topups", topupId);
       await updateDoc(ref, { status: newStatus });
     } catch (err) {
-      console.error("Failed to update order status", err);
+      console.error("Failed to update topup status", err);
       setError("Failed to update status. Changes reverted.");
-      setOrders(prev);
+      setTopups(prev);
     } finally {
       setSavingId(null);
     }
   };
 
-  const handleToggle = (order) => {
-    const current = String(order.status ?? "pending").toLowerCase();
+  const handleToggle = (topup) => {
+    const current = String(topup.status ?? "pending").toLowerCase();
     const next = current === "completed" ? "pending" : "completed";
-    updateStatus(order.id, next);
+    updateStatus(topup.id, next);
   };
 
-  const handleFail = (order) => {
-    updateStatus(order.id, "failed");
+  const handleFail = (topup) => {
+    updateStatus(topup.id, "failed");
   };
 
   return (
     <div className="p-4">
       <div className="flex items-center justify-between mb-3">
-        <h1 className="text-lg font-semibold text-gray-900">Orders</h1>
+        <h1 className="text-lg font-semibold text-gray-900">Topups</h1>
         <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-          {orders.length} total
+          {topups.length} total
         </span>
       </div>
 
@@ -120,9 +116,9 @@ export default function AdminOrders() {
       )}
 
       {loading ? (
-        <div className="text-xs text-gray-500 py-4">Loading orders…</div>
-      ) : orders.length === 0 ? (
-        <div className="text-xs text-gray-600 py-4 text-center bg-gray-50 rounded-lg">No orders found.</div>
+        <div className="text-xs text-gray-500 py-4">Loading topups…</div>
+      ) : topups.length === 0 ? (
+        <div className="text-xs text-gray-600 py-4 text-center bg-gray-50 rounded-lg">No topups found.</div>
       ) : (
         <>
           {/* Desktop Table View */}
@@ -131,9 +127,8 @@ export default function AdminOrders() {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ID</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Buyer</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Item</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Cost</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">User</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Time</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
                   <th className="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
@@ -141,62 +136,57 @@ export default function AdminOrders() {
               </thead>
 
               <tbody className="divide-y divide-gray-100">
-                {orders.map((order) => (
-                  <tr key={order.id} className="hover:bg-gray-50 transition-colors">
+                {topups.map((topup) => (
+                  <tr key={topup.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-3 py-2">
                       <span className="text-xs font-mono text-gray-600 truncate block max-w-[120px]">
-                        {order.id.slice(0, 8)}...
+                        {topup.id.slice(0, 8)}...
                       </span>
                     </td>
                     <td className="px-3 py-2">
                       <span className="text-xs text-gray-800 truncate block max-w-[120px]">
-                        {order.username ?? order.buyer ?? "—"}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2">
-                      <span className="text-xs text-gray-700 truncate block max-w-[150px]" title={order.item ?? order.product ?? ""}>
-                        {order.item ?? order.product ?? "—"}
+                        {topup.username ?? topup.name ?? topup.uid ?? "—"}
                       </span>
                     </td>
                     <td className="px-3 py-2">
                       <span className="text-xs font-semibold text-gray-900">
-                        {order.cost != null ? `₹${order.cost}` : "—"}
+                        ₹{topup.amount ?? topup.cost ?? topup.price ?? "—"}
                       </span>
                     </td>
                     <td className="px-3 py-2">
-                      <span className="text-xs text-gray-500">{formatDate(order.createdAt)}</span>
+                      <span className="text-xs text-gray-500">{formatDate(topup.createdAt)}</span>
                     </td>
                     <td className="px-3 py-2">
                       <span
                         className={
                           "inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full capitalize " +
-                          (order.status === "completed"
+                          (topup.status === "completed" || topup.status === "success"
                             ? "bg-green-100 text-green-700"
-                            : order.status === "failed"
+                            : topup.status === "failed"
                             ? "bg-red-100 text-red-700"
                             : "bg-yellow-100 text-yellow-700")
                         }
                       >
-                        {order.status ?? "pending"}
+                        {topup.status ?? "pending"}
                       </span>
                     </td>
                     <td className="px-3 py-2 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         <button
-                          onClick={() => handleToggle(order)}
-                          disabled={savingId === order.id}
+                          onClick={() => handleToggle(topup)}
+                          disabled={savingId === topup.id}
                           className="px-2 py-1 text-xs rounded-md border border-gray-300 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          title={order.status === "completed" ? "Mark pending" : "Mark completed"}
+                          title={topup.status === "completed" || topup.status === "success" ? "Mark pending" : "Mark completed"}
                         >
-                          {savingId === order.id ? "..." : order.status === "completed" ? "Pending" : "Complete"}
+                          {savingId === topup.id ? "..." : topup.status === "completed" || topup.status === "success" ? "Pending" : "Complete"}
                         </button>
                         <button
-                          onClick={() => handleFail(order)}
-                          disabled={savingId === order.id || order.status === "failed"}
+                          onClick={() => handleFail(topup)}
+                          disabled={savingId === topup.id || topup.status === "failed"}
                           className="px-2 py-1 text-xs rounded-md border border-red-300 bg-white text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           title="Mark failed"
                         >
-                          {savingId === order.id ? "..." : "Fail"}
+                          {savingId === topup.id ? "..." : "Fail"}
                         </button>
                       </div>
                     </td>
@@ -208,56 +198,52 @@ export default function AdminOrders() {
 
           {/* Mobile/Tablet Card View */}
           <div className="lg:hidden space-y-2">
-            {orders.map((order) => (
-              <div key={order.id} className="bg-white rounded-lg border border-gray-200 p-3 hover:shadow-sm transition-shadow">
+            {topups.map((topup) => (
+              <div key={topup.id} className="bg-white rounded-lg border border-gray-200 p-3 hover:shadow-sm transition-shadow">
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-mono text-gray-500 truncate">{order.id.slice(0, 12)}...</p>
-                    <p className="text-sm font-semibold text-gray-900 truncate">{order.username ?? order.buyer ?? "—"}</p>
+                    <p className="text-xs font-mono text-gray-500 truncate">{topup.id.slice(0, 12)}...</p>
+                    <p className="text-sm font-semibold text-gray-900 truncate">{topup.username ?? topup.name ?? topup.uid ?? "—"}</p>
                   </div>
                   <span
                     className={
                       "inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full capitalize flex-shrink-0 " +
-                      (order.status === "completed"
+                      (topup.status === "completed" || topup.status === "success"
                         ? "bg-green-100 text-green-700"
-                        : order.status === "failed"
+                        : topup.status === "failed"
                         ? "bg-red-100 text-red-700"
                         : "bg-yellow-100 text-yellow-700")
                     }
                   >
-                    {order.status ?? "pending"}
+                    {topup.status ?? "pending"}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 mb-2 text-xs">
                   <div>
-                    <span className="text-gray-500">Item:</span>
-                    <span className="text-gray-800 ml-1 truncate block">{order.item ?? order.product ?? "—"}</span>
+                    <span className="text-gray-500">Amount:</span>
+                    <span className="text-gray-900 font-semibold ml-1">₹{topup.amount ?? topup.cost ?? topup.price ?? "—"}</span>
                   </div>
                   <div className="text-right">
-                    <span className="text-gray-500">Cost:</span>
-                    <span className="text-gray-900 font-semibold ml-1">{order.cost != null ? `₹${order.cost}` : "—"}</span>
-                  </div>
-                  <div className="col-span-2">
                     <span className="text-gray-500">Time:</span>
-                    <span className="text-gray-600 ml-1">{formatDate(order.createdAt)}</span>
+                    <span className="text-gray-600 ml-1">{formatDate(topup.createdAt)}</span>
                   </div>
                 </div>
 
                 <div className="flex gap-1.5 pt-2 border-t border-gray-100">
                   <button
-                    onClick={() => handleToggle(order)}
-                    disabled={savingId === order.id}
+                    onClick={() => handleToggle(topup)}
+                    disabled={savingId === topup.id}
                     className="flex-1 px-2 py-1.5 text-xs rounded-md border border-gray-300 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
                   >
-                    {savingId === order.id ? "..." : order.status === "completed" ? "Pending" : "Complete"}
+                    {savingId === topup.id ? "..." : topup.status === "completed" || topup.status === "success" ? "Pending" : "Complete"}
                   </button>
                   <button
-                    onClick={() => handleFail(order)}
-                    disabled={savingId === order.id || order.status === "failed"}
+                    onClick={() => handleFail(topup)}
+                    disabled={savingId === topup.id || topup.status === "failed"}
                     className="flex-1 px-2 py-1.5 text-xs rounded-md border border-red-300 bg-white text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
                   >
-                    {savingId === order.id ? "..." : "Fail"}
+                    {savingId === topup.id ? "..." : "Fail"}
                   </button>
                 </div>
               </div>
@@ -268,3 +254,4 @@ export default function AdminOrders() {
     </div>
   );
 }
+
