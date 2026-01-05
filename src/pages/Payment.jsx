@@ -14,52 +14,34 @@ import {
 } from "react-icons/fa";
 import axios from "axios";
 
-/* ---------------- helpers ---------------- */
-const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
-
-const extractUpiFromUpiString = (upiString) => {
-  if (!upiString) return null;
-  try {
-    const decoded = decodeURIComponent(upiString);
-    const match = decoded.match(/pa=([^&]+)/i);
-    return match ? match[1].trim() : null;
-  } catch {
-    return null;
-  }
-};
-
-const generateTr = () =>
-  `ORD${Date.now()}${Math.floor(Math.random() * 100000)}`;
-
 const Payment = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useUser();
   const { showSuccess, showError } = useAlert();
-
-  const type = searchParams.get("type") || "topup";
+  const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+  const type = searchParams.get("type") || "topup"; // "topup" or "game" or "manual"
   const orderId = searchParams.get("order_id") || searchParams.get("orderId");
 
+  
   const [orderData, setOrderData] = useState(null);
-  const [status, setStatus] = useState("pending");
+  const [status, setStatus] = useState("pending"); // pending, success, failed, checking
   const [loading, setLoading] = useState(true);
   const [checkingCount, setCheckingCount] = useState(0);
   const [copied, setCopied] = useState(false);
-
-  const maxChecks = 60;
+  const maxChecks = 60; // Check for 10 minutes (60 * 10 seconds)
   const intervalRef = useRef(null);
   const countRef = useRef(0);
-  const successHandledRef = useRef(false);
-  const [tr] = useState(generateTr);
+  const successHandledRef = useRef(false); // Track if success has already been handled
 
-  /* ---------------- fetch order ---------------- */
   useEffect(() => {
     if (!orderId) {
       showError("No order ID found in URL");
-      navigate("/");
+      setTimeout(() => navigate("/"), 3000);
       return;
     }
 
+    // Determine collection based on type
     const collectionName =
       type === "game"
         ? "orders"
@@ -68,80 +50,174 @@ const Payment = () => {
         : type === "account"
         ? "gameAccounts"
         : "topups";
-
     const orderRef = doc(db, collectionName, orderId);
 
+    // Initial fetch
     const fetchOrder = async () => {
       try {
         const docSnap = await getDoc(orderRef);
-        if (!docSnap.exists()) {
-          showError("Order not found");
-          navigate("/");
-          return;
-        }
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setOrderData(data);
+          setStatus(data.status || "pending");
+          setLoading(false);
 
-        const data = docSnap.data();
-        setOrderData(data);
-        setStatus(data.status || "pending");
-        setLoading(false);
-
-        if (
-          data.status === "success" ||
-          data.status === "completed" ||
-          data.status === "closed"
-        ) {
-          handleSuccess();
+          // If already successful, show success
+          if (
+            data.status === "success" ||
+            data.status === "completed" ||
+            data.status === "closed"
+          ) {
+            handleSuccess(data);
+          } else if (data.status === "failed") {
+            setStatus("failed");
+          } else {
+            // Start checking payment status with synced count
+            startStatusCheck(data);
+          }
         } else {
-          startStatusCheck(data);
+          showError("Order not found");
+          setLoading(false);
+          setTimeout(() => navigate("/"), 3000);
         }
       } catch (error) {
-        console.error(error);
+        console.error("Error fetching order:", error);
         showError("Failed to load order details");
         setLoading(false);
       }
     };
 
     fetchOrder();
+    
 
-    const unsubscribe = onSnapshot(orderRef, (docSnap) => {
-      if (!docSnap.exists()) return;
+    // Real-time listener for order updates
+    const unsubscribe = onSnapshot(
+      orderRef,
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          const newStatus = data.status || "pending";
 
-      const data = docSnap.data();
-      setOrderData(data);
+          console.log(
+            `[Payment] Firestore update for ${orderId}: status=${newStatus}, current status=${status}`
+          );
 
-      if (data.status !== status) {
-        setStatus(data.status);
+          setOrderData(data);
 
-        if (
-          (data.status === "success" || data.status === "completed") &&
-          !successHandledRef.current
-        ) {
-          successHandledRef.current = true;
-          clearInterval(intervalRef.current);
-          handleSuccess();
+          if (newStatus !== status) {
+            console.log(
+              `[Payment] Status changed from ${status} to ${newStatus} for ${orderId}`
+            );
+            setStatus(newStatus);
+
+            if (newStatus === "success" || newStatus === "completed") {
+              // Clear interval if payment succeeded
+              if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+              }
+              console.log(`[Payment] ✅ Payment successful, redirecting...`);
+              // Only handle success once to prevent duplicate alerts
+              if (!successHandledRef.current) {
+                successHandledRef.current = true;
+                handleSuccess(data);
+              }
+            } else if (newStatus === "failed") {
+              // Clear interval if payment failed
+              if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+              }
+              setStatus("failed");
+            } else if (newStatus === "pending" && status === "checking") {
+              // If status changed back to pending, restart check with synced count
+              startStatusCheck(data);
+            }
+          }
         }
+      },
+      (error) => {
+        console.error(
+          `[Payment] Firestore listener error for ${orderId}:`,
+          error
+        );
       }
-    });
+    );
 
     return () => {
       unsubscribe();
-      clearInterval(intervalRef.current);
+      // Clean up interval on unmount
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     };
   }, [orderId, type]);
 
-  /* ---------------- polling ---------------- */
-  const startStatusCheck = (data) => {
-    clearInterval(intervalRef.current);
-    countRef.current = 0;
-    setCheckingCount(0);
+  const openUpiIntent = () => {
+    if (!orderData?.intentLink) return;
+    window.location.href = orderData.intentLink;
+  };
+  
+
+  const startStatusCheck = (orderDataParam) => {
+    // Clear any existing interval first
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
+    // Use passed orderData or current state
+    const dataToUse = orderDataParam || orderData;
+
+    // Calculate elapsed time since order creation
+    let initialCount = 0;
+    if (dataToUse?.createdAt) {
+      let createdAt = null;
+
+      // Handle Firestore Timestamp
+      if (dataToUse.createdAt?.toDate) {
+        createdAt = dataToUse.createdAt.toDate();
+      } else if (dataToUse.createdAt?.toMillis) {
+        createdAt = new Date(dataToUse.createdAt.toMillis());
+      } else if (dataToUse.createdAt instanceof Date) {
+        createdAt = dataToUse.createdAt;
+      } else if (typeof dataToUse.createdAt === "number") {
+        createdAt = new Date(dataToUse.createdAt);
+      }
+
+      if (createdAt && !isNaN(createdAt.getTime())) {
+        const now = new Date();
+        const elapsedSeconds = Math.floor((now - createdAt) / 1000);
+        // Each check happens every 10 seconds
+        initialCount = Math.floor(elapsedSeconds / 10);
+        // Cap at maxChecks
+        initialCount = Math.min(initialCount, maxChecks);
+      }
+    }
+
+    // Set initial count based on elapsed time
+    countRef.current = initialCount;
+    setCheckingCount(initialCount);
     setStatus("checking");
 
-    intervalRef.current = setInterval(async () => {
-      countRef.current++;
-      setCheckingCount(countRef.current);
+    // If we've already exceeded max checks, don't start interval
+    if (initialCount >= maxChecks) {
+      setStatus("pending");
+      return;
+    }
 
-      if (countRef.current >= maxChecks) {
-        clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(async () => {
+      countRef.current += 1;
+      const currentCount = countRef.current;
+
+      setCheckingCount(currentCount);
+
+      if (currentCount >= maxChecks) {
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
         setStatus("pending");
         return;
       }
@@ -150,62 +226,89 @@ const Payment = () => {
         const backendUrl = import.meta.env.VITE_BACKEND_URL;
         const response = await axios.post(
           `${backendUrl}/payment/check-status`,
-          { order_id: orderId, type }
+          {
+            order_id: orderId,
+            type: type,
+          }
+        );
+
+        console.log(
+          `[Payment] Status check response for ${orderId}:`,
+          response.data
         );
 
         if (
-          (response.data.status === "success" ||
-            response.data.status === "completed") &&
-          !successHandledRef.current
+          response.data.status === "success" ||
+          response.data.status === "completed"
         ) {
-          successHandledRef.current = true;
-          clearInterval(intervalRef.current);
-          handleSuccess();
-        }
-
-        if (response.data.status === "failed") {
-          clearInterval(intervalRef.current);
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
+          setStatus("completed");
+          // Only handle success once to prevent duplicate alerts
+          if (!successHandledRef.current) {
+            successHandledRef.current = true;
+            if (response.data.orderData) {
+              setOrderData(response.data.orderData);
+              handleSuccess(response.data.orderData);
+            } else {
+              // If orderData not in response, trigger success anyway
+              handleSuccess(orderData);
+            }
+          }
+        } else if (response.data.status === "failed") {
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
           setStatus("failed");
         }
-      } catch (err) {
-        console.error("Status check error:", err);
+      } catch (error) {
+        console.error("Error checking status:", error);
       }
-    }, 10000);
+    }, 10000); // Check every 10 seconds
   };
 
-  /* ---------------- success ---------------- */
-  const handleSuccess = () => {
-    showSuccess("Payment successful!");
+  const handleSuccess = (data) => {
+    showSuccess(
+      type === "game"
+        ? "Payment successful! Your game topup is being processed."
+        : "Payment successful! Your wallet has been topped up."
+    );
 
+    // Redirect after 3 seconds
     setTimeout(() => {
-      if (type === "game") navigate("/orders");
-      else if (type === "manual") navigate("/queues");
-      else if (type === "account") navigate("/accounts");
-      else navigate("/wallet");
+      if (type === "game") {
+        navigate("/orders");
+      } else if (type === "manual") {
+        navigate("/queues");
+      } else if (type === "account") {
+        navigate("/accounts");
+      } else {
+        navigate("/wallet");
+      }
     }, 1000);
   };
 
-  /* ---------------- intent (FIXED) ---------------- */
-  const resolvedUpi = extractUpiFromUpiString(orderData?.upiString);
-
-  const openUpiIntent = () => {
-    if (!resolvedUpi || !orderData?.amount) {
-      showError("UPI app payment not available. Please scan the QR code.");
-      return;
+  const getStatusIcon = () => {
+    switch (status) {
+      case "success":
+      case "completed":
+        return <FaCheckCircle className="text-6xl text-green-500" />;
+      case "failed":
+        return <FaTimesCircle className="text-6xl text-red-500" />;
+      case "checking":
+        return <FaSpinner className="text-6xl text-purple-600 animate-spin" />;
+      default:
+        return <FaSpinner className="text-6xl text-gray-400 animate-spin" />;
     }
-
-    const upiIntent = `upi://pay?pa=${encodeURIComponent(
-      resolvedUpi
-    )}&pn=${encodeURIComponent(
-      orderData.merchantName || "Merchant"
-    )}&am=${orderData.amount}&cu=INR&tn=${encodeURIComponent(
-      "Order " + tr
-    )}&tr=${tr}`;
-
-    window.location.href = upiIntent;
   };
 
-  /* ---------------- UI helpers ---------------- */
+
+  
+  
+
   const getStatusText = () => {
     switch (status) {
       case "success":
@@ -220,56 +323,224 @@ const Payment = () => {
     }
   };
 
+  const getStatusDescription = () => {
+    switch (status) {
+      case "success":
+      case "completed":
+        return type === "game"
+          ? "Your game topup order has been processed successfully. You will receive your items shortly."
+          : "Your wallet has been topped up successfully. You can now use your balance for purchases.";
+      case "failed":
+        return "Your payment could not be processed. Please try again or contact support if the issue persists.";
+      case "checking":
+        return "We're verifying your payment. This may take a few moments.";
+      default:
+        return "Scan the QR code below to complete your payment.";
+    }
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <FaSpinner className="text-6xl animate-spin text-purple-600" />
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-indigo-50/30 flex items-center justify-center">
+        <div className="text-center">
+          <FaSpinner className="text-6xl text-purple-600 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600 text-lg">Loading payment details...</p>
+        </div>
       </div>
     );
   }
 
-  /* ---------------- render ---------------- */
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
-      <div className="max-w-3xl mx-auto px-4">
-        <div className="bg-white rounded-2xl shadow-xl p-5">
-          <h1 className="text-2xl font-bold text-center mb-4">
-            {getStatusText()}
-          </h1>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-indigo-50/30 py-8">
+      <div className="max-w-3xl shadow-black/20 border-gray-200 border shadow-2xl mx-auto px-4 md:px-6 lg:px-6">
+        <div className="bg-white rounded-2xl shadow-xl p-4 md:p-5">
+          {/* Status Icon and Text */}
+          <div className="text-center mb-2">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+              {getStatusText()}
+            </h1>
+          </div>
 
-          {orderData?.qrCode &&
-            (status === "pending" || status === "checking") && (
-              <div className="text-center border-t pt-6">
-                <img
-                  src={orderData.qrCode}
-                  alt="UPI QR Code"
-                  className="w-44 mx-auto"
-                />
+{/* QR Code Display (for pending payments) */}
+{orderData &&
+  (status === "pending" || status === "checking") &&
+  orderData.qrCode && (
+    <div className="border-t border-gray-200 pt-6 mb-6">
+      <div className="text-center">
+        <h3 className="text-lg font-semibold text-gray-800 mb-2">
+          Scan QR Code to Pay
+        </h3>
 
-                <p className="mt-3 text-lg font-bold">
-                  ₹{orderData.amount}
-                </p>
+        <div className="inline-block p-2 bg-white rounded-xl shadow-lg border-2 border-gray-200">
+          <img
+            src={orderData.qrCode}
+            alt="UPI QR Code"
+            className="w-44 h-44 mx-auto"
+          />
+        </div>
 
-                {isMobile && resolvedUpi && (
-                  <button
-                    onClick={openUpiIntent}
-                    className="mt-4 w-64 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg"
-                  >
-                    Pay with UPI Apps
-                  </button>
-                )}
+        {orderData.amount && (
+          <p className="mt-4 text-lg font-bold text-gray-800">
+            Amount: ₹{orderData.amount}
+          </p>
+        )}
 
-                <p className="text-xs text-gray-500 mt-2">
-                  Works with Paytm, Google Pay, PhonePe, BHIM
-                </p>
+{isMobile && orderData?.intentLink && (
+  <div className="mt-4 w-full mx-auto flex justify-center">
+    <button
+      onClick={openUpiIntent}
+      className="w-64 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition"
+    >
+      Pay with UPI Apps
+    </button>
+  </div>
+)}
+
+
+
+<p className="text-xs text-gray-500 mt-2 text-center">
+  Works with Paytm, Google Pay, PhonePe, BHIM
+</p>
+
+      </div>
+    </div>
+  )}
+
+
+          {/* Order Details */}
+          {orderData && (
+            <div className="border-t border-gray-200 pt-6 space-y-4">
+              <div className="flex items-center justify-between py-2">
+                <span className="text-gray-600 font-medium">Order ID:</span>
+                <span className="text-gray-900 font-semibold">
+                  {orderData.id || orderId}
+                </span>
               </div>
-            )}
 
+              {orderData.amount && (
+                <div className="flex items-center justify-between py-2">
+                  <span className="text-gray-600 font-medium">Amount:</span>
+                  <span className="text-gray-900 font-semibold">
+                    ₹{orderData.amount}
+                  </span>
+                </div>
+              )}
+
+              {orderData.item && (
+                <div className="flex items-center justify-between py-2">
+                  <span className="text-gray-600 font-medium">Item:</span>
+                  <span className="text-gray-900 font-semibold">
+                    {orderData.item}
+                  </span>
+                </div>
+              )}
+
+              {orderData.date && (
+                <div className="flex items-center justify-between py-2">
+                  <span className="text-gray-600 font-medium">Date:</span>
+                  <span className="text-gray-900 font-semibold">
+                    {orderData.date} {orderData.time && `at ${orderData.time}`}
+                  </span>
+                </div>
+              )}
+
+              {orderData.status && (
+                <div className="flex items-center justify-between py-2">
+                  <span className="text-gray-600 font-medium">Status:</span>
+                  <span
+                    className={`font-semibold ${
+                      orderData.status === "success" ||
+                      orderData.status === "completed"
+                        ? "text-green-600"
+                        : orderData.status === "failed"
+                        ? "text-red-600"
+                        : "text-yellow-600"
+                    }`}
+                  >
+                    {orderData.status.toUpperCase()}
+                  </span>
+                </div>
+              )}
+
+              {orderData.utr && (
+                <div className="flex items-center justify-between py-2">
+                  <span className="text-gray-600 font-medium">
+                    Transaction ID:
+                  </span>
+                  <span className="text-gray-900 font-semibold font-mono text-sm">
+                    {orderData.utr}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="mt-8 flex flex-col sm:flex-row gap-4">
+            {status === "success" || status === "completed" ? (
+              <>
+                <button
+                  onClick={() =>
+                    navigate(type === "game" ? "/orders" : "/wallet")
+                  }
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
+                >
+                  {type === "game" ? (
+                    <>
+                      <FaGamepad /> View Orders
+                    </>
+                  ) : (
+                    <>
+                      <FaWallet /> Go to Wallet
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() => navigate("/")}
+                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition-all duration-200"
+                >
+                  Back to Home
+                </button>
+              </>
+            ) : status === "failed" ? (
+              <>
+                <button
+                  onClick={() =>
+                    navigate(type === "game" ? "/recharge" : "/wallet")
+                  }
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200"
+                >
+                  Try Again
+                </button>
+                <button
+                  onClick={() => navigate("/")}
+                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition-all duration-200"
+                >
+                  Back to Home
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => navigate("/")}
+                className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition-all duration-200"
+              >
+                Back to Home
+              </button>
+            )}
+          </div>
+
+          {/* Checking Progress */}
           {status === "checking" && (
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-500">
                 Checking payment status... ({checkingCount}/{maxChecks})
               </p>
+              <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-gradient-to-r from-purple-600 to-indigo-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${(checkingCount / maxChecks) * 100}%` }}
+                />
+              </div>
             </div>
           )}
         </div>
