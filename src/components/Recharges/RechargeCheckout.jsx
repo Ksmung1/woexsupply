@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useUser } from "../../context/UserContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useModal } from "../../context/ModalContext";
@@ -24,20 +24,32 @@ const RechargeCheckout = ({
   setUsernameExists,
 }) => {
   const { user } = useUser();
-
-  const [showPhoneModal, setShowPhoneModal] = useState(false);
-  const [showOrderModal, setShowOrderModal] = useState(false);
-  const [orderDetails, setOrderDetails] = useState(null);
-  const [product, setProduct] = useState("");
   const { showAlert } = useAlert();
   const { openModal } = useModal();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  /* ---------------- SCREEN SIZE MOBILE DETECTION ---------------- */
+  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
+  useEffect(() => {
+    const onResize = () => setScreenWidth(window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+  const isMobile = screenWidth <= 768;
+
+  /* ---------------- STATES ---------------- */
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [orderDetails, setOrderDetails] = useState(null);
+  const [product, setProduct] = useState(null);
 
   const [isSelectedPayment, setIsSelectedPayment] = useState("coin");
   const [isDisabled, setIsDisabled] = useState(false);
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 
-  const balance = user?.balance || 0;
-  const parsedBalance = parseFloat(balance);
+  /* ---------------- AMOUNT LOGIC ---------------- */
+  const balance = parseFloat(user?.balance || 0);
 
   const getParsedAmount = () => {
     if (!selectedItem) return 0;
@@ -47,62 +59,30 @@ const RechargeCheckout = ({
     if (user?.role === "vip") return Math.round(selectedItem.rupees * 0.97);
     return selectedItem.rupees;
   };
-
   const parsedAmount = getParsedAmount();
-  function getLocalISOString() {
-    const now = new Date();
-    const pad = (num) => num.toString().padStart(2, "0");
-    let hours = now.getHours();
-    const minutes = pad(now.getMinutes());
-    const seconds = pad(now.getSeconds());
-    const ampm = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12 || 12;
-    const timeString = `${pad(hours)}:${minutes}:${seconds} ${ampm}`;
-    const dateString = `${pad(now.getDate())}-${pad(
-      now.getMonth() + 1
-    )}-${now.getFullYear()}`;
-    return `${dateString}T${timeString}`;
-  }
 
-  const fullDateTime = getLocalISOString();
-  const [datePart, timePart] = fullDateTime.split("T");
+  /* ---------------- DATE / TIME ---------------- */
+  const now = new Date();
+  const datePart = `${now.getDate()}-${now.getMonth() + 1}-${now.getFullYear()}`;
+  const timePart = now.toLocaleTimeString();
 
-  function generateRandomOrderId(length = 10) {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let orderId = "MLBB-s";
-    for (let i = 0; i < length; i++) {
-      orderId += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return orderId;
-  }
-
+  /* ---------------- ORDER ID ---------------- */
+  const generateRandomOrderId = () =>
+    "MLBB-" + Math.random().toString(36).substring(2, 10).toUpperCase();
   const [newOrderId, setNewOrderId] = useState(generateRandomOrderId());
 
   useEffect(() => {
     setNewOrderId(generateRandomOrderId());
-  }, [isSelectedPayment, username]);
-  const location = useLocation();
-  useEffect(() => {
-    if (selectedItem) {
-      const el = document.getElementById("form");
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    }
-  }, [selectedItem]);
+  }, [username, isSelectedPayment]);
 
+  /* ---------------- PRODUCT BY ROUTE ---------------- */
   useEffect(() => {
-    const path = location.pathname;
-
-    if (path === "/recharge/mcgg") {
-      setProduct("magicchessgogo");
-    } else if (path === "/recharge/mlbb") {
+    if (location.pathname === "/recharge/mcgg") setProduct("magicchessgogo");
+    else if (location.pathname === "/recharge/mlbb")
       setProduct("mobilelegends");
-    } else {
-      setProduct(null);
-    }
   }, [location.pathname]);
 
+  /* ---------------- RESET ---------------- */
   const resetForm = () => {
     setSelectedItem(null);
     setIsSelectedPayment("coin");
@@ -112,29 +92,24 @@ const RechargeCheckout = ({
     setZoneId("");
     setUsername("");
     setUsernameExists(false);
+    setShowCheckoutModal(false);
   };
 
-  // === UPI PAYMENT ===
+  /* ---------------- UPI FLOW ---------------- */
   const handleUpi = async () => {
-    if (!username) {
-      showAlert("Please check username first");
-      return;
-    }
-
-    const orderData = {
+    const payload = {
       id: newOrderId,
       userId,
       uid: user.uid,
       zoneId,
-      product: product,
+      product,
       productId: selectedItem.id,
       username: user.username,
       gameUsername: username,
       cost: parsedAmount,
       date: datePart,
       time: timePart,
-      item: selectedItem.label, // Required field for Firestore
-      selectedItem,
+      item: selectedItem.label,
       type: "game",
       api: selectedItem.api,
       stockPrice: selectedItem.price,
@@ -142,73 +117,42 @@ const RechargeCheckout = ({
 
     try {
       showAlert("Redirecting to payment...");
-      console.log("Starting order");
-
-      const backendUrl =
-        import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_PAYMENT_URL;
-      const gatewayRes = await axios.post(
+      const backendUrl = import.meta.env.VITE_BACKEND_URL;
+      const res = await axios.post(
         `${backendUrl}/payment/start-order`,
-        orderData
+        payload
       );
-      console.log("done");
 
-      console.log("Payment Response:", gatewayRes.data);
-
-      // Redirect to payment page with QR code
-      if (gatewayRes.data.result?.result?.payment_url) {
-        window.location.href = gatewayRes.data.result.result.payment_url;
-      } else if (gatewayRes.data.redirect_url) {
-        window.location.href = gatewayRes.data.redirect_url;
-      } else {
-        showAlert("Payment initialization failed. Please try again.");
-      }
-    } catch (err) {
-      console.error("Payment error:", err.response?.data || err.message);
-      showAlert("Failed to start payment. Try again.");
+      window.location.href =
+        res.data.result?.result?.payment_url || res.data.redirect_url;
+    } catch {
+      showAlert("Failed to start payment.");
     }
   };
 
-  // === MAIN ORDER HANDLER ===
+  /* ---------------- CONFIRM FLOW ---------------- */
   const handleCreateOrder = async () => {
-    setIsDisabled(true);
-
-    try {
-      if (!user?.phone) {
-        setShowPhoneModal(true);
-        setIsDisabled(false);
-        return;
-      }
-
-      if (!selectedItem) {
-        showAlert("Please select a package.");
-        setIsDisabled(false);
-        return;
-      }
-
-      if (!username) {
-        showAlert("Please check your ML username.");
-        setIsDisabled(false);
-        return;
-      }
-
-      proceedToConfirm();
-    } catch (err) {
-      console.error(err);
-      setIsDisabled(false);
+    if (!user) return navigate("/login");
+    if (!user.phone) return setShowPhoneModal(true);
+    if (!selectedItem || !username) {
+      showAlert("Please select product & confirm username.");
+      return;
     }
+
+    if (isMobile) {
+      setShowCheckoutModal(true);
+      return;
+    }
+
+    proceedToConfirm();
   };
 
-  // === CONFIRMATION MODAL ===
   const proceedToConfirm = () => {
     openModal({
       title: "Confirm Purchase",
       content: (
         <p className="text-sm">
-          Buy <strong>{selectedItem.label}</strong> for{" "}
-          <strong>
-            {userId}
-            {zoneId && ` (${zoneId})`}
-          </strong>
+          <strong>{selectedItem.label}</strong>
           <br />
           Username: <strong>{username}</strong>
           <br />
@@ -216,163 +160,109 @@ const RechargeCheckout = ({
         </p>
       ),
       type: "confirm",
-
       onConfirm: async () => {
-        // UPI ONLY REDIRECT
-        if (isSelectedPayment === "upi") {
-          handleUpi();
-          setIsDisabled(false);
-          return;
-        }
+        if (isSelectedPayment === "upi") return handleUpi();
 
-        // GAMEBAR COIN
-        if (parsedBalance < parsedAmount) {
+        if (balance < parsedAmount) {
           showAlert("Not enough balance.");
-          setIsDisabled(false);
           return;
         }
 
-        showAlert("Processing your order...");
-
-        try {
-          const url = import.meta.env.VITE_BACKEND_URL;
-          const ksmApi = import.meta.env.VITE_KSM_API_KEY;
-          const payload = {
-            userId,
-            zoneId,
-            productId: selectedItem.id,
-            ksmApi,
-            uid: user.uid,
-            cost: parsedAmount,
-            date: datePart,
-            time: timePart,
-            item: selectedItem.label,
-            payment: "coin",
-            username: user.name,
-            gameUsername: username,
-            idtrx: newOrderId,
-            api: selectedItem.api || "smile",
-            product: "MLBB Recharge",
-            stockPrice: selectedItem.price,
-          };
-
-          const endpoint =
-            selectedItem.api === "smile"
-              ? `${url}/smile/create-order`
-              : `${url}/gamestopup/create-order`;
-
-          const { data } = await axios.post(endpoint, payload);
-
-          if (
-            data?.status === 200 &&
-            data?.order_id &&
-            data.order_id !== "Order Failed"
-          ) {
-            setOrderDetails(data.orderData);
-            setShowOrderModal(true);
-            setUsernameExists(false);
-          } else {
-            showAlert("Order failed. Try again.");
-          }
-        } catch (err) {
-          console.error("Order Error:", err);
-          showAlert("Order failed. Try again.");
-        }
-
-        setIsDisabled(false);
+        showAlert("Processing order...");
       },
-
-      onCancel: () => setIsDisabled(false),
     });
   };
 
+  const showBottomConfirm =
+    isMobile && selectedItem && username && !showCheckoutModal;
+
+  /* ================= RENDER ================= */
   return (
     <>
       {showPhoneModal && (
         <AddPhoneNumber onClose={() => setShowPhoneModal(false)} />
       )}
 
-      <div className="w-full flex flex-col gap-6 p-0">
-        {/* PAYMENT METHOD BOX */}
-        <div className="w-full border border-gray-100 rounded-sm shadow-lg p-4 bg-white">
-          <h1 className="text-xl font-semibold mb-3">Choose Payment Method</h1>
-
-          <div className="flex flex-col gap-4">
-            {["upi", "coin"].map((method) => (
+      {/* PAYMENT METHOD (DESKTOP OR MOBILE MODAL) */}
+      {(!isMobile || showCheckoutModal) && (
+        <div
+          className={`bg-white border shadow-lg p-4 ${
+            isMobile
+              ? "fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl"
+              : "mb-6"
+          }`}
+        >
+          {isMobile && (
+            <div className="flex justify-between mb-3">
+              <h2 className="font-semibold text-lg">Choose Payment</h2>
               <button
-                key={method}
-                onClick={() => setIsSelectedPayment(method)}
-                className={`relative flex items-center justify-between py-3 px-4 rounded-md transition font-medium shadow-md border ${
-                  isSelectedPayment === method
-                    ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-purple-700"
-                    : "bg-white border-gray-300 hover:bg-gray-50"
-                }`}
+                onClick={() => setShowCheckoutModal(false)}
+                className="text-sm text-gray-500"
               >
-                {method === "coin" && (
-                  <>
-                    <div className="flex items-center gap-3">
-                      <img className="w-10 h-10" src={coin} alt="Coin" />
-                      <div>
-                        <p className="font-semibold">Balance</p>
-                        <p className="text-sm">
-                          <strong className="text-green-600">
-                            {user?.balance || 0}
-                          </strong>
-                        </p>
-                      </div>
-                    </div>
-                    <span className="font-bold text-lg">₹{parsedAmount}</span>
-                  </>
-                )}
-
-                {method === "upi" && (
-                  <>
-                    <div className="flex items-center gap-3">
-                      <img className="h-10" src={upi} alt="UPI" />
-                      <span className="font-semibold">UPI / QR</span>
-                    </div>
-                    <span className="font-bold text-lg">
-                      ₹{Math.round(parsedAmount)}
-                    </span>
-                  </>
-                )}
+                Close
               </button>
-            ))}
-          </div>
-        </div>
+            </div>
+          )}
 
-        {/* BUY BUTTON */}
-        <div className="w-full rounded-md shadow-md p-4 bg-white">
+          {["upi", "coin"].map((method) => (
+            <button
+              key={method}
+              onClick={() => setIsSelectedPayment(method)}
+              className={`w-full mb-3 p-4 border rounded-lg flex justify-between items-center ${
+                isSelectedPayment === method
+                  ? "bg-indigo-600 text-white"
+                  : "bg-white"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <img
+                  src={method === "upi" ? upi : coin}
+                  className="h-8"
+                />
+                <span className="font-semibold">
+                  {method === "upi" ? "UPI / QR" : "Wallet"}
+                </span>
+              </div>
+              ₹{parsedAmount}
+            </button>
+          ))}
+
           <button
-            disabled={isDisabled || selectedItem?.outOfStock}
-            onClick={user ? handleCreateOrder : () => navigate("/login")}
-            className={`w-full py-4 text-lg font-bold rounded-lg transition-all ${
-              isDisabled || selectedItem?.outOfStock
-                ? "bg-gray-500 text-gray-300 cursor-not-allowed"
-                : "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white"
-            }`}
+            onClick={proceedToConfirm}
+            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-3 rounded-lg font-bold"
           >
-            {selectedItem?.outOfStock
-              ? "Out of Stock"
-              : user
-              ? isDisabled
-                ? "Processing..."
-                : "Buy Now"
-              : "Login to Buy"}
+            Pay ₹{parsedAmount}
           </button>
         </div>
+      )}
 
-        {/* SUCCESS MODAL */}
-        {showOrderModal && (
-          <OrderDetailModal
-            orderData={orderDetails}
-            onClose={() => {
-              setShowOrderModal(false);
-              resetForm();
-            }}
-          />
-        )}
-      </div>
+      {/* BOTTOM CONFIRM BAR (MOBILE) */}
+      {showBottomConfirm && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-4 z-40">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-sm text-gray-500">Ready to checkout</p>
+              <p className="text-lg font-bold">₹{parsedAmount}</p>
+            </div>
+            <button
+              onClick={() => setShowCheckoutModal(true)}
+              className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg font-semibold"
+            >
+              Confirm
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showOrderModal && (
+        <OrderDetailModal
+          orderData={orderDetails}
+          onClose={() => {
+            setShowOrderModal(false);
+            resetForm();
+          }}
+        />
+      )}
     </>
   );
 };
