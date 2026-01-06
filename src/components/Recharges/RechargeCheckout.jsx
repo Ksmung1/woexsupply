@@ -63,7 +63,9 @@ const RechargeCheckout = ({
 
   /* ---------------- DATE / TIME ---------------- */
   const now = new Date();
-  const datePart = `${now.getDate()}-${now.getMonth() + 1}-${now.getFullYear()}`;
+  const datePart = `${now.getDate()}-${
+    now.getMonth() + 1
+  }-${now.getFullYear()}`;
   const timePart = now.toLocaleTimeString();
 
   /* ---------------- ORDER ID ---------------- */
@@ -104,7 +106,7 @@ const RechargeCheckout = ({
       zoneId,
       product,
       productId: selectedItem.id,
-      username: user.username,
+      username: user.name,
       gameUsername: username,
       cost: parsedAmount,
       date: datePart,
@@ -186,10 +188,10 @@ const RechargeCheckout = ({
       {/* PAYMENT METHOD (DESKTOP OR MOBILE MODAL) */}
       {(!isMobile || showCheckoutModal) && (
         <div
-          className={`bg-white border shadow-lg p-4 ${
+          className={`bg-white  shadow-lg p-4 mx-auto ${
             isMobile
-              ? "fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl"
-              : "mb-6"
+              ? "fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-xl  z-50 rounded-t-2xl"
+              : "mb-6 "
           }`}
         >
           {isMobile && (
@@ -215,10 +217,7 @@ const RechargeCheckout = ({
               }`}
             >
               <div className="flex items-center gap-3">
-                <img
-                  src={method === "upi" ? upi : coin}
-                  className="h-8"
-                />
+                <img src={method === "upi" ? upi : coin} className="h-8" />
                 <span className="font-semibold">
                   {method === "upi" ? "UPI / QR" : "Wallet"}
                 </span>
@@ -238,18 +237,41 @@ const RechargeCheckout = ({
 
       {/* BOTTOM CONFIRM BAR (MOBILE) */}
       {showBottomConfirm && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-4 z-40">
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-sm text-gray-500">Ready to checkout</p>
-              <p className="text-lg font-bold">₹{parsedAmount}</p>
+        <div className="fixed bottom-0 left-0 right-0 z-40">
+          {/* Glow layer for 3D effect */}
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-indigo-600 blur-lg opacity-10 -z-10" />
+
+          <div
+            className="bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 
+                    border-t border-purple-500/40
+                    shadow-[0_-10px_30px_rgba(88,28,135,0.45)]
+                    px-5 py-4 rounded-sm"
+          >
+            <div className="flex justify-between items-center">
+              {/* LEFT: Product + Price */}
+              <div className="text-white">
+                <p className="text-xs uppercase tracking-wide text-purple-200">
+                  Selected Product
+                </p>
+                <p className="text-sm font-semibold truncate max-w-[180px]">
+                  {selectedItem?.label || "Selected Product"}
+                </p>
+
+                <p className="text-xl font-extrabold mt-1">₹{parsedAmount}</p>
+              </div>
+
+              {/* RIGHT: CTA */}
+              <button
+                onClick={() => setShowCheckoutModal(true)}
+                className="relative bg-white text-purple-700 
+                     px-7 py-3 rounded-xl font-bold
+                     shadow-[0_8px_20px_rgba(255,255,255,0.35)]
+                     active:scale-95 transition-all duration-150
+                     hover:shadow-[0_12px_28px_rgba(255,255,255,0.5)]"
+              >
+                Confirm
+              </button>
             </div>
-            <button
-              onClick={() => setShowCheckoutModal(true)}
-              className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg font-semibold"
-            >
-              Confirm
-            </button>
           </div>
         </div>
       )}

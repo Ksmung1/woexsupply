@@ -90,6 +90,16 @@ const games = [
     tag: "skin",
     collectionName: "skinproductlist",
   },
+  {
+    id: 9,
+    name: "Custom Packs",
+    img: mlLogo,
+    route: "/recharge/custom",
+    filter: "others",
+    order: 9,
+    tag: "custom",
+    collectionName: "customproductlist",
+  },
 ];
 
 export default games;

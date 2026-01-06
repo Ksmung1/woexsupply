@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { signOut } from "firebase/auth";
 import {
   doc,
   onSnapshot,
@@ -11,7 +12,7 @@ import {
   documentId,
   getDoc,
 } from "firebase/firestore";
-import { db } from "../config/firebase";
+import { db, auth } from "../config/firebase";
 import { useUser } from "../context/UserContext";
 import { format } from "date-fns";
 import {
@@ -31,6 +32,7 @@ import {
   FaChartLine,
   FaGamepad,
   FaClipboardList,
+  FaSignOutAlt,
 } from "react-icons/fa";
 
 const Profile = () => {
@@ -273,6 +275,14 @@ const Profile = () => {
       setError("Failed to save phone number. Please try again.");
     } finally {
       setSavingPhone(false);
+    }
+  };
+  const logout = async () => {
+    try {
+      await signOut(auth);
+      console.log("User signed out successfully");
+    } catch (error) {
+      console.error("Error signing out:", error);
     }
   };
 
@@ -592,7 +602,7 @@ const Profile = () => {
                 <h3 className="text-lg font-bold text-gray-800 mb-4">
                   Quick Actions
                 </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
                   <button
                     onClick={() => navigate("/orders")}
                     className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 transition-all duration-200 border border-purple-100"
@@ -627,6 +637,15 @@ const Profile = () => {
                     <FaCoins className="text-yellow-600 text-xl" />
                     <span className="text-sm font-semibold text-gray-700">
                       Wallet
+                    </span>
+                  </button>
+                  <button
+                    onClick={logout}
+                    className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-yellow-50 to-orange-50 hover:from-yellow-100 hover:to-orange-100 transition-all duration-200 border border-yellow-100"
+                  >
+                    <FaSignOutAlt className="text-red-600 text-xl" />
+                    <span className="text-sm font-semibold text-gray-700">
+                      Logout
                     </span>
                   </button>
                 </div>

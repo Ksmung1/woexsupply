@@ -67,7 +67,7 @@ const Modal = ({ open, onClose, title, children, footer }) => {
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full overflow-hidden animate-scale-in"
+        className="bg-white rounded-2xl max-w-4xl mx-auto shadow-2xl w-full overflow-hidden animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

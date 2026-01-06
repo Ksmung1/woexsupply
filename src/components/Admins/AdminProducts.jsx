@@ -8,6 +8,7 @@ import GenshinAdmin from "./Products/GenshinAdmin";
 import SuperSusAdmin from "./Products/SuperSusAdmin";
 import CharismaAdmin from "./Products/CharismaAdmin";
 import SkinAdmin from "./Products/SkinAdmin";
+import CustomAdmin from "./Products/CustomAdmin";
 
 const componentMap = {
   mlbb: MobileLegendsAdmin,
@@ -16,6 +17,8 @@ const componentMap = {
   bs: BloodStrikeAdmin,
   hsr: HonkaiAdmin,
   gi: GenshinAdmin,
+  custom: CustomAdmin,
+
   charisma: CharismaAdmin,
   skin: SkinAdmin,
 };

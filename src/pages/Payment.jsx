@@ -12,6 +12,7 @@ import {
   FaGamepad,
   FaCopy,
 } from "react-icons/fa";
+import logo from "../assets/images/logo.png";
 import axios from "axios";
 
 const Payment = () => {
@@ -23,7 +24,6 @@ const Payment = () => {
   const type = searchParams.get("type") || "topup"; // "topup" or "game" or "manual"
   const orderId = searchParams.get("order_id") || searchParams.get("orderId");
 
-  
   const [orderData, setOrderData] = useState(null);
   const [status, setStatus] = useState("pending"); // pending, success, failed, checking
   const [loading, setLoading] = useState(true);
@@ -88,7 +88,6 @@ const Payment = () => {
     };
 
     fetchOrder();
-    
 
     // Real-time listener for order updates
     const unsubscribe = onSnapshot(
@@ -158,7 +157,6 @@ const Payment = () => {
     if (!orderData?.intentLink) return;
     window.location.href = orderData.intentLink;
   };
-  
 
   const startStatusCheck = (orderDataParam) => {
     // Clear any existing interval first
@@ -305,10 +303,6 @@ const Payment = () => {
     }
   };
 
-
-  
-  
-
   const getStatusText = () => {
     switch (status) {
       case "success":
@@ -320,22 +314,6 @@ const Payment = () => {
         return "Checking Payment Status...";
       default:
         return "Payment Pending";
-    }
-  };
-
-  const getStatusDescription = () => {
-    switch (status) {
-      case "success":
-      case "completed":
-        return type === "game"
-          ? "Your game topup order has been processed successfully. You will receive your items shortly."
-          : "Your wallet has been topped up successfully. You can now use your balance for purchases.";
-      case "failed":
-        return "Your payment could not be processed. Please try again or contact support if the issue persists.";
-      case "checking":
-        return "We're verifying your payment. This may take a few moments.";
-      default:
-        return "Scan the QR code below to complete your payment.";
     }
   };
 
@@ -361,51 +339,56 @@ const Payment = () => {
             </h1>
           </div>
 
-{/* QR Code Display (for pending payments) */}
-{orderData &&
-  (status === "pending" || status === "checking") &&
-  orderData.qrCode && (
-    <div className="border-t border-gray-200 pt-6 mb-6">
-      <div className="text-center">
-        <h3 className="text-lg font-semibold text-gray-800 mb-2">
-          Scan QR Code to Pay
-        </h3>
+          {/* QR Code Display (for pending payments) */}
+          {orderData &&
+            (status === "pending" || status === "checking") &&
+            orderData.qrCode && (
+              <div className="border-t border-gray-200 pt-6 mb-6">
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                    Scan QR Code to Pay
+                  </h3>
+                  <img
+                    src={logo}
+                    className="w-20 flex items-center max-w-md mx-auto my-2"
+                  />
 
-        <div className="inline-block p-2 bg-white rounded-xl shadow-lg border-2 border-gray-200">
-          <img
-            src={orderData.qrCode}
-            alt="UPI QR Code"
-            className="w-44 h-44 mx-auto"
-          />
-        </div>
+                  <div className="inline-block p-2 bg-white rounded-xl shadow-lg border-2 border-gray-200">
+                    <img
+                      src={orderData.qrCode}
+                      alt="UPI QR Code"
+                      className="w-44 h-44 mx-auto"
+                    />
+                  </div>
 
-        {orderData.amount && (
-          <p className="mt-4 text-lg font-bold text-gray-800">
-            Amount: ₹{orderData.amount}
-          </p>
-        )}
+                  {orderData.amount && (
+                    <p className="mt-4 text-lg font-bold text-gray-800">
+                      Amount: ₹{orderData.amount}
+                    </p>
+                  )}
 
-{isMobile && orderData?.intentLink && (
-  <div className="mt-4 w-full mx-auto flex justify-center">
-    <button
-      onClick={openUpiIntent}
-      className="w-64 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition"
-    >
-      Pay with UPI Apps
-    </button>
-  </div>
-)}
+                  {isMobile && orderData?.intentLink && (
+                    <div className="mt-4 w-full px-4">
+                      <button
+                        onClick={openUpiIntent}
+                        className="w-full flex items-center justify-center gap-3 bg-[#00B9F1] active:bg-[#00A3D6] text-white font-semibold py-4 rounded-xl shadow-md transition-all duration-150"
+                      >
+                        <img
+                          src="https://upload.wikimedia.org/wikipedia/commons/5/55/Paytm_logo.png"
+                          alt="Paytm"
+                          className="h-6"
+                        />
+                        <span className="text-base">Pay using Paytm</span>
+                      </button>
+                    </div>
+                  )}
 
-
-
-<p className="text-xs text-gray-500 mt-2 text-center">
-  Works with Paytm, Google Pay, PhonePe, BHIM
-</p>
-
-      </div>
-    </div>
-  )}
-
+                  <p className="text-xs text-gray-500 mt-2 text-center">
+                    Works with Paytm, Google Pay, PhonePe, BHIM
+                  </p>
+                </div>
+              </div>
+            )}
 
           {/* Order Details */}
           {orderData && (

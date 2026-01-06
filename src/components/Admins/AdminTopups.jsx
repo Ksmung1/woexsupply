@@ -78,7 +78,9 @@ export default function AdminTopups() {
     setError(null);
 
     const prev = topups;
-    setTopups((cur) => cur.map((t) => (t.id === topupId ? { ...t, status: newStatus } : t)));
+    setTopups((cur) =>
+      cur.map((t) => (t.id === topupId ? { ...t, status: newStatus } : t))
+    );
 
     try {
       const ref = doc(db, "topups", topupId);
@@ -112,13 +114,17 @@ export default function AdminTopups() {
       </div>
 
       {error && (
-        <div className="mb-3 p-2 bg-red-50 text-red-700 rounded text-xs">{error}</div>
+        <div className="mb-3 p-2 bg-red-50 text-red-700 rounded text-xs">
+          {error}
+        </div>
       )}
 
       {loading ? (
         <div className="text-xs text-gray-500 py-4">Loading topups…</div>
       ) : topups.length === 0 ? (
-        <div className="text-xs text-gray-600 py-4 text-center bg-gray-50 rounded-lg">No topups found.</div>
+        <div className="text-xs text-gray-600 py-4 text-center bg-gray-50 rounded-lg">
+          No topups found.
+        </div>
       ) : (
         <>
           {/* Desktop Table View */}
@@ -126,18 +132,33 @@ export default function AdminTopups() {
             <table className="min-w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ID</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">User</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Time</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                  <th className="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    ID
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    User
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Amount
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Time
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
 
               <tbody className="divide-y divide-gray-100">
                 {topups.map((topup) => (
-                  <tr key={topup.id} className="hover:bg-gray-50 transition-colors">
+                  <tr
+                    key={topup.id}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
                     <td className="px-3 py-2">
                       <span className="text-xs font-mono text-gray-600 truncate block max-w-[120px]">
                         {topup.id.slice(0, 8)}...
@@ -145,7 +166,11 @@ export default function AdminTopups() {
                     </td>
                     <td className="px-3 py-2">
                       <span className="text-xs text-gray-800 truncate block max-w-[120px]">
-                        {topup.username ?? topup.name ?? topup.uid ?? "—"}
+                        {topup.username ??
+                          topup.name ??
+                          topup.user ??
+                          topup.uid ??
+                          "—"}
                       </span>
                     </td>
                     <td className="px-3 py-2">
@@ -154,13 +179,16 @@ export default function AdminTopups() {
                       </span>
                     </td>
                     <td className="px-3 py-2">
-                      <span className="text-xs text-gray-500">{formatDate(topup.createdAt)}</span>
+                      <span className="text-xs text-gray-500">
+                        {formatDate(topup.createdAt)}
+                      </span>
                     </td>
                     <td className="px-3 py-2">
                       <span
                         className={
                           "inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full capitalize " +
-                          (topup.status === "completed" || topup.status === "success"
+                          (topup.status === "completed" ||
+                          topup.status === "success"
                             ? "bg-green-100 text-green-700"
                             : topup.status === "failed"
                             ? "bg-red-100 text-red-700"
@@ -176,13 +204,25 @@ export default function AdminTopups() {
                           onClick={() => handleToggle(topup)}
                           disabled={savingId === topup.id}
                           className="px-2 py-1 text-xs rounded-md border border-gray-300 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          title={topup.status === "completed" || topup.status === "success" ? "Mark pending" : "Mark completed"}
+                          title={
+                            topup.status === "completed" ||
+                            topup.status === "success"
+                              ? "Mark pending"
+                              : "Mark completed"
+                          }
                         >
-                          {savingId === topup.id ? "..." : topup.status === "completed" || topup.status === "success" ? "Pending" : "Complete"}
+                          {savingId === topup.id
+                            ? "..."
+                            : topup.status === "completed" ||
+                              topup.status === "success"
+                            ? "Pending"
+                            : "Complete"}
                         </button>
                         <button
                           onClick={() => handleFail(topup)}
-                          disabled={savingId === topup.id || topup.status === "failed"}
+                          disabled={
+                            savingId === topup.id || topup.status === "failed"
+                          }
                           className="px-2 py-1 text-xs rounded-md border border-red-300 bg-white text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           title="Mark failed"
                         >
@@ -199,16 +239,24 @@ export default function AdminTopups() {
           {/* Mobile/Tablet Card View */}
           <div className="lg:hidden space-y-2">
             {topups.map((topup) => (
-              <div key={topup.id} className="bg-white rounded-lg border border-gray-200 p-3 hover:shadow-sm transition-shadow">
+              <div
+                key={topup.id}
+                className="bg-white rounded-lg border border-gray-200 p-3 hover:shadow-sm transition-shadow"
+              >
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-mono text-gray-500 truncate">{topup.id.slice(0, 12)}...</p>
-                    <p className="text-sm font-semibold text-gray-900 truncate">{topup.username ?? topup.name ?? topup.uid ?? "—"}</p>
+                    <p className="text-xs font-mono text-gray-500 truncate">
+                      {topup.id.slice(0, 12)}...
+                    </p>
+                    <p className="text-sm font-semibold text-gray-900 truncate">
+                      {topup.username ?? topup.name ?? topup.uid ?? "—"}
+                    </p>
                   </div>
                   <span
                     className={
                       "inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full capitalize flex-shrink-0 " +
-                      (topup.status === "completed" || topup.status === "success"
+                      (topup.status === "completed" ||
+                      topup.status === "success"
                         ? "bg-green-100 text-green-700"
                         : topup.status === "failed"
                         ? "bg-red-100 text-red-700"
@@ -222,11 +270,15 @@ export default function AdminTopups() {
                 <div className="grid grid-cols-2 gap-2 mb-2 text-xs">
                   <div>
                     <span className="text-gray-500">Amount:</span>
-                    <span className="text-gray-900 font-semibold ml-1">₹{topup.amount ?? topup.cost ?? topup.price ?? "—"}</span>
+                    <span className="text-gray-900 font-semibold ml-1">
+                      ₹{topup.amount ?? topup.cost ?? topup.price ?? "—"}
+                    </span>
                   </div>
                   <div className="text-right">
                     <span className="text-gray-500">Time:</span>
-                    <span className="text-gray-600 ml-1">{formatDate(topup.createdAt)}</span>
+                    <span className="text-gray-600 ml-1">
+                      {formatDate(topup.createdAt)}
+                    </span>
                   </div>
                 </div>
 
@@ -236,11 +288,18 @@ export default function AdminTopups() {
                     disabled={savingId === topup.id}
                     className="flex-1 px-2 py-1.5 text-xs rounded-md border border-gray-300 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
                   >
-                    {savingId === topup.id ? "..." : topup.status === "completed" || topup.status === "success" ? "Pending" : "Complete"}
+                    {savingId === topup.id
+                      ? "..."
+                      : topup.status === "completed" ||
+                        topup.status === "success"
+                      ? "Pending"
+                      : "Complete"}
                   </button>
                   <button
                     onClick={() => handleFail(topup)}
-                    disabled={savingId === topup.id || topup.status === "failed"}
+                    disabled={
+                      savingId === topup.id || topup.status === "failed"
+                    }
                     className="flex-1 px-2 py-1.5 text-xs rounded-md border border-red-300 bg-white text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
                   >
                     {savingId === topup.id ? "..." : "Fail"}
@@ -254,4 +313,3 @@ export default function AdminTopups() {
     </div>
   );
 }
-

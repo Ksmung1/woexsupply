@@ -5,6 +5,8 @@ import { UserProvider } from "./context/UserContext";
 import { AlertProvider } from "./context/AlertContext";
 import { ModalProvider } from "./context/ModalContext";
 import LoadingPage from "./components/Global/LoadingPage";
+import MaintenanceGuard from "./pages/MaintenanceGuard";
+import Maintenance from "./pages/Maintenance";
 
 // Lazy load all pages
 const Home = lazy(() => import("./pages/Home"));
@@ -37,6 +39,7 @@ const RegionChecker = lazy(() => import("./pages/RegionChecker"));
 const GameAccount = lazy(() => import("./pages/GameAccount"));
 const MyAccounts = lazy(() => import("./pages/MyAccounts"));
 const Browse = lazy(() => import("./pages/Browse"));
+
 const App = () => {
   return (
     <UserProvider>
@@ -45,8 +48,19 @@ const App = () => {
           <Router>
             <Suspense fallback={<LoadingPage />}>
               <Routes>
-                <Route path="/" element={<MainLayout />}>
-                  <Route index element={<Home />}></Route>
+                {/* 🚧 Maintenance Page */}
+                <Route path="/maintenance" element={<Maintenance />} />
+
+                {/* 🌍 PUBLIC / USER ROUTES (GUARDED) */}
+                <Route
+                  path="/"
+                  element={
+                    <MaintenanceGuard>
+                      <MainLayout />
+                    </MaintenanceGuard>
+                  }
+                >
+                  <Route index element={<Home />} />
                   <Route path="orders" element={<Orders />} />
                   <Route path="accounts" element={<MyAccounts />} />
                   <Route path="browse" element={<Browse />} />
@@ -70,6 +84,7 @@ const App = () => {
                   <Route path="*" element={<NotFound />} />
                 </Route>
 
+                {/* 🔐 ADMIN ROUTES (NOT GUARDED) */}
                 <Route path="/admin" element={<AdminLayout />}>
                   <Route index element={<Admin />} />
                   <Route path="orders" element={<AdminOrders />} />

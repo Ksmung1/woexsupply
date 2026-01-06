@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "../context/UserContext";
+import { doc, updateDoc, onSnapshot } from "firebase/firestore";
+import { db } from "../config/firebase";
 import { signOut } from "firebase/auth";
 import { auth } from "../config/firebase";
 import LoadingPage from "../components/Global/LoadingPage";
@@ -22,9 +24,25 @@ import {
 
 const AdminLayout = () => {
   const { user, isAdmin, loading } = useUser();
+  const [maintenance, setMaintenance] = useState(false);
+  const [loadingMaintenance, setLoadingMaintenance] = useState(true);
+
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const ref = doc(db, "settings", "website");
+
+    const unsub = onSnapshot(ref, (snap) => {
+      if (snap.exists()) {
+        setMaintenance(!!snap.data().maintenance);
+      }
+      setLoadingMaintenance(false);
+    });
+
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     // Wait for loading to complete before checking permissions
@@ -40,6 +58,26 @@ const AdminLayout = () => {
   useEffect(() => {
     setSidebarOpen(false);
   }, [location.pathname]);
+
+  const toggleMaintenance = async () => {
+    const nextValue = !maintenance;
+
+    const confirmed = window.confirm(
+      nextValue
+        ? "⚠️ Enable maintenance mode?\n\nThis will block the website for all users."
+        : "✅ Disable maintenance mode?\n\nThe website will go live immediately."
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const ref = doc(db, "settings", "website");
+      await updateDoc(ref, { maintenance: nextValue });
+    } catch (err) {
+      console.error("Maintenance toggle failed:", err);
+      alert("❌ Failed to update maintenance mode");
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -153,15 +191,34 @@ const AdminLayout = () => {
 
         {/* User Info & Logout */}
         <div className="p-3 lg:p-4 border-t border-gray-200">
-          <div className="mb-3 p-2 lg:p-3 bg-gray-50 rounded-lg">
-            <p className="text-xs text-gray-500 mb-1">Logged in as</p>
-            <p className="text-xs lg:text-sm font-semibold text-gray-900 truncate">
-              {user?.name || user?.email || "Admin"}
-            </p>
-          </div>
+          <button
+            onClick={toggleMaintenance}
+            disabled={loadingMaintenance}
+            className={`w-full flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2 lg:py-3 rounded-lg 
+    font-medium text-sm lg:text-base mb-2 transition-colors
+    ${
+      maintenance
+        ? "bg-green-50 text-green-700 hover:bg-green-100"
+        : "bg-yellow-50 text-yellow-700 hover:bg-yellow-100"
+    }
+    ${loadingMaintenance ? "opacity-50 cursor-not-allowed" : ""}
+  `}
+          >
+            <FaShieldAlt />
+            <span>
+              {loadingMaintenance
+                ? "Checking Maintenance..."
+                : maintenance
+                ? "Disable Maintenance"
+                : "Enable Maintenance"}
+            </span>
+          </button>
+
           <button
             onClick={() => navigate("/")}
-            className="w-full flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2 lg:py-3 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors font-medium text-sm lg:text-base"
+            className="w-full flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2 lg:py-3 rounded-lg 
+               bg-red-50 text-red-600 hover:bg-red-100 transition-colors 
+               font-medium text-sm lg:text-base"
           >
             <FaSignOutAlt />
             <span>Exit</span>

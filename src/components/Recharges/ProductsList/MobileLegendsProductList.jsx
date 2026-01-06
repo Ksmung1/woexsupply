@@ -3,14 +3,13 @@ import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../../../config/firebase";
 import { useUser } from "../../../context/UserContext";
 
-import diamondImg from "../../../assets/images/game.png";
-import firstRechargeImg from "../../../assets/images/game.png";
-import weeklyImg from "../../../assets/images/game.png";
-import twilightImg from "../../../assets/images/game.png";
-import defaultImg from "../../../assets/images/game.png";
-import smallPacks from "../../../assets/images/game.png";
-import mediumPacks from "../../../assets/images/game.png";
-import largePacks from "../../../assets/images/game.png";
+import firstRechargeImg from "../../../assets/images/dd.avif";
+import weeklyImg from "../../../assets/images/weekly.avif";
+import twilightImg from "../../../assets/images/twilight.jpg";
+import defaultImg from "../../../assets/images/d1.jpg";
+import smallPacks from "../../../assets/images/small-packs.png";
+import mediumPacks from "../../../assets/images/medium-packs.png";
+import largePacks from "../../../assets/images/large-packs.png";
 
 /**
  * MobileLegendsProductList
@@ -20,13 +19,25 @@ import largePacks from "../../../assets/images/game.png";
  */
 
 const groupNames = {
-  dd: { label: "First Recharge", img: firstRechargeImg },
-  d: { label: "Diamonds", img: diamondImg },
-  weekly: { label: "Weekly Pass", img: weeklyImg },
-  twilight: { label: "Twilight Pass", img: twilightImg },
+  dd: {
+    label: "First Recharge",
+    img: firstRechargeImg,
+  },
+  d: {
+    label: "Diamonds",
+    img: mediumPacks,
+  },
+  weekly: {
+    label: "Weekly Pass",
+    img: weeklyImg,
+  },
+  twilight: {
+    label: "Twilight Pass",
+    img: twilightImg,
+  },
 };
-const collectionName = 'mlbbproductlist'
-const MobileLegendsProductList = ({  selectedItem, setSelectedItem }) => {
+const collectionName = "mlbbproductlist";
+const MobileLegendsProductList = ({ selectedItem, setSelectedItem }) => {
   const { user } = useUser();
   const [products, setProducts] = useState([]);
   const [loaded, setLoaded] = useState(false);
@@ -37,7 +48,7 @@ const MobileLegendsProductList = ({  selectedItem, setSelectedItem }) => {
   useEffect(() => {
     setLoaded(false);
     try {
-      console.log(collectionName)
+      console.log(collectionName);
       const colRef = collection(db, collectionName);
       const unsub = onSnapshot(
         colRef,
@@ -66,7 +77,10 @@ const MobileLegendsProductList = ({  selectedItem, setSelectedItem }) => {
   // After selecting, bring selection into view
   useEffect(() => {
     if (selectedItem && selectionRef.current) {
-      selectionRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      selectionRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
     }
   }, [selectedItem]);
 
@@ -91,14 +105,17 @@ const MobileLegendsProductList = ({  selectedItem, setSelectedItem }) => {
     if (item.group === "d") {
       if (diamonds >= 2000) return largePacks;
       if (diamonds >= 1000) return mediumPacks;
-      if (diamonds >= 500) return diamondImg;
+      if (diamonds >= 500) return mediumPacks;
       if (diamonds >= 100) return smallPacks;
       return smallPacks;
     }
 
     if (item.group === "dd") return firstRechargeImg;
+    if (item.group === 'weekly') return weeklyImg
+    if (item.group === 'twilight') return twilightImg
     return defaultImg;
   };
+
 
   const formatPrice = (item) => {
     const rupees = Number(item.rupees) || 0;
@@ -116,7 +133,7 @@ const MobileLegendsProductList = ({  selectedItem, setSelectedItem }) => {
   return (
     <div className="w-full space-y-4  text-gray-900">
       {/* Tabs */}
-      <div className="grid grid-cols-4 gap-3 mb-2">
+      <div className="grid grid-cols-4 gap-3 mb-4">
         {Object.entries(groupNames).map(([key, { label, img }]) => (
           <button
             key={key}
@@ -130,8 +147,12 @@ const MobileLegendsProductList = ({  selectedItem, setSelectedItem }) => {
                 : "bg-white text-gray-700 border-gray-300"
             }`}
           >
-            <img src={img} alt={label} className="w-9 h-9 rounded-sm object-cover" />
-            <span className="mt-1">{label}</span>
+            <img
+              src={img}
+              alt={label}
+              className="w-14 h-10 rounded-sm object-contain"
+            />
+            <span className="mt-">{label}</span>
           </button>
         ))}
       </div>
@@ -139,8 +160,9 @@ const MobileLegendsProductList = ({  selectedItem, setSelectedItem }) => {
       {/* Notes */}
       {activeGroup === "dd" && (
         <div className="p-3 rounded-md shadow text-sm border-l-4 bg-yellow-100 border-yellow-500 text-yellow-800">
-          <strong>Note:</strong> Double Diamonds are only available for first-time purchases. If you've already
-          purchased, please choose regular diamonds.
+          <strong>Note:</strong> Double Diamonds are only available for
+          first-time purchases. If you've already purchased, please choose
+          regular diamonds.
         </div>
       )}
 
@@ -171,32 +193,41 @@ const MobileLegendsProductList = ({  selectedItem, setSelectedItem }) => {
 
                 <div className="flex items-left justify-between">
                   <div className="flex items-center gap-2">
-  <div className="w-8 h-8 flex items-center">
-                    <img src={imageSrc} alt={item.label} className="w-full h-full object-cover rounded-sm" />
-                  </div>
-                  <div className="">
-                    <div className="text-[10px] line-clamp- font-semibold">
-                      {(Number(item.diamonds) || "")}{" "}
-                      {item.type === "double diamond"
-                        ? "Double"
-                        : item.type === "ml-weekly"
-                        ? "Weekly"
-                        : item.type === "ml-twilight"
-                        ? "Twilight"
-                        : "Diamonds"}
+                    <div className="w-8 h-8 flex object-contain items-center">
+                      <img
+                        src={imageSrc}
+                        alt={item.label}
+                        className="w-full h-full object-contain rounded-sm"
+                      />
                     </div>
-                    <div className="text-[9px] text-gray-500 mt-1 line-clamp-2">{item.label}</div>
+                    <div className="">
+                      <div className="text-[10px] line-clamp- font-semibold">
+                        {Number(item.diamonds) || ""}{" "}
+                        {item.type === "double diamond"
+                          ? "Double"
+                          : item.type === "ml-weekly"
+                          ? "Weekly"
+                          : item.type === "ml-twilight"
+                          ? "Twilight"
+                          : "Diamonds"}
+                      </div>
+                      <div className="text-[9px] text-gray-500 mt-1 line-clamp-2">
+                        {item.label}
+                      </div>
+                    </div>
                   </div>
-                  </div>
-                
-                                  <div className="flex items-end justify-between">
-                  <div className="text-right">
-                    <div className="text-xs font-semibold text-green-600">₹{formatPrice(item)}</div>
-                    <div className="text-[10px] text-red-500 line-through">₹{item.falseRupees}</div>
-                  </div>
-                </div>
-                </div>
 
+                  <div className="flex items-end justify-between">
+                    <div className="text-right">
+                      <div className="text-xs font-semibold text-green-600">
+                        ₹{formatPrice(item)}
+                      </div>
+                      <div className="text-[10px] text-red-500 line-through">
+                        ₹{item.falseRupees}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             );
           })}
