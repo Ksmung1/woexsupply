@@ -3,13 +3,13 @@ import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../../../config/firebase";
 import { useUser } from "../../../context/UserContext";
 
-import diamondImg from "../../../assets/images/game.png";
-import firstRechargeImg from "../../../assets/images/game.png";
-import weeklyImg from "../../../assets/images/game.png";
-import defaultImg from "../../../assets/images/game.png";
-import smallPacks from "../../../assets/images/game.png";
-import mediumPacks from "../../../assets/images/game.png";
-import largePacks from "../../../assets/images/game.png";
+import diamondImg from "../../../assets/images/diamonds.webp";
+import firstRechargeImg from "../../../assets/images/diamonds.webp";
+import weeklyImg from "../../../assets/images/weekly-mc.png";
+import defaultImg from "../../../assets/images/diamonds.webp";
+import smallPacks from "../../../assets/images/diamonds.webp";
+import mediumPacks from "../../../assets/images/diamonds.webp";
+import largePacks from "../../../assets/images/diamonds.webp";
 
 /**
  * MobileLegendsProductList
@@ -23,9 +23,9 @@ const groupNames = {
   d: { label: "Diamonds", img: diamondImg },
   weekly: { label: "Weekly Pass", img: weeklyImg },
 };
-const collectionName = 'mcggproductlist'
+const collectionName = "mcggproductlist";
 
-const MagicChessProductList = ({  selectedItem, setSelectedItem }) => {
+const MagicChessProductList = ({ selectedItem, setSelectedItem }) => {
   const { user } = useUser();
   const [products, setProducts] = useState([]);
   const [loaded, setLoaded] = useState(false);
@@ -36,7 +36,7 @@ const MagicChessProductList = ({  selectedItem, setSelectedItem }) => {
   useEffect(() => {
     setLoaded(false);
     try {
-      console.log(collectionName)
+      console.log(collectionName);
       const colRef = collection(db, collectionName);
       const unsub = onSnapshot(
         colRef,
@@ -65,7 +65,10 @@ const MagicChessProductList = ({  selectedItem, setSelectedItem }) => {
   // After selecting, bring selection into view
   useEffect(() => {
     if (selectedItem && selectionRef.current) {
-      selectionRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      selectionRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
     }
   }, [selectedItem]);
 
@@ -75,12 +78,12 @@ const MagicChessProductList = ({  selectedItem, setSelectedItem }) => {
     if (!item) return false;
     if (item.hide) return false;
     const t = (item.type || "").toLowerCase();
-    console.log(t)
+    console.log(t);
     if (activeGroup === "weekly") return t === "mc-weekly";
     return item.group === activeGroup;
   });
 
-  console.log(filteredList)
+  console.log(filteredList);
   const getImageByGroupOrType = (item) => {
     const diamonds = Number(item.diamonds) || 0;
     const t = (item.type || "").toLowerCase();
@@ -96,6 +99,7 @@ const MagicChessProductList = ({  selectedItem, setSelectedItem }) => {
     }
 
     if (item.group === "dd") return firstRechargeImg;
+    if (item.group === "weekly") return weeklyImg;
     return defaultImg;
   };
 
@@ -129,7 +133,11 @@ const MagicChessProductList = ({  selectedItem, setSelectedItem }) => {
                 : "bg-white text-gray-700 border-gray-300"
             }`}
           >
-            <img src={img} alt={label} className="w-9 h-9 rounded-sm object-cover" />
+            <img
+              src={img}
+              alt={label}
+              className="w-9 h-9 rounded-sm object-cover"
+            />
             <span className="mt-1">{label}</span>
           </button>
         ))}
@@ -138,13 +146,14 @@ const MagicChessProductList = ({  selectedItem, setSelectedItem }) => {
       {/* Notes */}
       {activeGroup === "dd" && (
         <div className="p-3 rounded-md shadow text-sm border-l-4 bg-yellow-100 border-yellow-500 text-yellow-800">
-          <strong>Note:</strong> Double Diamonds are only available for first-time purchases. If you've already
-          purchased, please choose regular diamonds.
+          <strong>Note:</strong> Double Diamonds are only available for
+          first-time purchases. If you've already purchased, please choose
+          regular diamonds.
         </div>
       )}
 
       {/* Products grid */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-2">
         {[...filteredList]
           .sort((a, b) => {
             const aD = Number(a.diamonds) || 0;
@@ -170,30 +179,39 @@ const MagicChessProductList = ({  selectedItem, setSelectedItem }) => {
 
                 <div className="flex items-left justify-between">
                   <div className="flex items-center gap-2">
-  <div className="w-8 h-8 flex items-center">
-                    <img src={imageSrc} alt={item.label} className="w-full h-full object-cover rounded-sm" />
-                  </div>
-                  <div className="">
-                    <div className="text-[10px] line-clamp- font-semibold">
-                      {(Number(item.diamonds) || "")}{" "}
-                      {item.type === "mc-double"
-                        ? "Diamonds"
-                        : item.type === "mc-weekly"
-                        ? "Weekly"
-                        : "Diamonds"}
+                    <div className="w-8 h-8 flex items-center">
+                      <img
+                        src={imageSrc}
+                        alt={item.label}
+                        className="w-full h-full object-cover rounded-sm"
+                      />
                     </div>
-                    <div className="text-[9px] text-gray-500 mt-1 line-clamp-2">{item.label}</div>
+                    <div className="">
+                      <div className="text-[10px] line-clamp- font-semibold">
+                        {Number(item.diamonds) || ""}{" "}
+                        {item.type === "mc-double"
+                          ? "Diamonds"
+                          : item.type === "mc-weekly"
+                          ? "Weekly"
+                          : "Diamonds"}
+                      </div>
+                      <div className="text-[9px] text-gray-500 mt-1 line-clamp-2">
+                        {item.label}
+                      </div>
+                    </div>
                   </div>
-                  </div>
-                
-                                  <div className="flex items-end justify-between">
-                  <div className="text-right">
-                    <div className="text-xs font-semibold text-green-600">₹{formatPrice(item)}</div>
-                    <div className="text-[10px] text-red-500 line-through">₹{item.falseRupees}</div>
-                  </div>
-                </div>
-                </div>
 
+                  <div className="flex items-end justify-between">
+                    <div className="text-right">
+                      <div className="text-xs font-semibold text-green-600">
+                        ₹{formatPrice(item)}
+                      </div>
+                      <div className="text-[10px] text-red-500 line-through">
+                        ₹{item.falseRupees}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             );
           })}

@@ -63,10 +63,12 @@ const Payment = () => {
           setLoading(false);
 
           // If already successful, show success
+          // For manual orders, also check if paymentReceived is true
           if (
             data.status === "success" ||
             data.status === "completed" ||
-            data.status === "closed"
+            data.status === "closed" ||
+            (type === "manual" && data.paymentReceived)
           ) {
             handleSuccess(data);
           } else if (data.status === "failed") {
@@ -109,7 +111,26 @@ const Payment = () => {
             );
             setStatus(newStatus);
 
-            if (newStatus === "success" || newStatus === "completed") {
+            // For manual orders, check if paymentReceived is true (even if status is pending)
+            if (
+              type === "manual" &&
+              data.paymentReceived &&
+              newStatus === "pending"
+            ) {
+              // Clear interval if payment succeeded
+              if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+              }
+              console.log(
+                `[Payment] ✅ Payment received for manual order, showing success...`
+              );
+              // Only handle success once to prevent duplicate alerts
+              if (!successHandledRef.current) {
+                successHandledRef.current = true;
+                handleSuccess(data);
+              }
+            } else if (newStatus === "success" || newStatus === "completed") {
               // Clear interval if payment succeeded
               if (intervalRef.current) {
                 clearInterval(intervalRef.current);
@@ -235,15 +256,22 @@ const Payment = () => {
           response.data
         );
 
+        // For manual orders, check if paymentReceived is true
+        const orderDataFromResponse = response.data.orderData || orderData;
         if (
           response.data.status === "success" ||
-          response.data.status === "completed"
+          response.data.status === "completed" ||
+          (type === "manual" && orderDataFromResponse?.paymentReceived)
         ) {
           if (intervalRef.current) {
             clearInterval(intervalRef.current);
             intervalRef.current = null;
           }
-          setStatus("completed");
+          setStatus(
+            type === "manual" && orderDataFromResponse?.paymentReceived
+              ? "paid"
+              : "completed"
+          );
           // Only handle success once to prevent duplicate alerts
           if (!successHandledRef.current) {
             successHandledRef.current = true;
@@ -269,11 +297,17 @@ const Payment = () => {
   };
 
   const handleSuccess = (data) => {
-    showSuccess(
-      type === "game"
-        ? "Payment successful! Your game topup is being processed."
-        : "Payment successful! Your wallet has been topped up."
-    );
+    if (type === "manual") {
+      showSuccess(
+        "Payment received! An admin will process your order shortly. Thank you for your purchase!"
+      );
+    } else {
+      showSuccess(
+        type === "game"
+          ? "Payment successful! Your game topup is being processed."
+          : "Payment successful! Your wallet has been topped up."
+      );
+    }
 
     // Redirect after 3 seconds
     setTimeout(() => {
@@ -286,13 +320,18 @@ const Payment = () => {
       } else {
         navigate("/wallet");
       }
-    }, 1000);
+    }, 3000);
   };
 
   const getStatusIcon = () => {
+    // For manual orders with paymentReceived, show success icon even if status is pending
+    if (type === "manual" && orderData?.paymentReceived) {
+      return <FaCheckCircle className="text-6xl text-green-500" />;
+    }
     switch (status) {
       case "success":
       case "completed":
+      case "paid":
         return <FaCheckCircle className="text-6xl text-green-500" />;
       case "failed":
         return <FaTimesCircle className="text-6xl text-red-500" />;
@@ -304,9 +343,14 @@ const Payment = () => {
   };
 
   const getStatusText = () => {
+    // For manual orders with paymentReceived, show success even if status is pending
+    if (type === "manual" && orderData?.paymentReceived) {
+      return "Payment Received!";
+    }
     switch (status) {
       case "success":
       case "completed":
+      case "paid":
         return "Payment Successful!";
       case "failed":
         return "Payment Failed";
@@ -340,8 +384,10 @@ const Payment = () => {
           </div>
 
           {/* QR Code Display (for pending payments) */}
+          {/* For manual orders, show QR if payment not received yet */}
           {orderData &&
             (status === "pending" || status === "checking") &&
+            !(type === "manual" && orderData.paymentReceived) &&
             orderData.qrCode && (
               <div className="border-t border-gray-200 pt-6 mb-6">
                 <div className="text-center">
@@ -458,9 +504,25 @@ const Payment = () => {
             </div>
           )}
 
+          {/* Success Message for Manual Orders */}
+          {type === "manual" && orderData?.paymentReceived && (
+            <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-green-800 font-semibold text-center">
+                ✅ Payment Received Successfully!
+              </p>
+              <p className="text-green-700 text-sm text-center mt-2">
+                An admin will process your order shortly. You will be notified
+                once it's completed.
+              </p>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className="mt-8 flex flex-col sm:flex-row gap-4">
-            {status === "success" || status === "completed" ? (
+            {status === "success" ||
+            status === "completed" ||
+            status === "paid" ||
+            (type === "manual" && orderData?.paymentReceived) ? (
               <>
                 <button
                   onClick={() =>

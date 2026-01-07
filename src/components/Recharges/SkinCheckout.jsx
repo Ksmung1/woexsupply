@@ -261,7 +261,12 @@ const SkinCheckout = ({
   return (
     <>
       {showPhoneModal && (
-        <AddPhoneNumber onClose={() => setShowPhoneModal(false)} />
+        <AddPhoneNumber 
+          onClose={() => setShowPhoneModal(false)}
+          onSuccess={() => {
+            setShowPhoneModal(false);
+          }}
+        />
       )}
 
       <div className="w-full flex flex-col gap-6 p-0">

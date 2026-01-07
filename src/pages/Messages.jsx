@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useUser } from "../context/UserContext";
 import { db } from "../config/firebase";
 import {
@@ -18,6 +18,7 @@ const Messages = () => {
   const { user } = useUser();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const hasMarkedAsRead = useRef(false);
 
   useEffect(() => {
     if (!user?.uid) {
@@ -32,15 +33,34 @@ const Messages = () => {
       orderBy("createdAt", "desc")
     );
 
-    const unsubscribe = onSnapshot(
+      const unsubscribe = onSnapshot(
       q,
-      (snapshot) => {
+      async (snapshot) => {
         const messagesList = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
         setMessages(messagesList);
         setLoading(false);
+
+        // Automatically mark all unread messages as read when messages are loaded
+        const unreadMessages = messagesList.filter((msg) => !msg.read);
+        if (unreadMessages.length > 0 && !hasMarkedAsRead.current) {
+          hasMarkedAsRead.current = true;
+          try {
+            const updatePromises = unreadMessages.map((msg) => {
+              const messageRef = doc(db, "messages", msg.id);
+              return updateDoc(messageRef, {
+                read: true,
+                readAt: Timestamp.now(),
+              });
+            });
+            await Promise.all(updatePromises);
+          } catch (error) {
+            console.error("Error marking messages as read on open:", error);
+            hasMarkedAsRead.current = false; // Reset on error so it can retry
+          }
+        }
       },
       (error) => {
         console.error("Error fetching messages:", error);
@@ -48,7 +68,10 @@ const Messages = () => {
       }
     );
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      hasMarkedAsRead.current = false; // Reset when component unmounts
+    };
   }, [user?.uid]);
 
   const markAsRead = async (messageId) => {

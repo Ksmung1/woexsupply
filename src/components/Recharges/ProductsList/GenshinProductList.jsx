@@ -3,10 +3,8 @@ import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../../../config/firebase";
 import { useUser } from "../../../context/UserContext";
 
-import defaultImg from "../../../assets/images/game.png";
-import smallPacks from "../../../assets/images/game.png";
-import mediumPacks from "../../../assets/images/game.png";
-import largePacks from "../../../assets/images/game.png";
+import defaultImg from "../../../assets/images/genshin.png";
+import otherImg from "../../../assets/images/blessing.png";
 
 /**
  * GenshinProductList
@@ -15,7 +13,7 @@ import largePacks from "../../../assets/images/game.png";
  * - Default collection: "genshinproductlist"
  */
 
-const collectionName = "genshinproductlist";
+const collectionName = "giproductlist";
 
 const GenshinProductList = ({ selectedItem, setSelectedItem }) => {
   const { user } = useUser();
@@ -55,7 +53,10 @@ const GenshinProductList = ({ selectedItem, setSelectedItem }) => {
   // Scroll into view when selection changes
   useEffect(() => {
     if (selectedItem && selectionRef.current) {
-      selectionRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      selectionRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
     }
   }, [selectedItem]);
 
@@ -64,12 +65,22 @@ const GenshinProductList = ({ selectedItem, setSelectedItem }) => {
   // Filter out hidden items
   const visibleProducts = (products || []).filter((p) => p && !p.hide);
 
-  // Simple image selector based on diamonds / price heuristics
+  // Simple image selector - use blessing.png for blessing items, genshin.png for others
   const getImageForItem = (item) => {
-    const diamonds = Number(item.diamonds) || 0;
-    if (diamonds >= 5000) return largePacks;
-    if (diamonds >= 2000) return mediumPacks;
-    if (diamonds >= 500) return smallPacks;
+    const label = (item.label || "").toLowerCase();
+    const type = (item.type || "").toLowerCase();
+
+    // Check if it's a blessing/welkin moon item
+    if (
+      label.includes("blessing") ||
+      label.includes("welkin") ||
+      type.includes("blessing") ||
+      type.includes("welkin")
+    ) {
+      return otherImg;
+    }
+
+    // Default to genshin.png for all other items
     return defaultImg;
   };
 
@@ -95,7 +106,7 @@ const GenshinProductList = ({ selectedItem, setSelectedItem }) => {
         <p className="text-sm text-gray-500">Tap a product to select</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-2">
         {[...visibleProducts]
           .sort((a, b) => {
             // sort by diamonds (numeric) ascending for predictable order
@@ -123,21 +134,31 @@ const GenshinProductList = ({ selectedItem, setSelectedItem }) => {
                 <div className="flex items-left justify-between">
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 flex items-center">
-                      <img src={imageSrc} alt={item.label} className="w-full h-full object-cover rounded-sm" />
+                      <img
+                        src={imageSrc}
+                        alt={item.label}
+                        className="w-full h-full object-cover rounded-sm"
+                      />
                     </div>
                     <div>
                       <div className="text-[10px] font-semibold">
                         {Number(item.diamonds) || ""} {item.type || "Top Up"}
                       </div>
-                      <div className="text-[9px] text-gray-500 mt-1 line-clamp-2">{item.label}</div>
+                      <div className="text-[9px] text-gray-500 mt-1 line-clamp-2">
+                        {item.label}
+                      </div>
                     </div>
                   </div>
 
                   <div className="flex items-end justify-between">
                     <div className="text-right">
-                      <div className="text-xs font-semibold text-green-600">₹{formatPrice(item)}</div>
+                      <div className="text-xs font-semibold text-green-600">
+                        ₹{formatPrice(item)}
+                      </div>
                       {item.falseRupees ? (
-                        <div className="text-[10px] text-red-500 line-through">₹{item.falseRupees}</div>
+                        <div className="text-[10px] text-red-500 line-through">
+                          ₹{item.falseRupees}
+                        </div>
                       ) : null}
                     </div>
                   </div>

@@ -18,6 +18,7 @@ import { db } from "../config/firebase";
 import { useUser } from "../context/UserContext";
 import { useAlert } from "../context/AlertContext";
 import { useModal } from "../context/ModalContext";
+import AddPhoneNumber from "../utils/AddPhoneNumber";
 import axios from "axios";
 import coin from "../assets/images/topup.png";
 import upi from "../assets/images/upi.png";
@@ -448,6 +449,8 @@ const GameAccount = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState({});
   const [selectedGame, setSelectedGame] = useState(null);
   const [showBuyModal, setShowBuyModal] = useState(false);
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [pendingGame, setPendingGame] = useState(null);
   const [imageLoading, setImageLoading] = useState({});
   const [thumbnailLoading, setThumbnailLoading] = useState({});
 
@@ -522,6 +525,12 @@ const GameAccount = () => {
       window.location.href = "/login";
       return;
     }
+    // Check if user has phone number
+    if (!user.phone) {
+      setPendingGame(game);
+      setShowPhoneModal(true);
+      return;
+    }
     setSelectedGame(game);
     setShowBuyModal(true);
   };
@@ -533,6 +542,24 @@ const GameAccount = () => {
 
   return (
     <>
+      {showPhoneModal && (
+        <AddPhoneNumber
+          onClose={() => {
+            setShowPhoneModal(false);
+            setPendingGame(null);
+          }}
+          onSuccess={() => {
+            setShowPhoneModal(false);
+            // After phone is saved, open buy modal if there's a pending game
+            if (pendingGame) {
+              setSelectedGame(pendingGame);
+              setShowBuyModal(true);
+              setPendingGame(null);
+            }
+          }}
+          message="Please add your phone number to continue with your purchase."
+        />
+      )}
       {showBuyModal && selectedGame && (
         <BuyModal
           game={selectedGame}

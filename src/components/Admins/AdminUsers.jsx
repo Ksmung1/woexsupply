@@ -11,7 +11,7 @@ import {
   doc,
   updateDoc,
 } from "firebase/firestore";
-import { FaSpinner } from "react-icons/fa";
+import { FaSpinner, FaTimes } from "react-icons/fa";
 
 const USERS_COLLECTION = "users"; // change if your collection name is different
 
@@ -25,6 +25,7 @@ export default function AdminUsers() {
   const [updatingRole, setUpdatingRole] = useState(null); // Track which user's role is being updated
   const [updatingBalance, setUpdatingBalance] = useState(null); // Track which user's balance is being updated
   const [balanceInputs, setBalanceInputs] = useState({}); // Track balance input values
+  const [balanceConfirm, setBalanceConfirm] = useState(null); // { userId, user, oldBalance, newBalance }
 
   // debounce input to avoid too many queries
   const [debounced, setDebounced] = useState(search);
@@ -205,9 +206,10 @@ export default function AdminUsers() {
     }
   };
 
-  // Update user balance
-  const updateBalance = async (userId, newBalance) => {
-    if (updatingBalance === userId) return; // Prevent double clicks
+  // Show confirmation dialog for balance update
+  const confirmBalanceUpdate = (userId, newBalance) => {
+    const user = users.find((u) => (u.id ?? u.uid) === userId);
+    if (!user) return;
 
     const parsedBalance = parseFloat(newBalance);
     if (isNaN(parsedBalance)) {
@@ -215,11 +217,27 @@ export default function AdminUsers() {
       return;
     }
 
+    const oldBalance = user.balance ?? 0;
+    setBalanceConfirm({
+      userId,
+      user,
+      oldBalance,
+      newBalance: parsedBalance,
+    });
+  };
+
+  // Update user balance (called after confirmation)
+  const updateBalance = async () => {
+    if (!balanceConfirm) return;
+    const { userId, newBalance } = balanceConfirm;
+
+    if (updatingBalance === userId) return; // Prevent double clicks
+
     setUpdatingBalance(userId);
     try {
       const userRef = doc(db, USERS_COLLECTION, userId);
       await updateDoc(userRef, {
-        balance: parsedBalance,
+        balance: newBalance,
       });
       // Clear the input value after successful update
       setBalanceInputs((prev) => {
@@ -227,6 +245,7 @@ export default function AdminUsers() {
         delete updated[userId];
         return updated;
       });
+      setBalanceConfirm(null); // Close confirmation dialog
     } catch (err) {
       console.error("Error updating user balance:", err);
       setError("Failed to update user balance.");
@@ -341,6 +360,9 @@ export default function AdminUsers() {
                 Email
               </th>
               <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Phone
+              </th>
+              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Balance
               </th>
               <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -361,11 +383,12 @@ export default function AdminUsers() {
               const userRole = u.role || "customer";
               const isUpdating = updatingRole === (u.id ?? u.uid);
               const isUpdatingBalance = updatingBalance === (u.id ?? u.uid);
-              const currentBalance = balanceInputs[u.id ?? u.uid] !== undefined 
-                ? balanceInputs[u.id ?? u.uid] 
-                : (u.balance ?? 0);
+              const currentBalance =
+                balanceInputs[u.id ?? u.uid] !== undefined
+                  ? balanceInputs[u.id ?? u.uid]
+                  : u.balance ?? 0;
               const userId = u.id ?? u.uid;
-              
+
               return (
                 <tr
                   key={userId ?? i}
@@ -388,15 +411,28 @@ export default function AdminUsers() {
                     </span>
                   </td>
                   <td className="px-3 py-2">
+                    <span
+                      className="text-xs text-gray-600 truncate block max-w-[150px]"
+                      title={u.phone ?? ""}
+                    >
+                      {u.phone ?? "—"}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2">
                     <div className="flex items-center gap-2">
                       <input
                         type="number"
                         value={currentBalance}
-                        onChange={(e) => handleBalanceChange(userId, e.target.value)}
+                        onChange={(e) =>
+                          handleBalanceChange(userId, e.target.value)
+                        }
                         onBlur={(e) => {
                           const newValue = parseFloat(e.target.value);
-                          if (!isNaN(newValue) && newValue !== parseFloat(u.balance ?? 0)) {
-                            updateBalance(userId, e.target.value);
+                          if (
+                            !isNaN(newValue) &&
+                            newValue !== parseFloat(u.balance ?? 0)
+                          ) {
+                            confirmBalanceUpdate(userId, e.target.value);
                           }
                         }}
                         onKeyDown={(e) => {
@@ -415,10 +451,10 @@ export default function AdminUsers() {
                   <td className="px-3 py-2">
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-gray-600">
-                        {userRole === "reseller" 
-                          ? "Reseller" 
-                          : userRole === "admin" 
-                          ? "Admin" 
+                        {userRole === "reseller"
+                          ? "Reseller"
+                          : userRole === "admin"
+                          ? "Admin"
                           : "Customer"}
                       </span>
                       <button
@@ -475,7 +511,7 @@ export default function AdminUsers() {
             {display.length === 0 && !loading && (
               <tr>
                 <td
-                  colSpan={7}
+                  colSpan={8}
                   className="px-3 py-6 text-center text-xs text-gray-500"
                 >
                   No users found.
@@ -498,11 +534,12 @@ export default function AdminUsers() {
             const userRole = u.role || "customer";
             const isUpdating = updatingRole === (u.id ?? u.uid);
             const isUpdatingBalance = updatingBalance === (u.id ?? u.uid);
-            const currentBalance = balanceInputs[u.id ?? u.uid] !== undefined 
-              ? balanceInputs[u.id ?? u.uid] 
-              : (u.balance ?? 0);
+            const currentBalance =
+              balanceInputs[u.id ?? u.uid] !== undefined
+                ? balanceInputs[u.id ?? u.uid]
+                : u.balance ?? 0;
             const userId = u.id ?? u.uid;
-            
+
             return (
               <div
                 key={userId ?? i}
@@ -522,6 +559,12 @@ export default function AdminUsers() {
                       {u.email ?? "—"}
                     </span>
                   </div>
+                  <div>
+                    <span className="text-gray-500">Phone:</span>
+                    <span className="text-gray-700 ml-1 truncate block">
+                      {u.phone ?? "—"}
+                    </span>
+                  </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-gray-500">Balance:</span>
@@ -529,11 +572,16 @@ export default function AdminUsers() {
                         <input
                           type="number"
                           value={currentBalance}
-                          onChange={(e) => handleBalanceChange(userId, e.target.value)}
+                          onChange={(e) =>
+                            handleBalanceChange(userId, e.target.value)
+                          }
                           onBlur={(e) => {
                             const newValue = parseFloat(e.target.value);
-                            if (!isNaN(newValue) && newValue !== parseFloat(u.balance ?? 0)) {
-                              updateBalance(userId, e.target.value);
+                            if (
+                              !isNaN(newValue) &&
+                              newValue !== parseFloat(u.balance ?? 0)
+                            ) {
+                              confirmBalanceUpdate(userId, e.target.value);
                             }
                           }}
                           onKeyDown={(e) => {
@@ -554,10 +602,10 @@ export default function AdminUsers() {
                     <div className="flex items-center gap-2">
                       <span className="text-gray-500">Role:</span>
                       <span className="text-xs text-gray-700">
-                        {userRole === "reseller" 
-                          ? "Reseller" 
-                          : userRole === "admin" 
-                          ? "Admin" 
+                        {userRole === "reseller"
+                          ? "Reseller"
+                          : userRole === "admin"
+                          ? "Admin"
                           : "Customer"}
                       </span>
                       <button
@@ -612,6 +660,122 @@ export default function AdminUsers() {
           })
         )}
       </div>
+
+      {/* Balance Update Confirmation Modal */}
+      {balanceConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Confirm Balance Update
+              </h2>
+              <button
+                onClick={() => setBalanceConfirm(null)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <FaTimes className="text-sm" />
+              </button>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                <div>
+                  <span className="text-xs text-gray-500">Username:</span>
+                  <p className="text-sm font-medium text-gray-900">
+                    {balanceConfirm.user.name ??
+                      balanceConfirm.user.username ??
+                      "—"}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-500">Email:</span>
+                  <p className="text-sm text-gray-700">
+                    {balanceConfirm.user.email ?? "—"}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-500">UID:</span>
+                  <p className="text-xs font-mono text-gray-600 break-all">
+                    {balanceConfirm.userId}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-500">Role:</span>
+                  <p className="text-sm text-gray-700">
+                    {balanceConfirm.user.role === "reseller"
+                      ? "Reseller"
+                      : balanceConfirm.user.role === "admin"
+                      ? "Admin"
+                      : "Customer"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="border-t border-b border-gray-200 py-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-600">
+                    Current Balance:
+                  </span>
+                  <span className="text-sm font-semibold text-gray-900">
+                    ${balanceConfirm.oldBalance.toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">New Balance:</span>
+                  <span className="text-sm font-semibold text-purple-600">
+                    ${balanceConfirm.newBalance.toFixed(2)}
+                  </span>
+                </div>
+                <div className="mt-2 pt-2 border-t border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">
+                      Change:
+                    </span>
+                    <span
+                      className={`text-sm font-semibold ${
+                        balanceConfirm.newBalance >= balanceConfirm.oldBalance
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
+                    >
+                      {balanceConfirm.newBalance >= balanceConfirm.oldBalance
+                        ? "+"
+                        : ""}
+                      $
+                      {(
+                        balanceConfirm.newBalance - balanceConfirm.oldBalance
+                      ).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setBalanceConfirm(null)}
+                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={updateBalance}
+                disabled={updatingBalance === balanceConfirm.userId}
+                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {updatingBalance === balanceConfirm.userId ? (
+                  <>
+                    <FaSpinner className="animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  "Confirm Update"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

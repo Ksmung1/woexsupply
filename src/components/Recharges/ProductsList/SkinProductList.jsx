@@ -77,7 +77,7 @@ const SkinProductList = ({ selectedItem, setSelectedItem }) => {
       <h2 className="text-xl font-bold mb-4">Skin Products</h2>
 
       {/* Products grid */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-2">
         {[...filteredList]
           .sort((a, b) => {
             const aPrice = Number(a.rupees) || 0;

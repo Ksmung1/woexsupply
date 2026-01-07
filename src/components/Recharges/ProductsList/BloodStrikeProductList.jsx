@@ -3,12 +3,16 @@ import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../../../config/firebase";
 import { useUser } from "../../../context/UserContext";
 
-import diamondImg from "../../../assets/images/game.png";
 import firstRechargeImg from "../../../assets/images/game.png";
-import defaultImg from "../../../assets/images/game.png";
-import smallPacks from "../../../assets/images/game.png";
-import mediumPacks from "../../../assets/images/game.png";
-import largePacks from "../../../assets/images/game.png";
+import defaultImg from "../../../assets/images/105-golds.webp";
+import golds105 from "../../../assets/images/105-golds.webp";
+import golds320 from "../../../assets/images/320-golds.webp";
+import golds540 from "../../../assets/images/540-golds.webp";
+import golds1100 from "../../../assets/images/1100-golds.webp";
+import golds2260 from "../../../assets/images/2260-golds.webp";
+import golds5800 from "../../../assets/images/5800-golds.webp";
+import expressPassImg from "../../../assets/images/strikeelite.png";
+import premiumPassImg from "../../../assets/images/strikepremium.png";
 
 /**
  * MobileLegendsProductList
@@ -17,12 +21,21 @@ import largePacks from "../../../assets/images/game.png";
  * - Safer numeric parsing and type checks
  */
 
-const groupNames = {
-  bloodstrike: { label: "Bloodstrike", img: firstRechargeImg },
-  others: { label: "Others", img: diamondImg },
+const shardImageMap = {
+  105: golds105,
+  320: golds320,
+  540: golds540,
+  1100: golds1100,
+  2260: golds2260,
+  5800: golds5800,
 };
-const collectionName = 'bsproductlist'
-const BloodStrikeProductList = ({  selectedItem, setSelectedItem }) => {
+
+const groupNames = {
+  bloodstrike: { label: "Bloodstrike", img: golds105 },
+  others: { label: "Others", img: expressPassImg },
+};
+const collectionName = "bsproductlist";
+const BloodStrikeProductList = ({ selectedItem, setSelectedItem }) => {
   const { user } = useUser();
   const [products, setProducts] = useState([]);
   const [loaded, setLoaded] = useState(false);
@@ -33,7 +46,7 @@ const BloodStrikeProductList = ({  selectedItem, setSelectedItem }) => {
   useEffect(() => {
     setLoaded(false);
     try {
-      console.log(collectionName)
+      console.log(collectionName);
       const colRef = collection(db, collectionName);
       const unsub = onSnapshot(
         colRef,
@@ -62,7 +75,10 @@ const BloodStrikeProductList = ({  selectedItem, setSelectedItem }) => {
   // After selecting, bring selection into view
   useEffect(() => {
     if (selectedItem && selectionRef.current) {
-      selectionRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      selectionRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
     }
   }, [selectedItem]);
 
@@ -79,15 +95,24 @@ const BloodStrikeProductList = ({  selectedItem, setSelectedItem }) => {
   const getImageByGroupOrType = (item) => {
     const diamonds = Number(item.diamonds) || 0;
     const t = (item.type || "").toLowerCase();
+    const label = (item.label || "").toLowerCase();
 
-
-    if (item.group === "d") {
-      if (diamonds >= 2000) return largePacks;
-      if (diamonds >= 1000) return mediumPacks;
-      if (diamonds >= 500) return diamondImg;
-      if (diamonds >= 100) return smallPacks;
-      return smallPacks;
+    // Handle "others" group images based on label
+    if (item.group === "others" || t === "bs-others") {
+      if (label.includes("elite") || label.includes("express"))
+        return expressPassImg;
+      if (label.includes("premium")) return premiumPassImg;
+      return defaultImg;
     }
+
+    // Handle "bloodstrike" group images based on diamonds amount using shardImageMap
+    // Map diamonds to closest matching image
+    if (diamonds >= 5800) return shardImageMap[5800];
+    if (diamonds >= 2260) return shardImageMap[2260];
+    if (diamonds >= 1100) return shardImageMap[1100];
+    if (diamonds >= 540) return shardImageMap[540];
+    if (diamonds >= 320) return shardImageMap[320];
+    if (diamonds >= 105) return shardImageMap[105];
     return defaultImg;
   };
 
@@ -121,7 +146,11 @@ const BloodStrikeProductList = ({  selectedItem, setSelectedItem }) => {
                 : "bg-white text-gray-700 border-gray-300"
             }`}
           >
-            <img src={img} alt={label} className="w-9 h-9 rounded-sm object-cover" />
+            <img
+              src={img}
+              alt={label}
+              className="w-9 h-9 rounded-sm object-cover"
+            />
             <span className="mt-1">{label}</span>
           </button>
         ))}
@@ -130,13 +159,14 @@ const BloodStrikeProductList = ({  selectedItem, setSelectedItem }) => {
       {/* Notes */}
       {activeGroup === "dd" && (
         <div className="p-3 rounded-md shadow text-sm border-l-4 bg-yellow-100 border-yellow-500 text-yellow-800">
-          <strong>Note:</strong> Double Diamonds are only available for first-time purchases. If you've already
-          purchased, please choose regular diamonds.
+          <strong>Note:</strong> Double Diamonds are only available for
+          first-time purchases. If you've already purchased, please choose
+          regular diamonds.
         </div>
       )}
 
       {/* Products grid */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-2">
         {[...filteredList]
           .sort((a, b) => {
             const aD = Number(a.diamonds) || 0;
@@ -162,32 +192,51 @@ const BloodStrikeProductList = ({  selectedItem, setSelectedItem }) => {
 
                 <div className="flex items-left justify-between">
                   <div className="flex items-center gap-2">
-  <div className="w-8 h-8 flex items-center">
-                    <img src={imageSrc} alt={item.label} className="w-full h-full object-cover rounded-sm" />
-                  </div>
-                  <div className="">
-                    <div className="text-[10px] line-clamp- font-semibold">
-                      {(Number(item.diamonds) || "")}{" "}
-                      {item.type === "double diamond"
-                        ? "Double"
-                        : item.type === "ml-weekly"
-                        ? "Weekly"
-                        : item.type === "ml-twilight"
-                        ? "Twilight"
-                        : "Diamonds"}
+                    <div className="w-8 h-8 flex items-center">
+                      <img
+                        src={imageSrc}
+                        alt={item.label}
+                        className="w-full h-full object-cover rounded-sm"
+                      />
                     </div>
-                    <div className="text-[9px] text-gray-500 mt-1 line-clamp-2">{item.label}</div>
+                    <div className="">
+                      <div className="text-[10px] line-clamp- font-semibold">
+                        {item.group === "others" ||
+                        (item.type || "").toLowerCase() === "bs-others" ? (
+                          item.label
+                        ) : (
+                          <>
+                            {Number(item.diamonds) || ""}{" "}
+                            {item.type === "double diamond"
+                              ? "Double"
+                              : item.type === "bs-weekly"
+                              ? "Weekly"
+                              : item.type === "bs-twilight"
+                              ? "Twilight"
+                              : "Golds"}
+                          </>
+                        )}
+                      </div>
+                      {item.group !== "others" &&
+                        (item.type || "").toLowerCase() !== "bs-others" && (
+                          <div className="text-[9px] text-gray-500 mt-1 line-clamp-2">
+                            {item.label}
+                          </div>
+                        )}
+                    </div>
                   </div>
-                  </div>
-                
-                                  <div className="flex items-end justify-between">
-                  <div className="text-right">
-                    <div className="text-xs font-semibold text-green-600">₹{formatPrice(item)}</div>
-                    <div className="text-[10px] text-red-500 line-through">₹{item.falseRupees}</div>
-                  </div>
-                </div>
-                </div>
 
+                  <div className="flex items-end justify-between">
+                    <div className="text-right">
+                      <div className="text-xs font-semibold text-green-600">
+                        ₹{formatPrice(item)}
+                      </div>
+                      <div className="text-[10px] text-red-500 line-through">
+                        ₹{item.falseRupees}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             );
           })}

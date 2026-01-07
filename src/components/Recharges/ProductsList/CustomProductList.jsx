@@ -10,10 +10,6 @@ import group2 from "../../../assets/images/d3.jpg";
 import group3 from "../../../assets/images/d4.jpg";
 import group4 from "../../../assets/images/d5.jpg";
 import group5 from "../../../assets/images/d2.jpg";
-import smallPacks from "../../../assets/images/small-packs.png";
-import mediumPacks from "../../../assets/images/medium-packs.png";
-import largePacks from "../../../assets/images/large-packs.png";
-import weeklyImg from "../../../assets/images/weekly.avif";
 import defaultImg from "../../../assets/images/d1.jpg";
 
 const collectionName = "customproductlist";
@@ -157,7 +153,7 @@ const CustomProductList = ({ selectedItem, setSelectedItem }) => {
       </div>
 
       {/* ================= PRODUCTS ================= */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-2">
         {filteredList.map((item) => (
           <div
             key={item.id}

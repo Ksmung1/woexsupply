@@ -3,13 +3,17 @@ import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../../../config/firebase";
 import { useUser } from "../../../context/UserContext";
 
-import diamondImg from "../../../assets/images/game.png";
-import firstRechargeImg from "../../../assets/images/game.png";
-import defaultImg from "../../../assets/images/game.png";
-import smallPacks from "../../../assets/images/game.png";
-import mediumPacks from "../../../assets/images/game.png";
-import largePacks from "../../../assets/images/game.png";
-
+import diamondImg from "../../../assets/images/large-goldstar.png";
+import others from "../../../assets/images/supersus-monthly.png";
+import defaultImg from "../../../assets/images/small-goldstar.png";
+import smallPacks from "../../../assets/images/medium-goldstar.png";
+import mediumPacks from "../../../assets/images/big-goldstar.png";
+import largePacks from "../../../assets/images/large-goldstar.png";
+import monthly from "../../../assets/images/supersus-monthly.png";
+import vip from "../../../assets/images/supersus-supervip.png";
+import weekly from "../../../assets/images/supersus-weekly.webp";
+import superPass from "../../../assets/images/image.png";
+import superPassPackage from "../../../assets/images/image copy.png";
 /**
  * MobileLegendsProductList
  * - Now accepts `collectionName` prop (default: "mlproductlist")
@@ -18,11 +22,11 @@ import largePacks from "../../../assets/images/game.png";
  */
 
 const groupNames = {
-  goldstar: { label: "Goldstar", img: firstRechargeImg },
-  others: { label: "Others", img: diamondImg },
+  goldstar: { label: "Goldstar", img: diamondImg },
+  others: { label: "Others", img: others },
 };
-const collectionName = 'ssproductlist'
-const SupersusProductList = ({  selectedItem, setSelectedItem }) => {
+const collectionName = "ssproductlist";
+const SupersusProductList = ({ selectedItem, setSelectedItem }) => {
   const { user } = useUser();
   const [products, setProducts] = useState([]);
   const [loaded, setLoaded] = useState(false);
@@ -33,7 +37,7 @@ const SupersusProductList = ({  selectedItem, setSelectedItem }) => {
   useEffect(() => {
     setLoaded(false);
     try {
-      console.log(collectionName)
+      console.log(collectionName);
       const colRef = collection(db, collectionName);
       const unsub = onSnapshot(
         colRef,
@@ -62,7 +66,10 @@ const SupersusProductList = ({  selectedItem, setSelectedItem }) => {
   // After selecting, bring selection into view
   useEffect(() => {
     if (selectedItem && selectionRef.current) {
-      selectionRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      selectionRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
     }
   }, [selectedItem]);
 
@@ -79,16 +86,25 @@ const SupersusProductList = ({  selectedItem, setSelectedItem }) => {
   const getImageByGroupOrType = (item) => {
     const diamonds = Number(item.diamonds) || 0;
     const t = (item.type || "").toLowerCase();
+    const label = (item.label || "").toLowerCase();
 
-
-    if (item.group === "d") {
-      if (diamonds >= 2000) return largePacks;
-      if (diamonds >= 1000) return mediumPacks;
-      if (diamonds >= 500) return diamondImg;
-      if (diamonds >= 100) return smallPacks;
-      return smallPacks;
+    // Handle "others" group images based on label
+    if (item.group === "others" || t === "ss-others") {
+      if (label.includes("weekly")) return weekly;
+      if (label.includes("monthly")) return monthly;
+      if (label.includes("super vip") || label.includes("supervip")) return vip;
+      if (label.includes("super pass package")) return superPassPackage;
+      if (label.includes("super pass")) return superPass;
+      return defaultImg;
     }
-    return defaultImg;
+
+    // Handle "goldstar" group images based on diamonds amount
+    // If not "others" group, treat as goldstar
+    if (diamonds >= 2000) return largePacks;
+    if (diamonds >= 1000) return mediumPacks;
+    if (diamonds >= 500) return diamondImg;
+    if (diamonds >= 100) return smallPacks;
+    return smallPacks;
   };
 
   const formatPrice = (item) => {
@@ -121,7 +137,11 @@ const SupersusProductList = ({  selectedItem, setSelectedItem }) => {
                 : "bg-white text-gray-700 border-gray-300"
             }`}
           >
-            <img src={img} alt={label} className="w-9 h-9 rounded-sm object-cover" />
+            <img
+              src={img}
+              alt={label}
+              className="w-9 h-9 rounded-sm object-cover"
+            />
             <span className="mt-1">{label}</span>
           </button>
         ))}
@@ -130,13 +150,14 @@ const SupersusProductList = ({  selectedItem, setSelectedItem }) => {
       {/* Notes */}
       {activeGroup === "dd" && (
         <div className="p-3 rounded-md shadow text-sm border-l-4 bg-yellow-100 border-yellow-500 text-yellow-800">
-          <strong>Note:</strong> Double Diamonds are only available for first-time purchases. If you've already
-          purchased, please choose regular diamonds.
+          <strong>Note:</strong> Double Diamonds are only available for
+          first-time purchases. If you've already purchased, please choose
+          regular diamonds.
         </div>
       )}
 
       {/* Products grid */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-2">
         {[...filteredList]
           .sort((a, b) => {
             const aD = Number(a.diamonds) || 0;
@@ -162,32 +183,51 @@ const SupersusProductList = ({  selectedItem, setSelectedItem }) => {
 
                 <div className="flex items-left justify-between">
                   <div className="flex items-center gap-2">
-  <div className="w-8 h-8 flex items-center">
-                    <img src={imageSrc} alt={item.label} className="w-full h-full object-cover rounded-sm" />
-                  </div>
-                  <div className="">
-                    <div className="text-[10px] line-clamp- font-semibold">
-                      {(Number(item.diamonds) || "")}{" "}
-                      {item.type === "double diamond"
-                        ? "Double"
-                        : item.type === "ml-weekly"
-                        ? "Weekly"
-                        : item.type === "ml-twilight"
-                        ? "Twilight"
-                        : "Diamonds"}
+                    <div className="w-8 h-8 flex items-center">
+                      <img
+                        src={imageSrc}
+                        alt={item.label}
+                        className="w-full h-full object-cover rounded-sm"
+                      />
                     </div>
-                    <div className="text-[9px] text-gray-500 mt-1 line-clamp-2">{item.label}</div>
+                    <div className="">
+                      <div className="text-[10px] line-clamp- font-semibold">
+                        {item.group === "others" ||
+                        (item.type || "").toLowerCase() === "ss-others" ? (
+                          item.label
+                        ) : (
+                          <>
+                            {Number(item.diamonds) || ""}{" "}
+                            {item.type === "double diamond"
+                              ? "Double"
+                              : item.type === "ml-weekly"
+                              ? "Weekly"
+                              : item.type === "ml-twilight"
+                              ? "Twilight"
+                              : "Goldstar"}
+                          </>
+                        )}
+                      </div>
+                      {item.group !== "others" &&
+                        (item.type || "").toLowerCase() !== "ss-others" && (
+                          <div className="text-[9px] text-gray-500 mt-1 line-clamp-2">
+                            {item.label}
+                          </div>
+                        )}
+                    </div>
                   </div>
-                  </div>
-                
-                                  <div className="flex items-end justify-between">
-                  <div className="text-right">
-                    <div className="text-xs font-semibold text-green-600">₹{formatPrice(item)}</div>
-                    <div className="text-[10px] text-red-500 line-through">₹{item.falseRupees}</div>
-                  </div>
-                </div>
-                </div>
 
+                  <div className="flex items-end justify-between">
+                    <div className="text-right">
+                      <div className="text-xs font-semibold text-green-600">
+                        ₹{formatPrice(item)}
+                      </div>
+                      <div className="text-[10px] text-red-500 line-through">
+                        ₹{item.falseRupees}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             );
           })}

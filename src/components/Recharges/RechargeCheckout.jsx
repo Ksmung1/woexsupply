@@ -182,7 +182,13 @@ const RechargeCheckout = ({
   return (
     <>
       {showPhoneModal && (
-        <AddPhoneNumber onClose={() => setShowPhoneModal(false)} />
+        <AddPhoneNumber 
+          onClose={() => setShowPhoneModal(false)}
+          onSuccess={() => {
+            // Phone number saved, user context will be updated automatically
+            setShowPhoneModal(false);
+          }}
+        />
       )}
 
       {/* PAYMENT METHOD (DESKTOP OR MOBILE MODAL) */}

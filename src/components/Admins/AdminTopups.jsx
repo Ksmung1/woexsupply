@@ -8,6 +8,7 @@ import {
   updateDoc,
   doc,
 } from "firebase/firestore";
+import { FaTimes, FaCoins } from "react-icons/fa";
 
 /**
  * AdminTopups
@@ -48,6 +49,7 @@ export default function AdminTopups() {
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState(null);
   const [error, setError] = useState(null);
+  const [selectedTopup, setSelectedTopup] = useState(null); // Selected topup for details view
 
   useEffect(() => {
     setLoading(true);
@@ -157,7 +159,16 @@ export default function AdminTopups() {
                 {topups.map((topup) => (
                   <tr
                     key={topup.id}
-                    className="hover:bg-gray-50 transition-colors"
+                    className="hover:bg-gray-50 transition-colors cursor-pointer"
+                    onClick={(e) => {
+                      // Don't open details if clicking on interactive elements
+                      if (
+                        !e.target.closest("button") &&
+                        !e.target.closest("input")
+                      ) {
+                        setSelectedTopup(topup);
+                      }
+                    }}
                   >
                     <td className="px-3 py-2">
                       <span className="text-xs font-mono text-gray-600 truncate block max-w-[120px]">
@@ -241,7 +252,16 @@ export default function AdminTopups() {
             {topups.map((topup) => (
               <div
                 key={topup.id}
-                className="bg-white rounded-lg border border-gray-200 p-3 hover:shadow-sm transition-shadow"
+                className="bg-white rounded-lg border border-gray-200 p-3 hover:shadow-sm transition-shadow cursor-pointer"
+                onClick={(e) => {
+                  // Don't open details if clicking on interactive elements
+                  if (
+                    !e.target.closest("button") &&
+                    !e.target.closest("input")
+                  ) {
+                    setSelectedTopup(topup);
+                  }
+                }}
               >
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div className="flex-1 min-w-0">
@@ -309,6 +329,180 @@ export default function AdminTopups() {
             ))}
           </div>
         </>
+      )}
+
+      {/* Topup Details Modal */}
+      {selectedTopup && (
+        <div className="fixed inset-0  bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                  <FaCoins className="text-purple-600" />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Topup Details
+                </h2>
+              </div>
+              <button
+                onClick={() => setSelectedTopup(null)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <FaTimes className="text-lg" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <span className="text-xs text-gray-500 block mb-1">
+                    Topup ID
+                  </span>
+                  <p className="text-xs font-mono text-gray-900 break-all">
+                    {selectedTopup.id ?? "—"}
+                  </p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <span className="text-xs text-gray-500 block mb-1">
+                    Status
+                  </span>
+                  <span
+                    className={
+                      "inline-flex items-center px-2 py-1 text-xs font-medium rounded-full capitalize " +
+                      (selectedTopup.status === "completed" ||
+                      selectedTopup.status === "success"
+                        ? "bg-green-100 text-green-700"
+                        : selectedTopup.status === "failed"
+                        ? "bg-red-100 text-red-700"
+                        : "bg-yellow-100 text-yellow-700")
+                    }
+                  >
+                    {selectedTopup.status ?? "pending"}
+                  </span>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <span className="text-xs text-gray-500 block mb-1">User</span>
+                  <p className="text-sm font-medium text-gray-900">
+                    {selectedTopup.username ??
+                      selectedTopup.name ??
+                      selectedTopup.user ??
+                      selectedTopup.uid ??
+                      "—"}
+                  </p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <span className="text-xs text-gray-500 block mb-1">
+                    Amount
+                  </span>
+                  <p className="text-sm font-semibold text-gray-900">
+                    ₹
+                    {selectedTopup.amount ??
+                      selectedTopup.cost ??
+                      selectedTopup.price ??
+                      "—"}
+                  </p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <span className="text-xs text-gray-500 block mb-1">
+                    Created At
+                  </span>
+                  <p className="text-sm text-gray-700">
+                    {formatDate(selectedTopup.createdAt)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Additional Topup Data */}
+              {(() => {
+                // Only show these specific fields in Additional Information
+                const allowedFields = [
+                  "date",
+                  "gameUsername",
+                  "id",
+                  "item",
+                  "payment",
+                  "product",
+                  "productId",
+                  "status",
+                  "time",
+                  "type",
+                  "uid",
+                  "userId",
+                  "username",
+                  "utr",
+                  "zoneId",
+                  "api",
+                  "completedAt",
+                  "cost",
+                  "createdAt",
+                ];
+
+                // Get fields that are in allowedFields but not already shown in main grid
+                const mainGridFields = [
+                  "id",
+                  "status",
+                  "username",
+                  "name",
+                  "user",
+                  "uid",
+                  "amount",
+                  "cost",
+                  "price",
+                  "createdAt",
+                ];
+
+                const additionalFields = allowedFields.filter(
+                  (field) => !mainGridFields.includes(field)
+                );
+
+                const fieldsToShow = additionalFields.filter((field) =>
+                  selectedTopup.hasOwnProperty(field)
+                );
+
+                if (fieldsToShow.length === 0) return null;
+
+                return (
+                  <div className="border-t border-gray-200 pt-4">
+                    <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                      Additional Information
+                    </h3>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="space-y-2 max-h-60 overflow-y-auto">
+                        {fieldsToShow.map((key) => {
+                          const value = selectedTopup[key];
+                          return (
+                            <div
+                              key={key}
+                              className="flex justify-between items-start gap-4 text-xs"
+                            >
+                              <span className="text-gray-500 font-medium capitalize">
+                                {key.replace(/([A-Z])/g, " $1").trim()}:
+                              </span>
+                              <span className="text-gray-700 text-right break-all flex-1">
+                                {typeof value === "object" && value !== null
+                                  ? JSON.stringify(value, null, 2)
+                                  : String(value ?? "—")}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setSelectedTopup(null)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
