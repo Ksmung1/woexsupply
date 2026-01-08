@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useUser } from "../context/UserContext";
+import { useTheme } from "../context/ThemeContext";
 import { useNavigate } from "react-router-dom";
 import {
   collection,
@@ -23,6 +24,7 @@ import {
 
 const MyAccounts = () => {
   const { user } = useUser();
+  const { isDark } = useTheme();
   const navigate = useNavigate();
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -115,16 +117,16 @@ const MyAccounts = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-gray-900" : "bg-white"}`}>
         <FaSpinner className="animate-spin text-4xl text-blue-600" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className={`min-h-screen py-8 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
       <div className="max-w-7xl mx-auto px-4">
-        <h1 className="text-3xl font-bold mb-6">My Game Accounts</h1>
+        <h1 className={`text-3xl font-bold mb-6 ${isDark ? "text-white" : "text-gray-900"}`}>My Game Accounts</h1>
 
         {/* Filters */}
         <div className="flex gap-3 mb-6">
@@ -135,7 +137,9 @@ const MyAccounts = () => {
               className={`px-4 py-2 rounded ${
                 statusFilter === s
                   ? "bg-blue-600 text-white"
-                  : "bg-white border"
+                  : isDark
+                  ? "bg-gray-800 border border-gray-700 text-gray-300"
+                  : "bg-white border border-gray-300 text-gray-700"
               }`}
             >
               {s.toUpperCase()}
@@ -145,19 +149,19 @@ const MyAccounts = () => {
 
         {/* List */}
         {filteredAccounts.length === 0 ? (
-          <div className="text-center bg-white p-8 rounded shadow">
-            <FaGamepad className="mx-auto text-4xl text-gray-400 mb-4" />
-            <p>No purchased accounts found.</p>
+          <div className={`text-center p-8 rounded shadow ${isDark ? "bg-gray-800" : "bg-white"}`}>
+            <FaGamepad className={`mx-auto text-4xl mb-4 ${isDark ? "text-gray-600" : "text-gray-400"}`} />
+            <p className={isDark ? "text-gray-400" : "text-gray-700"}>No purchased accounts found.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredAccounts.map((account) => (
               <div
                 key={account.id}
-                className="bg-white rounded shadow overflow-hidden"
+                className={`rounded shadow overflow-hidden ${isDark ? "bg-gray-800" : "bg-white"}`}
               >
                 {/* Image */}
-                <div className="aspect-video bg-gray-200">
+                <div className={`aspect-video ${isDark ? "bg-gray-700" : "bg-gray-200"}`}>
                   {account.images?.[0] ? (
                     <img
                       src={account.images[0]}
@@ -166,40 +170,40 @@ const MyAccounts = () => {
                     />
                   ) : (
                     <div className="flex items-center justify-center h-full">
-                      <FaGamepad className="text-4xl text-gray-400" />
+                      <FaGamepad className={`text-4xl ${isDark ? "text-gray-600" : "text-gray-400"}`} />
                     </div>
                   )}
                 </div>
 
                 {/* Content */}
                 <div className="p-4 space-y-2">
-                  <h3 className="font-bold text-lg">
+                  <h3 className={`font-bold text-lg ${isDark ? "text-white" : "text-gray-900"}`}>
                     {account.gameLabel}
                   </h3>
 
-                  <div className="flex items-center gap-2 text-sm">
+                  <div className={`flex items-center gap-2 text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                     <FaRupeeSign />
                     ₹{account.paymentMeta?.amount || 0}
                   </div>
 
-                  <div className="flex items-center gap-2 text-sm">
+                  <div className={`flex items-center gap-2 text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                     <FaPhone />
                     {account.boughtBy?.phoneNumber || "N/A"}
                   </div>
 
-                  <div className="flex items-center gap-2 text-sm">
+                  <div className={`flex items-center gap-2 text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                     <FaCalendar />
                     {formatDate(account.boughtBy?.purchasedAt)}
                   </div>
 
                   <div className="flex items-center gap-2 mt-3">
                     {getStatusIcon(account.status)}
-                    <span className="font-semibold">
+                    <span className={`font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                       {account.status?.toUpperCase()}
                     </span>
                   </div>
 
-                  <span className="inline-block mt-2 px-3 py-1 text-xs rounded bg-blue-100 text-blue-800">
+                  <span className={`inline-block mt-2 px-3 py-1 text-xs rounded ${isDark ? "bg-blue-900/30 text-blue-400" : "bg-blue-100 text-blue-800"}`}>
                     Paid via {account.boughtBy?.paymentMethod?.toUpperCase()}
                   </span>
                 </div>

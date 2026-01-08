@@ -1,7 +1,9 @@
 import React from "react";
+import { useTheme } from "../context/ThemeContext";
 import { FaGamepad, FaCoins, FaShieldAlt, FaHeadset, FaRocket, FaUsers, FaAward, FaGlobe } from "react-icons/fa";
 
 const About = () => {
+  const { isDark } = useTheme();
   const features = [
     {
       icon: FaGamepad,
@@ -43,14 +45,14 @@ const About = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-indigo-50/30 py-8">
+    <div className={`min-h-screen bg-gradient-to-br py-8 ${isDark ? "from-gray-900 via-gray-900 to-gray-800" : "from-gray-50 via-purple-50/30 to-indigo-50/30"}`}>
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
         {/* Header Section */}
         <div className="text-center mb-12 md:mb-16">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 mb-4">
+          <h1 className={`text-4xl md:text-5xl lg:text-6xl font-bold mb-4 ${isDark ? "text-white" : "text-gray-800"}`}>
             About Us
           </h1>
-          <p className="text-lg md:text-xl text-gray-600 mx-auto">
+          <p className={`text-lg md:text-xl mx-auto ${isDark ? "text-gray-400" : "text-gray-600"}`}>
             Your trusted partner for game credits, recharges, and digital gaming solutions.
             We're committed to providing the best gaming experience for players worldwide.
           </p>
@@ -58,12 +60,12 @@ const About = () => {
 
         {/* Mission Section */}
         <div className="mb-16 md:mb-20">
-          <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12">
+          <div className={`rounded-2xl shadow-xl p-8 md:p-12 ${isDark ? "bg-gray-800" : "bg-white"}`}>
             <div className="flex items-center gap-3 mb-6">
               <FaRocket className="text-3xl text-purple-600" />
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-800">Our Mission</h2>
+              <h2 className={`text-3xl md:text-4xl font-bold ${isDark ? "text-white" : "text-gray-800"}`}>Our Mission</h2>
             </div>
-            <p className="text-lg text-gray-700 leading-relaxed">
+            <p className={`text-lg leading-relaxed ${isDark ? "text-gray-300" : "text-gray-700"}`}>
               Our mission is to make gaming more accessible and enjoyable for everyone. We provide
               a seamless platform where gamers can easily purchase game credits, recharge their
               favorite games, and enhance their gaming experience. With a focus on security, speed,
@@ -74,7 +76,7 @@ const About = () => {
 
         {/* Features Grid */}
         <div className="mb-16 md:mb-20">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-800 text-center mb-10">
+          <h2 className={`text-3xl md:text-4xl font-bold text-center mb-10 ${isDark ? "text-white" : "text-gray-800"}`}>
             Why Choose Us
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -83,15 +85,15 @@ const About = () => {
               return (
                 <div
                   key={index}
-                  className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300"
+                  className={`rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300 ${isDark ? "bg-gray-800" : "bg-white"}`}
                 >
                   <div className="flex items-center gap-4 mb-4">
                     <div className="bg-gradient-to-br from-purple-600 to-indigo-600 p-3 rounded-lg">
                       <IconComponent className="text-white text-2xl" />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-800">{feature.title}</h3>
+                    <h3 className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-800"}`}>{feature.title}</h3>
                   </div>
-                  <p className="text-gray-600 leading-relaxed">{feature.description}</p>
+                  <p className={`leading-relaxed ${isDark ? "text-gray-400" : "text-gray-600"}`}>{feature.description}</p>
                 </div>
               );
             })}
@@ -121,34 +123,34 @@ const About = () => {
 
         {/* Values Section */}
         <div className="mb-16 md:mb-20">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-800 text-center mb-10">
+          <h2 className={`text-3xl md:text-4xl font-bold text-center mb-10 ${isDark ? "text-white" : "text-gray-800"}`}>
             Our Values
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-600">
-              <h3 className="text-xl font-bold text-gray-800 mb-3">Customer First</h3>
-              <p className="text-gray-600">
+            <div className={`rounded-xl shadow-lg p-6 border-l-4 border-purple-600 ${isDark ? "bg-gray-800" : "bg-white"}`}>
+              <h3 className={`text-xl font-bold mb-3 ${isDark ? "text-white" : "text-gray-800"}`}>Customer First</h3>
+              <p className={isDark ? "text-gray-400" : "text-gray-600"}>
                 Your satisfaction is our top priority. We listen to your feedback and continuously
                 improve our services to meet your needs.
               </p>
             </div>
-            <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-indigo-600">
-              <h3 className="text-xl font-bold text-gray-800 mb-3">Transparency</h3>
-              <p className="text-gray-600">
+            <div className={`rounded-xl shadow-lg p-6 border-l-4 border-indigo-600 ${isDark ? "bg-gray-800" : "bg-white"}`}>
+              <h3 className={`text-xl font-bold mb-3 ${isDark ? "text-white" : "text-gray-800"}`}>Transparency</h3>
+              <p className={isDark ? "text-gray-400" : "text-gray-600"}>
                 We believe in honest communication and clear pricing. No hidden fees, no surprises—
                 just straightforward service.
               </p>
             </div>
-            <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-600">
-              <h3 className="text-xl font-bold text-gray-800 mb-3">Innovation</h3>
-              <p className="text-gray-600">
+            <div className={`rounded-xl shadow-lg p-6 border-l-4 border-purple-600 ${isDark ? "bg-gray-800" : "bg-white"}`}>
+              <h3 className={`text-xl font-bold mb-3 ${isDark ? "text-white" : "text-gray-800"}`}>Innovation</h3>
+              <p className={isDark ? "text-gray-400" : "text-gray-600"}>
                 We stay ahead of the curve by adopting the latest technologies and features to
                 enhance your gaming experience.
               </p>
             </div>
-            <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-indigo-600">
-              <h3 className="text-xl font-bold text-gray-800 mb-3">Reliability</h3>
-              <p className="text-gray-600">
+            <div className={`rounded-xl shadow-lg p-6 border-l-4 border-indigo-600 ${isDark ? "bg-gray-800" : "bg-white"}`}>
+              <h3 className={`text-xl font-bold mb-3 ${isDark ? "text-white" : "text-gray-800"}`}>Reliability</h3>
+              <p className={isDark ? "text-gray-400" : "text-gray-600"}>
                 Count on us for consistent, dependable service. We maintain high uptime and ensure
                 your transactions are processed quickly and securely.
               </p>
@@ -157,12 +159,12 @@ const About = () => {
         </div>
 
         {/* Contact CTA */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12 text-center">
+        <div className={`rounded-2xl shadow-xl p-8 md:p-12 text-center ${isDark ? "bg-gray-800" : "bg-white"}`}>
           <FaGlobe className="text-5xl text-purple-600 mx-auto mb-6" />
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+          <h2 className={`text-3xl md:text-4xl font-bold mb-4 ${isDark ? "text-white" : "text-gray-800"}`}>
             Have Questions?
           </h2>
-          <p className="text-lg text-gray-600 mb-6  mx-auto">
+          <p className={`text-lg mb-6 mx-auto ${isDark ? "text-gray-400" : "text-gray-600"}`}>
             We're here to help! Reach out to our support team anytime, and we'll be happy to assist you.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -174,7 +176,7 @@ const About = () => {
             </a>
             <a
               href="/wallet"
-              className="bg-white border-2 border-purple-600 text-purple-600 px-8 py-3 rounded-lg font-semibold hover:bg-purple-50 transition-all duration-200"
+              className={`border-2 border-purple-600 text-purple-600 px-8 py-3 rounded-lg font-semibold transition-all duration-200 ${isDark ? "bg-gray-800 hover:bg-gray-700" : "bg-white hover:bg-purple-50"}`}
             >
               Get Started
             </a>

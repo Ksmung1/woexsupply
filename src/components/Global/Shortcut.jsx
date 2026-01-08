@@ -4,6 +4,7 @@ import { CiShop } from "react-icons/ci";
 import { CgGames } from "react-icons/cg";
 import { EarthIcon, ShoppingBagIcon, MessageCircle } from "lucide-react";
 import { useUser } from "../../context/UserContext";
+import { useTheme } from "../../context/ThemeContext";
 import { db } from "../../config/firebase";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 
@@ -39,8 +40,8 @@ function Shortcut() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useUser();
+  const { isDark } = useTheme();
   const [unreadCount, setUnreadCount] = useState(0);
-  const isDarkMode = false;
 
   // Track unread messages
   useEffect(() => {
@@ -77,7 +78,7 @@ function Shortcut() {
     <div
       className={`fixed bottom-0 left-0 right-0 flex justify-between items-center 
       py-2 border-t z-10 h-16 md:hidden
-      ${isDarkMode ? "bg-gray-900 border-gray-700 text-gray-300" : "bg-white border-gray-300 text-gray-700"}`}
+      ${isDark ? "bg-gray-900 border-gray-700 text-gray-300" : "bg-white border-gray-300 text-gray-700"}`}
     >
       {shortcutItems.map(({ label, routes, icon }) => {
         const isActive = routes.includes(location.pathname);
@@ -91,10 +92,10 @@ function Shortcut() {
             cursor-pointer select-none text-xs transition-all duration-200 
             py-1 relative
             ${isActive
-              ? isDarkMode
+              ? isDark
                 ? "text-blue-400 font-semibold"
                 : "text-blue-600 font-semibold"
-              : isDarkMode
+              : isDark
               ? "text-gray-400 hover:text-white"
               : "text-gray-600 hover:text-blue-500"
             }`}

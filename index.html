@@ -5,6 +5,25 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>newwebsite</title>
+    <script>
+      // Set theme immediately before React renders to prevent flash
+      (function() {
+        const stored = localStorage.getItem("theme");
+        const shouldBeDark = stored 
+          ? stored === "dark" 
+          : window.matchMedia("(prefers-color-scheme: dark)").matches;
+        
+        if (shouldBeDark) {
+          document.documentElement.classList.add("dark");
+          document.body.classList.add("dark");
+          document.body.style.backgroundColor = "#111827";
+        } else {
+          document.documentElement.classList.remove("dark");
+          document.body.classList.remove("dark");
+          document.body.style.backgroundColor = "#ffffff";
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

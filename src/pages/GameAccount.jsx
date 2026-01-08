@@ -16,6 +16,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 import { useUser } from "../context/UserContext";
+import { useTheme } from "../context/ThemeContext";
 import { useAlert } from "../context/AlertContext";
 import { useModal } from "../context/ModalContext";
 import AddPhoneNumber from "../utils/AddPhoneNumber";
@@ -57,6 +58,7 @@ const formatDate = (dateValue) => {
 // Buy Modal Component
 const BuyModal = ({ game, onClose, onSuccess }) => {
   const { user } = useUser();
+  const { isDark } = useTheme();
   const { showAlert } = useAlert();
   const [phoneNumber, setPhoneNumber] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("coin");
@@ -293,26 +295,26 @@ const BuyModal = ({ game, onClose, onSuccess }) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-900">
+      <div className={`rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto ${isDark ? "bg-gray-800" : "bg-white"}`}>
+        <div className={`sticky top-0 border-b p-4 flex items-center justify-between ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}>
+          <h2 className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
             Purchase Game Account
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className={`p-2 rounded-lg transition-colors ${isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"}`}
           >
-            <X className="w-5 h-5 text-gray-600" />
+            <X className={`w-5 h-5 ${isDark ? "text-gray-400" : "text-gray-600"}`} />
           </button>
         </div>
 
         <div className="p-6 space-y-4">
           {/* Game Info */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h3 className="font-semibold text-gray-900 mb-2">{game.label}</h3>
+          <div className={`rounded-lg p-4 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
+            <h3 className={`font-semibold mb-2 ${isDark ? "text-white" : "text-gray-900"}`}>{game.label}</h3>
             <div className="flex items-center gap-1">
-              <IndianRupee className="w-4 h-4 text-gray-700" />
-              <span className="text-lg font-bold text-gray-900">
+              <IndianRupee className={`w-4 h-4 ${isDark ? "text-gray-300" : "text-gray-700"}`} />
+              <span className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
                 {game.rupees}
               </span>
             </div>
@@ -320,7 +322,7 @@ const BuyModal = ({ game, onClose, onSuccess }) => {
 
           {/* WhatsApp Phone Number Input */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
               <Phone className="w-4 h-4 inline mr-1" />
               WhatsApp Phone Number *
             </label>
@@ -334,7 +336,9 @@ const BuyModal = ({ game, onClose, onSuccess }) => {
                     ? "border-red-500 focus:border-red-500 focus:ring-red-500"
                     : phoneNumber && isPhoneValid
                     ? "border-green-500 focus:border-green-500 focus:ring-green-500"
-                    : "border-gray-300"
+                    : isDark
+                    ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400"
+                    : "border-gray-300 bg-white text-gray-900"
                 }`}
                 placeholder="Enter 10-digit phone number (e.g., 9876543210)"
               />
@@ -361,7 +365,7 @@ const BuyModal = ({ game, onClose, onSuccess }) => {
             ) : phoneNumber && isPhoneValid ? (
               <p className="text-xs text-green-600 mt-1">Valid phone number</p>
             ) : (
-              <p className="text-xs text-gray-500 mt-1">
+              <p className={`text-xs mt-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
                 Enter exactly 10 digits (e.g., 9876543210)
               </p>
             )}
@@ -369,7 +373,7 @@ const BuyModal = ({ game, onClose, onSuccess }) => {
 
           {/* Payment Method Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
+            <label className={`block text-sm font-medium mb-3 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
               Payment Method *
             </label>
             <div className="space-y-2">
@@ -380,7 +384,9 @@ const BuyModal = ({ game, onClose, onSuccess }) => {
                   className={`w-full flex items-center justify-between py-3 px-4 rounded-lg transition font-medium border-2 ${
                     paymentMethod === method
                       ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white border-blue-700"
-                      : "bg-white border-gray-300 hover:bg-gray-50"
+                      : isDark
+                      ? "bg-gray-700 border-gray-600 hover:bg-gray-600 text-white"
+                      : "bg-white border-gray-300 hover:bg-gray-50 text-gray-900"
                   }`}
                 >
                   {method === "coin" && (
@@ -444,6 +450,7 @@ const BuyModal = ({ game, onClose, onSuccess }) => {
 
 const GameAccount = () => {
   const { user } = useUser();
+  const { isDark } = useTheme();
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedImageIndex, setSelectedImageIndex] = useState({});
@@ -571,13 +578,13 @@ const GameAccount = () => {
         />
       )}
 
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
+      <div className={`min-h-screen bg-gradient-to-br py-8 ${isDark ? "from-gray-900 to-gray-800" : "from-gray-50 to-gray-100"}`}>
         <div className="max-w-7xl px-4 md:px-6 lg:px-8 mx-auto">
           <div className="mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            <h1 className={`text-4xl font-bold mb-2 ${isDark ? "text-white" : "text-gray-900"}`}>
               Game Accounts
             </h1>
-            <p className="text-gray-600">
+            <p className={isDark ? "text-gray-400" : "text-gray-600"}>
               Browse and purchase premium game accounts
             </p>
           </div>
@@ -586,12 +593,12 @@ const GameAccount = () => {
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                <p className="text-gray-600">Loading game accounts...</p>
+                <p className={isDark ? "text-gray-400" : "text-gray-600"}>Loading game accounts...</p>
               </div>
             </div>
           ) : games.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-600 text-lg">
+              <p className={`text-lg ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                 No available game accounts at the moment.
               </p>
             </div>
@@ -607,7 +614,7 @@ const GameAccount = () => {
                 return (
                   <div
                     key={game.id}
-                    className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1"
+                    className={`rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 ${isDark ? "bg-gray-800" : "bg-white"}`}
                   >
                     {/* Main Image */}
                     <div className="relative aspect-video bg-gray-200 overflow-hidden group">
@@ -673,21 +680,21 @@ const GameAccount = () => {
 
                     {/* Game Info */}
                     <div className="p-5">
-                      <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">
+                      <h3 className={`text-lg font-bold mb-2 line-clamp-2 ${isDark ? "text-white" : "text-gray-900"}`}>
                         {game.label}
                       </h3>
 
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-1">
-                          <IndianRupee className="w-5 h-5 text-gray-700" />
-                          <span className="text-2xl font-bold text-gray-900">
+                          <IndianRupee className={`w-5 h-5 ${isDark ? "text-gray-300" : "text-gray-700"}`} />
+                          <span className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
                             {game.rupees}
                           </span>
                         </div>
                       </div>
 
                       {/* Date Display */}
-                      <div className="flex items-center gap-2 mb-4 text-sm text-gray-600">
+                      <div className={`flex items-center gap-2 mb-4 text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                         <Calendar className="w-4 h-4" />
                         <span className="font-medium">
                           {formatDate(game.date)}
@@ -704,6 +711,8 @@ const GameAccount = () => {
                               className={`relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
                                 currentImageIndex === idx
                                   ? "border-blue-500 ring-2 ring-blue-200"
+                                  : isDark
+                                  ? "border-gray-600 hover:border-gray-500"
                                   : "border-gray-200 hover:border-gray-300"
                               }`}
                             >

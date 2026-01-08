@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTheme } from "../../context/ThemeContext";
 import { db } from "../../config/firebase"; // your initialized Firestore instance
 import {
   collection,
@@ -16,6 +17,7 @@ import { FaSpinner, FaTimes } from "react-icons/fa";
 const USERS_COLLECTION = "users"; // change if your collection name is different
 
 export default function AdminUsers() {
+  const { isDark } = useTheme();
   const [users, setUsers] = useState([]); // full or queried list from Firestore
   const [display, setDisplay] = useState([]); // filtered list shown to UI
   const [loading, setLoading] = useState(true);
@@ -289,15 +291,19 @@ export default function AdminUsers() {
   return (
     <div className="p-4">
       <div className="flex items-center justify-between mb-3">
-        <h1 className="text-lg font-semibold text-gray-900">Users</h1>
+        <h1 className={`text-lg font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>Users</h1>
         <div className="flex items-center gap-3">
           {/* Role Toggle */}
-          <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+          <div className={`flex items-center gap-2 rounded-lg p-1 ${isDark ? "bg-gray-800" : "bg-gray-100"}`}>
             <button
               onClick={() => setRoleFilter("all")}
               className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
                 roleFilter === "all"
-                  ? "bg-white text-purple-600 shadow-sm"
+                  ? isDark
+                  ? "bg-gray-700 text-purple-400 shadow-sm"
+                  : "bg-white text-purple-600 shadow-sm"
+                  : isDark
+                  ? "text-gray-400 hover:text-gray-200"
                   : "text-gray-600 hover:text-gray-900"
               }`}
             >
@@ -324,7 +330,7 @@ export default function AdminUsers() {
               Reseller
             </button>
           </div>
-          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+          <span className={`text-xs px-2 py-1 rounded-full ${isDark ? "text-gray-400 bg-gray-800" : "text-gray-500 bg-gray-100"}`}>
             {display.length} {loading ? "loading..." : "shown"}
           </span>
         </div>
@@ -335,22 +341,22 @@ export default function AdminUsers() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search username..."
-          className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm flex-1 sm:max-w-xs focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          className={`px-3 py-1.5 border rounded-lg text-sm flex-1 sm:max-w-xs focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${isDark ? "border-gray-600 bg-gray-800 text-white" : "border-gray-300 bg-white text-gray-900"}`}
         />
       </div>
 
       {error && (
-        <div className="mb-3 p-2 bg-red-50 text-red-700 rounded text-xs">
+        <div className={`mb-3 p-2 rounded text-xs ${isDark ? "bg-red-900/30 text-red-400" : "bg-red-50 text-red-700"}`}>
           {error}
         </div>
       )}
 
       {/* Desktop Table View */}
-      <div className="hidden lg:block overflow-x-auto bg-white rounded-lg border border-gray-200">
+      <div className={`hidden lg:block overflow-x-auto rounded-lg border ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}>
         <table className="min-w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
+          <thead className={`border-b ${isDark ? "bg-gray-900 border-gray-700" : "bg-gray-50 border-gray-200"}`}>
             <tr>
-              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <th className={`px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                 #
               </th>
               <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -377,7 +383,7 @@ export default function AdminUsers() {
             </tr>
           </thead>
 
-          <tbody className="divide-y divide-gray-100">
+          <tbody className={`divide-y ${isDark ? "divide-gray-700" : "divide-gray-100"}`}>
             {display.map((u, i) => {
               // Treat users without roles as customers
               const userRole = u.role || "customer";
@@ -392,19 +398,19 @@ export default function AdminUsers() {
               return (
                 <tr
                   key={userId ?? i}
-                  className="hover:bg-gray-50 transition-colors"
+                  className={`transition-colors ${isDark ? "hover:bg-gray-700/50" : "hover:bg-gray-50"}`}
                 >
                   <td className="px-3 py-2">
-                    <span className="text-xs text-gray-500">#{i + 1}</span>
+                    <span className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>#{i + 1}</span>
                   </td>
                   <td className="px-3 py-2">
-                    <span className="text-xs font-medium text-gray-900 truncate block max-w-[150px]">
+                    <span className={`text-xs font-medium truncate block max-w-[150px] ${isDark ? "text-white" : "text-gray-900"}`}>
                       {u.name ?? u.username ?? "—"}
                     </span>
                   </td>
                   <td className="px-3 py-2">
                     <span
-                      className="text-xs text-gray-600 truncate block max-w-[200px]"
+                      className={`text-xs truncate block max-w-[200px] ${isDark ? "text-gray-300" : "text-gray-600"}`}
                       title={u.email ?? ""}
                     >
                       {u.email ?? "—"}
@@ -441,7 +447,7 @@ export default function AdminUsers() {
                           }
                         }}
                         disabled={isUpdatingBalance}
-                        className="w-24 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        className={`w-24 px-2 py-1 text-xs border rounded focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:cursor-not-allowed ${isDark ? "border-gray-600 bg-gray-800 text-white disabled:bg-gray-700" : "border-gray-300 bg-white text-gray-900 disabled:bg-gray-100"}`}
                       />
                       {isUpdatingBalance && (
                         <FaSpinner className="animate-spin text-purple-600 text-xs" />
@@ -492,13 +498,13 @@ export default function AdminUsers() {
                     </div>
                   </td>
                   <td className="px-3 py-2">
-                    <span className="text-xs text-gray-500">
+                    <span className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>
                       {formatUserDate(u.createdAt)}
                     </span>
                   </td>
                   <td className="px-3 py-2">
                     <span
-                      className="text-xs font-mono text-gray-500 truncate block max-w-[180px]"
+                      className={`text-xs font-mono truncate block max-w-[180px] ${isDark ? "text-gray-400" : "text-gray-500"}`}
                       title={userId ?? ""}
                     >
                       {userId ?? "—"}
@@ -512,7 +518,7 @@ export default function AdminUsers() {
               <tr>
                 <td
                   colSpan={8}
-                  className="px-3 py-6 text-center text-xs text-gray-500"
+                  className={`px-3 py-6 text-center text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}
                 >
                   No users found.
                 </td>
@@ -525,7 +531,7 @@ export default function AdminUsers() {
       {/* Mobile/Tablet Card View */}
       <div className="lg:hidden space-y-2">
         {display.length === 0 && !loading ? (
-          <div className="text-center py-6 text-xs text-gray-500 bg-gray-50 rounded-lg border border-gray-200">
+          <div className={`text-center py-6 text-xs rounded-lg border ${isDark ? "text-gray-400 bg-gray-800 border-gray-700" : "text-gray-500 bg-gray-50 border-gray-200"}`}>
             No users found.
           </div>
         ) : (
@@ -543,31 +549,31 @@ export default function AdminUsers() {
             return (
               <div
                 key={userId ?? i}
-                className="bg-white rounded-lg border border-gray-200 p-3 hover:shadow-sm transition-shadow"
+                className={`rounded-lg border p-3 hover:shadow-sm transition-shadow ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs text-gray-400">#{i + 1}</span>
-                  <p className="text-sm font-semibold text-gray-900 truncate flex-1">
+                  <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>#{i + 1}</span>
+                  <p className={`text-sm font-semibold truncate flex-1 ${isDark ? "text-white" : "text-gray-900"}`}>
                     {u.name ?? u.username ?? "—"}
                   </p>
                 </div>
 
                 <div className="space-y-1.5 text-xs">
                   <div>
-                    <span className="text-gray-500">Email:</span>
-                    <span className="text-gray-700 ml-1 truncate block">
+                    <span className={isDark ? "text-gray-400" : "text-gray-500"}>Email:</span>
+                    <span className={`ml-1 truncate block ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                       {u.email ?? "—"}
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-500">Phone:</span>
-                    <span className="text-gray-700 ml-1 truncate block">
+                    <span className={isDark ? "text-gray-400" : "text-gray-500"}>Phone:</span>
+                    <span className={`ml-1 truncate block ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                       {u.phone ?? "—"}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="text-gray-500">Balance:</span>
+                      <span className={isDark ? "text-gray-400" : "text-gray-500"}>Balance:</span>
                       <div className="flex items-center gap-1">
                         <input
                           type="number"
@@ -590,7 +596,7 @@ export default function AdminUsers() {
                             }
                           }}
                           disabled={isUpdatingBalance}
-                          className="w-20 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          className={`w-20 px-2 py-1 text-xs border rounded focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:cursor-not-allowed ${isDark ? "border-gray-600 bg-gray-800 text-white disabled:bg-gray-700" : "border-gray-300 bg-white text-gray-900 disabled:bg-gray-100"}`}
                         />
                         {isUpdatingBalance && (
                           <FaSpinner className="animate-spin text-purple-600 text-xs" />
@@ -600,8 +606,8 @@ export default function AdminUsers() {
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="text-gray-500">Role:</span>
-                      <span className="text-xs text-gray-700">
+                      <span className={isDark ? "text-gray-400" : "text-gray-500"}>Role:</span>
+                      <span className={`text-xs ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                         {userRole === "reseller"
                           ? "Reseller"
                           : userRole === "admin"
@@ -642,15 +648,15 @@ export default function AdminUsers() {
                       </button>
                     </div>
                     <div>
-                      <span className="text-gray-500">Joined:</span>
-                      <span className="text-gray-600 ml-1">
+                      <span className={isDark ? "text-gray-400" : "text-gray-500"}>Joined:</span>
+                      <span className={`ml-1 ${isDark ? "text-gray-300" : "text-gray-600"}`}>
                         {formatUserDate(u.createdAt)}
                       </span>
                     </div>
                   </div>
                   <div>
-                    <span className="text-gray-500">UID:</span>
-                    <span className="text-gray-500 font-mono ml-1 text-[10px] truncate block">
+                    <span className={isDark ? "text-gray-400" : "text-gray-500"}>UID:</span>
+                    <span className={`font-mono ml-1 text-[10px] truncate block ${isDark ? "text-gray-400" : "text-gray-500"}`}>
                       {userId ?? "—"}
                     </span>
                   </div>
@@ -663,45 +669,45 @@ export default function AdminUsers() {
 
       {/* Balance Update Confirmation Modal */}
       {balanceConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+        <div className={`fixed inset-0 bg-black flex items-center justify-center z-50 p-4 ${isDark ? "bg-opacity-70" : "bg-opacity-50"}`}>
+          <div className={`rounded-lg shadow-xl max-w-md w-full p-6 ${isDark ? "bg-gray-800" : "bg-white"}`}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className={`text-lg font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>
                 Confirm Balance Update
               </h2>
               <button
                 onClick={() => setBalanceConfirm(null)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className={`transition-colors ${isDark ? "text-gray-500 hover:text-gray-300" : "text-gray-400 hover:text-gray-600"}`}
               >
                 <FaTimes className="text-sm" />
               </button>
             </div>
 
             <div className="space-y-4 mb-6">
-              <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+              <div className={`rounded-lg p-4 space-y-2 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
                 <div>
-                  <span className="text-xs text-gray-500">Username:</span>
-                  <p className="text-sm font-medium text-gray-900">
+                  <span className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>Username:</span>
+                  <p className={`text-sm font-medium ${isDark ? "text-white" : "text-gray-900"}`}>
                     {balanceConfirm.user.name ??
                       balanceConfirm.user.username ??
                       "—"}
                   </p>
                 </div>
                 <div>
-                  <span className="text-xs text-gray-500">Email:</span>
-                  <p className="text-sm text-gray-700">
+                  <span className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>Email:</span>
+                  <p className={`text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                     {balanceConfirm.user.email ?? "—"}
                   </p>
                 </div>
                 <div>
-                  <span className="text-xs text-gray-500">UID:</span>
-                  <p className="text-xs font-mono text-gray-600 break-all">
+                  <span className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>UID:</span>
+                  <p className={`text-xs font-mono break-all ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                     {balanceConfirm.userId}
                   </p>
                 </div>
                 <div>
-                  <span className="text-xs text-gray-500">Role:</span>
-                  <p className="text-sm text-gray-700">
+                  <span className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>Role:</span>
+                  <p className={`text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                     {balanceConfirm.user.role === "reseller"
                       ? "Reseller"
                       : balanceConfirm.user.role === "admin"
@@ -711,31 +717,31 @@ export default function AdminUsers() {
                 </div>
               </div>
 
-              <div className="border-t border-b border-gray-200 py-4">
+              <div className={`border-t border-b py-4 ${isDark ? "border-gray-700" : "border-gray-200"}`}>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-600">
+                  <span className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                     Current Balance:
                   </span>
-                  <span className="text-sm font-semibold text-gray-900">
+                  <span className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>
                     ${balanceConfirm.oldBalance.toFixed(2)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">New Balance:</span>
-                  <span className="text-sm font-semibold text-purple-600">
+                  <span className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>New Balance:</span>
+                  <span className={`text-sm font-semibold ${isDark ? "text-purple-400" : "text-purple-600"}`}>
                     ${balanceConfirm.newBalance.toFixed(2)}
                   </span>
                 </div>
-                <div className="mt-2 pt-2 border-t border-gray-200">
+                <div className={`mt-2 pt-2 border-t ${isDark ? "border-gray-700" : "border-gray-200"}`}>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className={`text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                       Change:
                     </span>
                     <span
                       className={`text-sm font-semibold ${
                         balanceConfirm.newBalance >= balanceConfirm.oldBalance
-                          ? "text-green-600"
-                          : "text-red-600"
+                          ? isDark ? "text-green-400" : "text-green-600"
+                          : isDark ? "text-red-400" : "text-red-600"
                       }`}
                     >
                       {balanceConfirm.newBalance >= balanceConfirm.oldBalance
@@ -754,7 +760,7 @@ export default function AdminUsers() {
             <div className="flex gap-3">
               <button
                 onClick={() => setBalanceConfirm(null)}
-                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${isDark ? "text-gray-300 bg-gray-700 hover:bg-gray-600" : "text-gray-700 bg-gray-100 hover:bg-gray-200"}`}
               >
                 Cancel
               </button>

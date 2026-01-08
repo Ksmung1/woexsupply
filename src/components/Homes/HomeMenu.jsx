@@ -1,9 +1,11 @@
 // HomeMenu.jsx
 import React, { useState, useCallback } from "react";
+import { useTheme } from "../../context/ThemeContext";
 import games from "../../assets/files/games";
 import { GameCard } from "../Global/GameCard";
 
 const HomeMenu = () => {
+  const { isDark } = useTheme();
   const [loaded, setLoaded] = useState({});
 
   const markLoaded = useCallback((id) => {
@@ -21,7 +23,7 @@ const HomeMenu = () => {
       {/* Popular Games */}
       <div className="mb-3 md:mb-5">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-2xl md:text-3xl font-bold text-gray-800">
+          <h3 className={`text-2xl md:text-3xl font-bold ${isDark ? "text-white" : "text-gray-800"}`}>
             Popular Games
           </h3>
         </div>
@@ -41,7 +43,7 @@ const HomeMenu = () => {
       {/* All Games */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-2xl md:text-3xl font-bold text-gray-800">
+          <h3 className={`text-2xl md:text-3xl font-bold ${isDark ? "text-white" : "text-gray-800"}`}>
             All Games
           </h3>
         </div>

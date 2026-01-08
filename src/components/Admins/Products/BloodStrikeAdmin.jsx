@@ -4,12 +4,14 @@ import { collection, onSnapshot, doc, updateDoc, setDoc } from "firebase/firesto
 import { deleteItem } from "../Utils/DeleteItem";
 import { FiPlus } from "react-icons/fi";
 import { useAlert } from "../../../context/AlertContext";
+import { useTheme } from "../../../context/ThemeContext";
 import AddModal from "../Utils/AddModal";
 import EditModal from "../Utils/EditModal";
 import AdminProduct from "../Utils/AdminProduct";
 import image from "../../../assets/images/game.png"
 
 const BloodStrikeAdmin = ({ collectionName  }) => {
+  const { isDark } = useTheme();
   const { showError, showSuccess, showWarning } = useAlert();
   const [items, setItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -188,12 +190,12 @@ const BloodStrikeAdmin = ({ collectionName  }) => {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-indigo-50/30 py-6 md:py-8">
+    <div className={`min-h-screen py-6 md:py-8 ${isDark ? "bg-gray-900" : "bg-gradient-to-br from-gray-50 via-purple-50/30 to-indigo-50/30"}`}>
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-6 md:mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Products</h2>
-          <p className="text-sm md:text-base text-gray-600">{collectionName}</p>
+          <h2 className={`text-2xl md:text-3xl font-bold mb-2 ${isDark ? "text-white" : "text-gray-800"}`}>Products</h2>
+          <p className={`text-sm md:text-base ${isDark ? "text-gray-400" : "text-gray-600"}`}>{collectionName}</p>
         </div>
 
       {/* Filter Tabs */}
@@ -209,6 +211,8 @@ const BloodStrikeAdmin = ({ collectionName  }) => {
                 className={`px-4 py-2 md:px-5 md:py-2.5 rounded-lg text-sm md:text-base font-semibold transition-all duration-200 ${
                   activeGroup === key
                     ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg"
+                    : isDark
+                    ? "bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600"
                     : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
                 }`}
           >
@@ -222,15 +226,15 @@ const BloodStrikeAdmin = ({ collectionName  }) => {
       {loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
-              <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-gray-600 font-medium">Loading products...</p>
+              <div className={`w-12 h-12 border-4 ${isDark ? "border-purple-400" : "border-purple-600"} border-t-transparent rounded-full animate-spin mx-auto mb-4`}></div>
+              <p className={`${isDark ? "text-gray-400" : "text-gray-600"} font-medium`}>Loading products...</p>
             </div>
           </div>
         ) : filteredItems.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12 text-center">
+          <div className={`${isDark ? "bg-gray-800" : "bg-white"} rounded-2xl shadow-xl p-8 md:p-12 text-center`}>
             <div className="text-6xl mb-4">📦</div>
-            <p className="text-gray-600 font-medium text-lg mb-2">No products found</p>
-            <p className="text-gray-500 text-sm">Try selecting a different group or add a new product</p>
+            <p className={`${isDark ? "text-gray-400" : "text-gray-600"} font-medium text-lg mb-2`}>No products found</p>
+            <p className={`${isDark ? "text-gray-500" : "text-gray-500"} text-sm`}>Try selecting a different group or add a new product</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">

@@ -25,15 +25,16 @@ import {
 } from "react-icons/fi";
 import { useAlert } from "../../context/AlertContext";
 import { useUser } from "../../context/UserContext";
+import { useTheme } from "../../context/ThemeContext";
 import { FaSpinner } from "react-icons/fa";
 import { format } from "date-fns";
 
 const AdminGameAccounts = () => {
+  const { isDark } = useTheme();
   const { showError, showSuccess, showWarning } = useAlert();
   const { user } = useUser();
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState("all"); // all, Available, pending, Sold
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -64,13 +65,6 @@ const AdminGameAccounts = () => {
     }
   }, [user]);
 
-  const statusOptions = [
-    { value: "all", label: "All" },
-    { value: "Available", label: "Available" },
-    { value: "pending", label: "Pending" },
-    { value: "Sold", label: "Sold" },
-  ];
-
   // Fetch accounts
   useEffect(() => {
     setLoading(true);
@@ -96,13 +90,12 @@ const AdminGameAccounts = () => {
     return () => unsub();
   }, [showError]);
 
-  // Filter accounts by status
-  const filteredAccounts =
-    statusFilter === "all"
-      ? accounts
-      : accounts.filter(
-          (acc) => acc.status?.toLowerCase() === statusFilter.toLowerCase()
-        );
+  // Filter accounts to show only Available accounts
+  const filteredAccounts = accounts.filter((acc) => {
+    // Handle accounts without status field - treat as "Available"
+    const accountStatus = (acc.status || "Available").toLowerCase();
+    return accountStatus === "available";
+  });
 
   // Handle add new account
   const handleAddNew = async () => {
@@ -458,21 +451,41 @@ const AdminGameAccounts = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <FaSpinner className="animate-spin text-purple-600 text-4xl" />
+        <FaSpinner
+          className={`animate-spin text-4xl ${
+            isDark ? "text-purple-400" : "text-purple-600"
+          }`}
+        />
       </div>
     );
   }
 
   return (
-    <div className="py-4 px-2 sm:px-4 bg-gray-50 min-h-screen">
+    <div
+      className={`py-4 px-2 sm:px-4 min-h-screen ${
+        isDark ? "bg-gray-900" : "bg-gray-50"
+      }`}
+    >
       {/* Header with Add Button */}
-      <div className="mb-6 bg-white rounded-lg shadow-sm p-4 sm:p-6">
+      <div
+        className={`mb-6 rounded-lg shadow-sm p-4 sm:p-6 ${
+          isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+        } border`}
+      >
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            <h2
+              className={`text-2xl sm:text-3xl font-bold ${
+                isDark ? "text-white" : "text-gray-900"
+              }`}
+            >
               Game Accounts
             </h2>
-            <p className="text-sm text-gray-600 mt-1">
+            <p
+              className={`text-sm mt-1 ${
+                isDark ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
               Manage game accounts for sale
             </p>
           </div>
@@ -484,66 +497,59 @@ const AdminGameAccounts = () => {
             <span>Add New Account</span>
           </button>
         </div>
-
-        {/* Status Filter Tabs */}
-        <div className="flex gap-3 overflow-x-auto pb-2">
-          {statusOptions.map((option) => {
-            const count =
-              option.value === "all"
-                ? accounts.length
-                : accounts.filter(
-                    (acc) =>
-                      acc.status?.toLowerCase() === option.value.toLowerCase()
-                  ).length;
-            return (
-              <button
-                key={option.value}
-                onClick={() => setStatusFilter(option.value)}
-                className={`px-5 py-2.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-all shadow-sm ${
-                  statusFilter === option.value
-                    ? "bg-blue-600 text-white shadow-lg scale-105"
-                    : "bg-white text-gray-700 border-2 border-gray-300 hover:border-blue-400 hover:bg-blue-50"
-                }`}
-              >
-                {option.label} ({count})
-              </button>
-            );
-          })}
-        </div>
       </div>
 
       {/* Accounts Grid */}
       {filteredAccounts.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-          <FiImage className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <p className="text-lg font-medium text-gray-700 mb-2">
-            No game accounts found
-            {statusFilter !== "all" && ` with status "${statusFilter}"`}
+        <div
+          className={`rounded-lg shadow-lg p-8 text-center ${
+            isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+          } border`}
+        >
+          <FiImage
+            className={`w-16 h-16 mx-auto mb-4 ${
+              isDark ? "text-gray-600" : "text-gray-400"
+            }`}
+          />
+          <p
+            className={`text-lg font-medium mb-2 ${
+              isDark ? "text-gray-300" : "text-gray-700"
+            }`}
+          >
+            No available game accounts found
           </p>
-          <p className="text-sm text-gray-500 mb-4">
-            {statusFilter === "all"
-              ? "Click 'Add New Account' to create your first game account"
-              : "Try selecting a different filter or add a new account"}
+          <p
+            className={`text-sm mb-4 ${
+              isDark ? "text-gray-400" : "text-gray-500"
+            }`}
+          >
+            Click 'Add New Account' to create your first available game account
           </p>
-          {statusFilter === "all" && (
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
-            >
-              <FiPlus className="w-5 h-5" />
-              <span>Add Your First Account</span>
-            </button>
-          )}
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+          >
+            <FiPlus className="w-5 h-5" />
+            <span>Add Your First Account</span>
+          </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredAccounts.map((account) => (
             <div
               key={account.id}
-              className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-shadow"
+              className={`rounded-lg shadow-lg overflow-hidden border hover:shadow-xl transition-shadow ${
+                isDark
+                  ? "bg-gray-800 border-gray-700"
+                  : "bg-white border-gray-200"
+              }`}
             >
               {/* Image */}
-              <div className="relative aspect-video bg-gray-200 overflow-hidden">
+              <div
+                className={`relative aspect-video overflow-hidden ${
+                  isDark ? "bg-gray-700" : "bg-gray-200"
+                }`}
+              >
                 {account.images && account.images.length > 0 ? (
                   <img
                     src={account.images[0]}
@@ -572,19 +578,35 @@ const AdminGameAccounts = () => {
 
               {/* Info */}
               <div className="p-4">
-                <h3 className="font-bold text-gray-900 mb-2 line-clamp-2">
+                <h3
+                  className={`font-bold mb-2 line-clamp-2 ${
+                    isDark ? "text-white" : "text-gray-900"
+                  }`}
+                >
                   {account.label}
                 </h3>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-lg font-bold text-gray-900">
+                  <span
+                    className={`text-lg font-bold ${
+                      isDark ? "text-white" : "text-gray-900"
+                    }`}
+                  >
                     ₹{account.rupees || 0}
                   </span>
                 </div>
-                <p className="text-xs text-gray-500 mb-3">
+                <p
+                  className={`text-xs mb-3 ${
+                    isDark ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
                   {formatDate(account.date)}
                 </p>
                 {account.images && account.images.length > 1 && (
-                  <p className="text-xs text-gray-500 mb-3">
+                  <p
+                    className={`text-xs mb-3 ${
+                      isDark ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  >
                     {account.images.length} images
                   </p>
                 )}
@@ -614,23 +636,51 @@ const AdminGameAccounts = () => {
 
       {/* Add Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900">
+        <div
+          className={`fixed inset-0 flex items-center justify-center z-50 p-4 ${
+            isDark ? "bg-black/70" : "bg-black/50"
+          } backdrop-blur-sm`}
+        >
+          <div
+            className={`rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto ${
+              isDark ? "bg-gray-800" : "bg-white"
+            }`}
+          >
+            <div
+              className={`sticky top-0 border-b p-4 flex items-center justify-between ${
+                isDark
+                  ? "bg-gray-800 border-gray-700"
+                  : "bg-white border-gray-200"
+              }`}
+            >
+              <h2
+                className={`text-xl font-bold ${
+                  isDark ? "text-white" : "text-gray-900"
+                }`}
+              >
                 Add Game Account
               </h2>
               <button
                 onClick={() => setShowAddModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className={`p-2 rounded-lg transition-colors ${
+                  isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"
+                }`}
               >
-                <FiPlus className="w-5 h-5 text-gray-600 rotate-45" />
+                <FiPlus
+                  className={`w-5 h-5 rotate-45 ${
+                    isDark ? "text-gray-400" : "text-gray-600"
+                  }`}
+                />
               </button>
             </div>
 
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  className={`block text-sm font-medium mb-2 ${
+                    isDark ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
                   Account ID *
                 </label>
                 <input
@@ -639,13 +689,21 @@ const AdminGameAccounts = () => {
                   onChange={(e) =>
                     setNewAccount({ ...newAccount, id: e.target.value })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    isDark
+                      ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400"
+                      : "border-gray-300 bg-white text-gray-900 placeholder-gray-500"
+                  }`}
                   placeholder="Unique account ID"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  className={`block text-sm font-medium mb-2 ${
+                    isDark ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
                   Label *
                 </label>
                 <input
@@ -654,13 +712,21 @@ const AdminGameAccounts = () => {
                   onChange={(e) =>
                     setNewAccount({ ...newAccount, label: e.target.value })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    isDark
+                      ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400"
+                      : "border-gray-300 bg-white text-gray-900 placeholder-gray-500"
+                  }`}
                   placeholder="Game account label"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  className={`block text-sm font-medium mb-2 ${
+                    isDark ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
                   Rupees *
                 </label>
                 <input
@@ -669,29 +735,49 @@ const AdminGameAccounts = () => {
                   onChange={(e) =>
                     setNewAccount({ ...newAccount, rupees: e.target.value })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    isDark
+                      ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400"
+                      : "border-gray-300 bg-white text-gray-900 placeholder-gray-500"
+                  }`}
                   placeholder="Price in rupees"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  className={`block text-sm font-medium mb-2 ${
+                    isDark ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
                   Posted By
                 </label>
                 <input
                   type="text"
                   value={user?.name || user?.email || user?.username || "Admin"}
                   disabled
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
+                  className={`w-full px-4 py-2 border rounded-lg cursor-not-allowed ${
+                    isDark
+                      ? "border-gray-600 bg-gray-700 text-gray-400"
+                      : "border-gray-300 bg-gray-100 text-gray-600"
+                  }`}
                   placeholder="Posted by (auto-filled)"
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p
+                  className={`text-xs mt-1 ${
+                    isDark ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
                   Automatically set to current user
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  className={`block text-sm font-medium mb-2 ${
+                    isDark ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
                   Status
                 </label>
                 <select
@@ -699,7 +785,11 @@ const AdminGameAccounts = () => {
                   onChange={(e) =>
                     setNewAccount({ ...newAccount, status: e.target.value })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    isDark
+                      ? "border-gray-600 bg-gray-700 text-white"
+                      : "border-gray-300 bg-white text-gray-900"
+                  }`}
                 >
                   <option value="Available">Available</option>
                   <option value="pending">Pending</option>
@@ -720,7 +810,9 @@ const AdminGameAccounts = () => {
                     return (
                       <div
                         key={idx}
-                        className="border border-gray-300 rounded-lg p-3"
+                        className={`border rounded-lg p-3 ${
+                          isDark ? "border-gray-600" : "border-gray-300"
+                        }`}
                       >
                         <div className="flex gap-3 mb-2">
                           {preview && (
@@ -734,7 +826,9 @@ const AdminGameAccounts = () => {
                                 <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center">
                                   <div className="text-center">
                                     <FaSpinner className="animate-spin w-6 h-6 text-white mx-auto mb-1" />
-                                    <span className="text-xs text-white font-medium">Uploading...</span>
+                                    <span className="text-xs text-white font-medium">
+                                      Uploading...
+                                    </span>
                                   </div>
                                 </div>
                               )}
@@ -744,7 +838,9 @@ const AdminGameAccounts = () => {
                             <div className="w-20 h-20 rounded-lg border-2 border-dashed border-blue-400 bg-blue-50 flex items-center justify-center flex-shrink-0">
                               <div className="text-center">
                                 <FaSpinner className="animate-spin w-6 h-6 text-blue-600 mx-auto mb-1" />
-                                <span className="text-xs text-blue-600 font-medium">Uploading...</span>
+                                <span className="text-xs text-blue-600 font-medium">
+                                  Uploading...
+                                </span>
                               </div>
                             </div>
                           )}
@@ -755,15 +851,25 @@ const AdminGameAccounts = () => {
                               onChange={(e) =>
                                 handleImageUrlChange(e.target.value, idx, true)
                               }
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
+                                isDark
+                                  ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400"
+                                  : "border-gray-300 bg-white text-gray-900 placeholder-gray-500"
+                              }`}
                               placeholder="Image URL or upload file below"
                               disabled={isUploading}
                             />
-                            <label className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-sm font-medium transition-colors ${
-                              isUploading 
-                                ? "bg-blue-100 text-blue-700 cursor-wait" 
-                                : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-                            }`}>
+                            <label
+                              className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-sm font-medium transition-colors ${
+                                isUploading
+                                  ? isDark
+                                    ? "bg-blue-900/30 text-blue-400 cursor-wait"
+                                    : "bg-blue-100 text-blue-700 cursor-wait"
+                                  : isDark
+                                  ? "bg-gray-700 hover:bg-gray-600 text-gray-300"
+                                  : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                              }`}
+                            >
                               <FiUpload className="w-4 h-4" />
                               <span>
                                 {isUploading ? "Uploading..." : "Upload Image"}
@@ -799,14 +905,22 @@ const AdminGameAccounts = () => {
                     {uploadingImages["new-bulk-upload"] && (
                       <div className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-50 border-2 border-blue-200 rounded-lg">
                         <FaSpinner className="animate-spin w-5 h-5 text-blue-600" />
-                        <span className="text-sm font-medium text-blue-700">Uploading images to Firebase...</span>
+                        <span className="text-sm font-medium text-blue-700">
+                          Uploading images to Firebase...
+                        </span>
                       </div>
                     )}
-                    <label className={`flex flex-col items-center justify-center w-full px-4 py-6 border-2 border-dashed rounded-lg transition-colors ${
-                      uploadingImages["new-bulk-upload"]
-                        ? "border-blue-400 bg-blue-50 cursor-wait"
-                        : "border-gray-300 hover:border-blue-500 cursor-pointer"
-                    }`}>
+                    <label
+                      className={`flex flex-col items-center justify-center w-full px-4 py-6 border-2 border-dashed rounded-lg transition-colors ${
+                        uploadingImages["new-bulk-upload"]
+                          ? isDark
+                            ? "border-blue-400 bg-blue-900/30 cursor-wait"
+                            : "border-blue-400 bg-blue-50 cursor-wait"
+                          : isDark
+                          ? "border-gray-600 hover:border-blue-500 cursor-pointer"
+                          : "border-gray-300 hover:border-blue-500 cursor-pointer"
+                      }`}
+                    >
                       {uploadingImages["new-bulk-upload"] ? (
                         <>
                           <FaSpinner className="animate-spin w-8 h-8 text-blue-600 mb-2" />
@@ -847,7 +961,11 @@ const AdminGameAccounts = () => {
                           images: [...(newAccount.images || []), ""],
                         })
                       }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700 text-sm font-medium"
+                      className={`w-full px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
+                        isDark
+                          ? "border-gray-600 hover:bg-gray-700 text-gray-300"
+                          : "border-gray-300 hover:bg-gray-50 text-gray-700"
+                      }`}
                     >
                       + Add Image URL (Manual)
                     </button>
@@ -865,7 +983,11 @@ const AdminGameAccounts = () => {
                 </button>
                 <button
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium"
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    isDark
+                      ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
                 >
                   Cancel
                 </button>
@@ -877,38 +999,78 @@ const AdminGameAccounts = () => {
 
       {/* Edit Modal */}
       {selectedAccount && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900">
+        <div
+          className={`fixed inset-0 flex items-center justify-center z-50 p-4 ${
+            isDark ? "bg-black/70" : "bg-black/50"
+          } backdrop-blur-sm`}
+        >
+          <div
+            className={`rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto ${
+              isDark ? "bg-gray-800" : "bg-white"
+            }`}
+          >
+            <div
+              className={`sticky top-0 border-b p-4 flex items-center justify-between ${
+                isDark
+                  ? "bg-gray-800 border-gray-700"
+                  : "bg-white border-gray-200"
+              }`}
+            >
+              <h2
+                className={`text-xl font-bold ${
+                  isDark ? "text-white" : "text-gray-900"
+                }`}
+              >
                 Edit Game Account
               </h2>
               <button
                 onClick={() => setSelectedAccount(null)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className={`p-2 rounded-lg transition-colors ${
+                  isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"
+                }`}
               >
-                <FiPlus className="w-5 h-5 text-gray-600 rotate-45" />
+                <FiPlus
+                  className={`w-5 h-5 rotate-45 ${
+                    isDark ? "text-gray-400" : "text-gray-600"
+                  }`}
+                />
               </button>
             </div>
 
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  className={`block text-sm font-medium mb-2 ${
+                    isDark ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
                   Account ID
                 </label>
                 <input
                   type="text"
                   value={selectedAccount.id}
                   disabled
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
+                  className={`w-full px-4 py-2 border rounded-lg ${
+                    isDark
+                      ? "border-gray-600 bg-gray-700 text-gray-400"
+                      : "border-gray-300 bg-gray-100 text-gray-600"
+                  }`}
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p
+                  className={`text-xs mt-1 ${
+                    isDark ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
                   ID cannot be changed
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  className={`block text-sm font-medium mb-2 ${
+                    isDark ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
                   Label *
                 </label>
                 <input
@@ -920,12 +1082,20 @@ const AdminGameAccounts = () => {
                       label: e.target.value,
                     })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    isDark
+                      ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400"
+                      : "border-gray-300 bg-white text-gray-900 placeholder-gray-500"
+                  }`}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  className={`block text-sm font-medium mb-2 ${
+                    isDark ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
                   Rupees *
                 </label>
                 <input
@@ -937,27 +1107,47 @@ const AdminGameAccounts = () => {
                       rupees: e.target.value,
                     })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    isDark
+                      ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400"
+                      : "border-gray-300 bg-white text-gray-900 placeholder-gray-500"
+                  }`}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  className={`block text-sm font-medium mb-2 ${
+                    isDark ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
                   Posted By
                 </label>
                 <input
                   type="text"
                   value={selectedAccount.postedBy || ""}
                   disabled
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
+                  className={`w-full px-4 py-2 border rounded-lg cursor-not-allowed ${
+                    isDark
+                      ? "border-gray-600 bg-gray-700 text-gray-400"
+                      : "border-gray-300 bg-gray-100 text-gray-600"
+                  }`}
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p
+                  className={`text-xs mt-1 ${
+                    isDark ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
                   Original poster (cannot be changed)
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  className={`block text-sm font-medium mb-2 ${
+                    isDark ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
                   Status
                 </label>
                 <select
@@ -968,7 +1158,11 @@ const AdminGameAccounts = () => {
                       status: e.target.value,
                     })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    isDark
+                      ? "border-gray-600 bg-gray-700 text-white"
+                      : "border-gray-300 bg-white text-gray-900"
+                  }`}
                 >
                   <option value="Available">Available</option>
                   <option value="pending">Pending</option>
@@ -977,7 +1171,11 @@ const AdminGameAccounts = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  className={`block text-sm font-medium mb-2 ${
+                    isDark ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
                   Images
                 </label>
                 <div className="space-y-3">
@@ -989,7 +1187,9 @@ const AdminGameAccounts = () => {
                     return (
                       <div
                         key={idx}
-                        className="border border-gray-300 rounded-lg p-3"
+                        className={`border rounded-lg p-3 ${
+                          isDark ? "border-gray-600" : "border-gray-300"
+                        }`}
                       >
                         <div className="flex gap-3 mb-2">
                           {preview && (
@@ -1003,7 +1203,9 @@ const AdminGameAccounts = () => {
                                 <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center">
                                   <div className="text-center">
                                     <FaSpinner className="animate-spin w-6 h-6 text-white mx-auto mb-1" />
-                                    <span className="text-xs text-white font-medium">Uploading...</span>
+                                    <span className="text-xs text-white font-medium">
+                                      Uploading...
+                                    </span>
                                   </div>
                                 </div>
                               )}
@@ -1013,7 +1215,9 @@ const AdminGameAccounts = () => {
                             <div className="w-20 h-20 rounded-lg border-2 border-dashed border-blue-400 bg-blue-50 flex items-center justify-center flex-shrink-0">
                               <div className="text-center">
                                 <FaSpinner className="animate-spin w-6 h-6 text-blue-600 mx-auto mb-1" />
-                                <span className="text-xs text-blue-600 font-medium">Uploading...</span>
+                                <span className="text-xs text-blue-600 font-medium">
+                                  Uploading...
+                                </span>
                               </div>
                             </div>
                           )}
@@ -1024,15 +1228,25 @@ const AdminGameAccounts = () => {
                               onChange={(e) =>
                                 handleImageUrlChange(e.target.value, idx, false)
                               }
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
+                                isDark
+                                  ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400"
+                                  : "border-gray-300 bg-white text-gray-900 placeholder-gray-500"
+                              }`}
                               placeholder="Image URL or upload file below"
                               disabled={isUploading}
                             />
-                            <label className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-sm font-medium transition-colors ${
-                              isUploading 
-                                ? "bg-blue-100 text-blue-700 cursor-wait" 
-                                : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-                            }`}>
+                            <label
+                              className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-sm font-medium transition-colors ${
+                                isUploading
+                                  ? isDark
+                                    ? "bg-blue-900/30 text-blue-400 cursor-wait"
+                                    : "bg-blue-100 text-blue-700 cursor-wait"
+                                  : isDark
+                                  ? "bg-gray-700 hover:bg-gray-600 text-gray-300"
+                                  : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                              }`}
+                            >
                               <FiUpload className="w-4 h-4" />
                               <span>
                                 {isUploading ? "Uploading..." : "Upload Image"}
@@ -1068,14 +1282,22 @@ const AdminGameAccounts = () => {
                     {uploadingImages["edit-bulk-upload"] && (
                       <div className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-50 border-2 border-blue-200 rounded-lg">
                         <FaSpinner className="animate-spin w-5 h-5 text-blue-600" />
-                        <span className="text-sm font-medium text-blue-700">Uploading images to Firebase...</span>
+                        <span className="text-sm font-medium text-blue-700">
+                          Uploading images to Firebase...
+                        </span>
                       </div>
                     )}
-                    <label className={`flex flex-col items-center justify-center w-full px-4 py-6 border-2 border-dashed rounded-lg transition-colors ${
-                      uploadingImages["edit-bulk-upload"]
-                        ? "border-blue-400 bg-blue-50 cursor-wait"
-                        : "border-gray-300 hover:border-blue-500 cursor-pointer"
-                    }`}>
+                    <label
+                      className={`flex flex-col items-center justify-center w-full px-4 py-6 border-2 border-dashed rounded-lg transition-colors ${
+                        uploadingImages["edit-bulk-upload"]
+                          ? isDark
+                            ? "border-blue-400 bg-blue-900/30 cursor-wait"
+                            : "border-blue-400 bg-blue-50 cursor-wait"
+                          : isDark
+                          ? "border-gray-600 hover:border-blue-500 cursor-pointer"
+                          : "border-gray-300 hover:border-blue-500 cursor-pointer"
+                      }`}
+                    >
                       {uploadingImages["edit-bulk-upload"] ? (
                         <>
                           <FaSpinner className="animate-spin w-8 h-8 text-blue-600 mb-2" />
@@ -1116,7 +1338,11 @@ const AdminGameAccounts = () => {
                           images: [...(selectedAccount.images || []), ""],
                         })
                       }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700 text-sm font-medium"
+                      className={`w-full px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
+                        isDark
+                          ? "border-gray-600 hover:bg-gray-700 text-gray-300"
+                          : "border-gray-300 hover:bg-gray-50 text-gray-700"
+                      }`}
                     >
                       + Add Image URL (Manual)
                     </button>
@@ -1142,7 +1368,11 @@ const AdminGameAccounts = () => {
                 </button>
                 <button
                   onClick={() => setSelectedAccount(null)}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium"
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    isDark
+                      ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
                 >
                   Cancel
                 </button>

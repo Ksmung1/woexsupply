@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "../context/ThemeContext";
 import { signOut } from "firebase/auth";
 import {
   doc,
@@ -37,6 +38,7 @@ import {
 
 const Profile = () => {
   const navigate = useNavigate();
+  const { isDark } = useTheme();
   const { user: ctxUser, setUser: setCtxUser } = useUser();
   const uid = ctxUser?.uid ?? ctxUser?.id ?? null;
 
@@ -370,15 +372,15 @@ const Profile = () => {
 
   if (!uid) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-pink-50 flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-8 text-center">
+      <div className={`min-h-screen bg-gradient-to-br flex items-center justify-center px-4 ${isDark ? "from-gray-900 via-gray-800 to-gray-900" : "from-purple-50 via-indigo-50 to-pink-50"}`}>
+        <div className={`max-w-md w-full rounded-3xl shadow-2xl p-8 text-center ${isDark ? "bg-gray-800" : "bg-white"}`}>
           <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center">
             <FaUser className="text-white text-4xl" />
           </div>
-          <h2 className="text-3xl font-bold text-gray-800 mb-3">
+          <h2 className={`text-3xl font-bold mb-3 ${isDark ? "text-white" : "text-gray-800"}`}>
             Sign In Required
           </h2>
-          <p className="text-gray-600 mb-6">
+          <p className={isDark ? "text-gray-400" : "text-gray-600"}>
             Please sign in to view your profile and access all features.
           </p>
           <button
@@ -393,35 +395,35 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-indigo-50/30 py-6 md:py-8">
+    <div className={`min-h-screen bg-gradient-to-br py-6 md:py-8 ${isDark ? "from-gray-900 via-gray-900 to-gray-800" : "from-gray-50 via-purple-50/30 to-indigo-50/30"}`}>
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
         {/* Header Section */}
         <div className="mb-6 md:mb-8">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+          <h1 className={`text-3xl md:text-4xl lg:text-5xl font-bold mb-2 flex items-center gap-3 ${isDark ? "text-white" : "text-gray-800"}`}>
             <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center">
               <FaUser className="text-white text-lg md:text-xl" />
             </div>
             <span>My Profile</span>
           </h1>
-          <p className="text-gray-600 text-sm md:text-base">
+          <p className={`text-sm md:text-base ${isDark ? "text-gray-400" : "text-gray-600"}`}>
             Manage your account and track your activity
           </p>
         </div>
 
         {/* Profile Card Section */}
         {loadingUser ? (
-          <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
+          <div className={`rounded-2xl shadow-xl p-8 mb-6 ${isDark ? "bg-gray-800" : "bg-white"}`}>
             <div className="animate-pulse space-y-4">
-              <div className="w-32 h-32 bg-gray-200 rounded-full mx-auto" />
-              <div className="h-6 bg-gray-200 rounded w-48 mx-auto" />
-              <div className="h-4 bg-gray-200 rounded w-64 mx-auto" />
+              <div className={`w-32 h-32 rounded-full mx-auto ${isDark ? "bg-gray-700" : "bg-gray-200"}`} />
+              <div className={`h-6 rounded w-48 mx-auto ${isDark ? "bg-gray-700" : "bg-gray-200"}`} />
+              <div className={`h-4 rounded w-64 mx-auto ${isDark ? "bg-gray-700" : "bg-gray-200"}`} />
             </div>
           </div>
         ) : userDoc ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             {/* Profile Card */}
             <div className="lg:col-span-1">
-              <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 hover:shadow-2xl transition-all duration-300 border border-gray-100">
+              <div className={`rounded-2xl shadow-xl p-6 md:p-8 hover:shadow-2xl transition-all duration-300 border ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-100"}`}>
                 <div className="flex flex-col items-center text-center">
                   {/* Avatar */}
                   <div className="relative mb-4">
@@ -448,34 +450,34 @@ const Profile = () => {
                   </div>
 
                   {/* Name & Email */}
-                  <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
+                  <h2 className={`text-xl md:text-2xl font-bold mb-1 ${isDark ? "text-white" : "text-gray-900"}`}>
                     {userDoc.name || "No name"}
                   </h2>
-                  <p className="text-sm text-gray-500 mb-4 flex items-center justify-center gap-2">
+                  <p className={`text-sm mb-4 flex items-center justify-center gap-2 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
                     <FaEnvelope className="text-xs" />
                     {userDoc.email || "No email"}
                   </p>
 
                   {/* Member Since */}
-                  <div className="w-full mb-4 p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl">
-                    <div className="flex items-center justify-center gap-2 text-xs text-gray-600 mb-1">
+                  <div className={`w-full mb-4 p-3 rounded-xl ${isDark ? "bg-gray-700/50" : "bg-gradient-to-r from-purple-50 to-indigo-50"}`}>
+                    <div className={`flex items-center justify-center gap-2 text-xs mb-1 ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                       <FaCalendar className="text-purple-600" />
                       <span>Member since</span>
                     </div>
-                    <div className="text-sm font-semibold text-gray-800">
+                    <div className={`text-sm font-semibold ${isDark ? "text-gray-200" : "text-gray-800"}`}>
                       {createdAtDisplay}
                     </div>
                   </div>
 
                   {/* Phone Number */}
                   <div className="w-full">
-                    <label className="text-xs font-semibold text-gray-700 block mb-2 flex items-center gap-2">
+                    <label className={`text-xs font-semibold block mb-2 flex items-center gap-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                       <FaPhone className="text-purple-600" />
                       <span>Phone Number</span>
                     </label>
                     {!isEditingPhone && userDoc.phone ? (
-                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-200">
-                        <span className="text-sm font-medium text-gray-800">
+                      <div className={`flex items-center justify-between p-3 rounded-xl border ${isDark ? "bg-gray-700/50 border-gray-600" : "bg-gray-50 border-gray-200"}`}>
+                        <span className={`text-sm font-medium ${isDark ? "text-gray-200" : "text-gray-800"}`}>
                           {userDoc.phone}
                         </span>
                         <button
@@ -499,7 +501,7 @@ const Profile = () => {
                             setError("");
                           }}
                           placeholder="Enter mobile number"
-                          className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                          className={`w-full border-2 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${isDark ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400" : "border-gray-200 bg-white text-gray-900"}`}
                         />
                         <div className="flex gap-2">
                           <button
@@ -531,12 +533,12 @@ const Profile = () => {
                       </div>
                     )}
                     {error && (
-                      <div className="mt-2 text-xs text-red-600 bg-red-50 p-2 rounded-lg">
+                      <div className={`mt-2 text-xs p-2 rounded-lg ${isDark ? "text-red-400 bg-red-900/30" : "text-red-600 bg-red-50"}`}>
                         {error}
                       </div>
                     )}
                     {success && (
-                      <div className="mt-2 text-xs text-green-600 bg-green-50 p-2 rounded-lg">
+                      <div className={`mt-2 text-xs p-2 rounded-lg ${isDark ? "text-green-400 bg-green-900/30" : "text-green-600 bg-green-50"}`}>
                         {success}
                       </div>
                     )}
@@ -598,53 +600,53 @@ const Profile = () => {
               </div>
 
               {/* Quick Actions */}
-              <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
-                <h3 className="text-lg font-bold text-gray-800 mb-4">
+              <div className={`rounded-2xl shadow-xl p-6 border ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-100"}`}>
+                <h3 className={`text-lg font-bold mb-4 ${isDark ? "text-white" : "text-gray-800"}`}>
                   Quick Actions
                 </h3>
                 <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
                   <button
                     onClick={() => navigate("/orders")}
-                    className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 transition-all duration-200 border border-purple-100"
+                    className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all duration-200 border ${isDark ? "bg-gray-700/50 border-gray-600 hover:bg-gray-700" : "bg-gradient-to-br from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 border-purple-100"}`}
                   >
                     <FaShoppingBag className="text-purple-600 text-xl" />
-                    <span className="text-sm font-semibold text-gray-700">
+                    <span className={`text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                       Orders
                     </span>
                   </button>
                   <button
                     onClick={() => navigate("/accounts")}
-                    className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 transition-all duration-200 border border-blue-100"
+                    className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all duration-200 border ${isDark ? "bg-gray-700/50 border-gray-600 hover:bg-gray-700" : "bg-gradient-to-br from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 border-blue-100"}`}
                   >
                     <FaGamepad className="text-blue-600 text-xl" />
-                    <span className="text-sm font-semibold text-gray-700">
+                    <span className={`text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                       Accounts
                     </span>
                   </button>
                   <button
                     onClick={() => navigate("/queues")}
-                    className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 transition-all duration-200 border border-green-100"
+                    className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all duration-200 border ${isDark ? "bg-gray-700/50 border-gray-600 hover:bg-gray-700" : "bg-gradient-to-br from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 border-green-100"}`}
                   >
                     <FaClipboardList className="text-green-600 text-xl" />
-                    <span className="text-sm font-semibold text-gray-700">
+                    <span className={`text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                       Queues
                     </span>
                   </button>
                   <button
                     onClick={() => navigate("/wallet")}
-                    className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-yellow-50 to-orange-50 hover:from-yellow-100 hover:to-orange-100 transition-all duration-200 border border-yellow-100"
+                    className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all duration-200 border ${isDark ? "bg-gray-700/50 border-gray-600 hover:bg-gray-700" : "bg-gradient-to-br from-yellow-50 to-orange-50 hover:from-yellow-100 hover:to-orange-100 border-yellow-100"}`}
                   >
                     <FaCoins className="text-yellow-600 text-xl" />
-                    <span className="text-sm font-semibold text-gray-700">
+                    <span className={`text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                       Wallet
                     </span>
                   </button>
                   <button
                     onClick={logout}
-                    className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-yellow-50 to-orange-50 hover:from-yellow-100 hover:to-orange-100 transition-all duration-200 border border-yellow-100"
+                    className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all duration-200 border ${isDark ? "bg-gray-700/50 border-gray-600 hover:bg-gray-700" : "bg-gradient-to-br from-yellow-50 to-orange-50 hover:from-yellow-100 hover:to-orange-100 border-yellow-100"}`}
                   >
                     <FaSignOutAlt className="text-red-600 text-xl" />
-                    <span className="text-sm font-semibold text-gray-700">
+                    <span className={`text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                       Logout
                     </span>
                   </button>
@@ -653,21 +655,21 @@ const Profile = () => {
             </div>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-            <p className="text-gray-600">No profile data available.</p>
+          <div className={`rounded-2xl shadow-xl p-8 text-center ${isDark ? "bg-gray-800" : "bg-white"}`}>
+            <p className={isDark ? "text-gray-400" : "text-gray-600"}>No profile data available.</p>
           </div>
         )}
 
         {/* Leaderboards Section */}
-        <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-gray-100">
+        <div className={`rounded-2xl shadow-xl p-6 md:p-8 border ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-100"}`}>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
             <div>
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+              <h2 className={`text-2xl md:text-3xl font-bold mb-2 flex items-center gap-3 ${isDark ? "text-white" : "text-gray-800"}`}>
                 <FaTrophy className="text-yellow-500" />
                 Global Leaderboards
               </h2>
               {lastUpdated && (
-                <p className="text-xs md:text-sm text-gray-500">
+                <p className={`text-xs md:text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>
                   Last updated:{" "}
                   {format(
                     lastUpdated.toDate
@@ -681,12 +683,14 @@ const Profile = () => {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-2 mb-6 border-b border-gray-200 overflow-x-auto">
+          <div className={`flex gap-2 mb-6 border-b overflow-x-auto ${isDark ? "border-gray-700" : "border-gray-200"}`}>
             <button
               onClick={() => setActiveTab("spenders")}
               className={`px-4 md:px-6 py-3 font-semibold transition-all duration-200 border-b-2 whitespace-nowrap ${
                 activeTab === "spenders"
                   ? "border-purple-600 text-purple-600"
+                  : isDark
+                  ? "border-transparent text-gray-400 hover:text-gray-300"
                   : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
             >
@@ -698,6 +702,8 @@ const Profile = () => {
               className={`px-4 md:px-6 py-3 font-semibold transition-all duration-200 border-b-2 whitespace-nowrap ${
                 activeTab === "orders"
                   ? "border-purple-600 text-purple-600"
+                  : isDark
+                  ? "border-transparent text-gray-400 hover:text-gray-300"
                   : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
             >
@@ -731,7 +737,11 @@ const Profile = () => {
                       key={user.uid || index}
                       className={`flex items-center gap-3 md:gap-4 p-4 rounded-xl border-2 transition-all duration-200 ${
                         isCurrentUser
-                          ? "bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-400 shadow-lg scale-105"
+                          ? isDark
+                          ? "bg-gradient-to-r from-purple-900/50 to-indigo-900/50 border-purple-500 shadow-lg scale-105"
+                          : "bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-400 shadow-lg scale-105"
+                          : isDark
+                          ? "bg-gray-800 border-gray-700 hover:shadow-md hover:scale-[1.02]"
                           : "bg-white border-gray-200 hover:shadow-md hover:scale-[1.02]"
                       }`}
                     >
@@ -764,7 +774,7 @@ const Profile = () => {
                       {/* User Info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-bold text-gray-800 truncate text-sm md:text-base">
+                          <h3 className={`font-bold truncate text-sm md:text-base ${isDark ? "text-white" : "text-gray-800"}`}>
                             {user.name || "Anonymous"}
                           </h3>
                           {isCurrentUser && (
@@ -774,7 +784,7 @@ const Profile = () => {
                           )}
                         </div>
                         {user.email && (
-                          <p className="text-xs md:text-sm text-gray-500 truncate">
+                          <p className={`text-xs md:text-sm truncate ${isDark ? "text-gray-400" : "text-gray-500"}`}>
                             {user.email}
                           </p>
                         )}
@@ -787,7 +797,7 @@ const Profile = () => {
                             <div className="text-lg md:text-2xl font-bold text-purple-600">
                               ₹{Number(user.totalSpent || 0).toLocaleString()}
                             </div>
-                            <div className="text-xs text-gray-500">
+                            <div className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>
                               {user.orderCount || 0}{" "}
                               {user.orderCount === 1 ? "order" : "orders"}
                             </div>
@@ -797,7 +807,7 @@ const Profile = () => {
                             <div className="text-lg md:text-2xl font-bold text-indigo-600">
                               {user.orderCount || 0}
                             </div>
-                            <div className="text-xs text-gray-500">
+                            <div className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>
                               ₹{Number(user.totalSpent || 0).toLocaleString()}{" "}
                               spent
                             </div>
@@ -811,8 +821,8 @@ const Profile = () => {
 
               {(activeTab === "spenders" ? topSpenders : topOrderCount)
                 .length === 0 && (
-                <div className="text-center py-12 text-gray-500">
-                  <FaTrophy className="text-4xl mx-auto mb-4 text-gray-300" />
+                <div className={`text-center py-12 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                  <FaTrophy className={`text-4xl mx-auto mb-4 ${isDark ? "text-gray-600" : "text-gray-300"}`} />
                   <p>No leaderboard data available yet.</p>
                   <p className="text-sm mt-2">
                     Leaderboards update every hour.

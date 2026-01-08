@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "../../context/UserContext";
+import { useTheme } from "../../context/ThemeContext";
 import {
   FaHome,
   FaCoins,
@@ -13,6 +14,8 @@ import {
   FaEnvelope,
   FaClipboardList,
   FaGamepad,
+  FaMoon,
+  FaSun,
 } from "react-icons/fa";
 import { db } from "../../config/firebase";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
@@ -41,6 +44,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useUser();
+  const { isDark, toggleTheme } = useTheme();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -112,7 +116,11 @@ const Navbar = () => {
   return (
     <>
       {/* DESKTOP NAVBAR - Only visible on md and above */}
-      <header className="hidden md:block fixed top-0 left-0 w-full z-50 bg-white shadow-md">
+      <header
+        className={`hidden md:block fixed top-0 left-0 w-full z-50 shadow-md ${
+          isDark ? "bg-gray-900 shadow-gray-800" : "bg-white"
+        }`}
+      >
         <div className="max-w-7xl mx-auto px-4 lg:px-8 h-16 flex items-center justify-between">
           {/* LEFT - Logo */}
           <div className="flex items-center gap-4 min-w-[200px]">
@@ -137,7 +145,11 @@ const Navbar = () => {
                     onClick={() => navigate(item.to)}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 relative ${
                       active
-                        ? "bg-purple-50 text-purple-600 shadow-sm"
+                        ? isDark
+                          ? "bg-purple-900/30 text-purple-400 shadow-sm"
+                          : "bg-purple-50 text-purple-600 shadow-sm"
+                        : isDark
+                        ? "text-gray-300 hover:bg-gray-800 hover:text-purple-400"
                         : "text-gray-700 hover:bg-gray-50 hover:text-purple-600"
                     }`}
                   >
@@ -162,6 +174,21 @@ const Navbar = () => {
                 )}
               </button>
             </nav>
+
+            {/* Dark Mode Toggle */}
+            <button
+              onClick={toggleTheme}
+              className={`p-2 rounded-lg transition-colors ${
+                isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"
+              }`}
+              aria-label="Toggle dark mode"
+            >
+              {isDark ? (
+                <FaSun size={18} className="text-yellow-500" />
+              ) : (
+                <FaMoon size={18} className="text-gray-700" />
+              )}
+            </button>
 
             {/* Balance Display */}
             <button
@@ -195,11 +222,21 @@ const Navbar = () => {
 
               {/* Profile Dropdown */}
               {profileMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50">
+                <div
+                  className={`absolute right-0 mt-2 w-48 rounded-xl shadow-xl border overflow-hidden z-50 ${
+                    isDark
+                      ? "bg-gray-800 border-gray-700"
+                      : "bg-white border-gray-100"
+                  }`}
+                >
                   <div className="py-1">
                     <button
                       onClick={handleProfileClick}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                      className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 ${
+                        isDark
+                          ? "text-gray-300 hover:bg-gray-700"
+                          : "text-gray-700 hover:bg-gray-50"
+                      }`}
                     >
                       <FaUser size={14} />
                       <span>{user ? "Profile" : "Sign In"}</span>
@@ -209,7 +246,11 @@ const Navbar = () => {
                         navigate("/orders");
                         setProfileMenuOpen(false);
                       }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                      className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 ${
+                        isDark
+                          ? "text-gray-300 hover:bg-gray-700"
+                          : "text-gray-700 hover:bg-gray-50"
+                      }`}
                     >
                       <FaShoppingBag size={14} />
                       <span>My Orders</span>
@@ -219,7 +260,11 @@ const Navbar = () => {
                         navigate("/accounts");
                         setProfileMenuOpen(false);
                       }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                      className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 ${
+                        isDark
+                          ? "text-gray-300 hover:bg-gray-700"
+                          : "text-gray-700 hover:bg-gray-50"
+                      }`}
                     >
                       <FaGamepad size={14} />
                       <span>My Accounts</span>
@@ -229,7 +274,11 @@ const Navbar = () => {
                         navigate("/queues");
                         setProfileMenuOpen(false);
                       }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                      className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 ${
+                        isDark
+                          ? "text-gray-300 hover:bg-gray-700"
+                          : "text-gray-700 hover:bg-gray-50"
+                      }`}
                     >
                       <FaClipboardList size={14} />
                       <span>Queues</span>
@@ -239,7 +288,11 @@ const Navbar = () => {
                         navigate("/wallet");
                         setProfileMenuOpen(false);
                       }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                      className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 ${
+                        isDark
+                          ? "text-gray-300 hover:bg-gray-700"
+                          : "text-gray-700 hover:bg-gray-50"
+                      }`}
                     >
                       <FaCoins size={14} />
                       <span>Wallet</span>
@@ -265,13 +318,21 @@ const Navbar = () => {
             <div ref={menuRef} className="lg:hidden relative">
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
-                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                className={`p-2 rounded-lg transition-colors ${
+                  isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"
+                }`}
               >
                 <FaBars size={20} />
               </button>
 
               {menuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50">
+                <div
+                  className={`absolute right-0 mt-2 w-48 rounded-xl shadow-xl border overflow-hidden z-50 ${
+                    isDark
+                      ? "bg-gray-800 border-gray-700"
+                      : "bg-white border-gray-100"
+                  }`}
+                >
                   <div className="py-1">
                     {desktopNavItems.map((item) => {
                       const Icon = item.icon;
@@ -285,7 +346,11 @@ const Navbar = () => {
                           }}
                           className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 ${
                             active
-                              ? "bg-purple-50 text-purple-600"
+                              ? isDark
+                                ? "bg-purple-900/30 text-purple-400"
+                                : "bg-purple-50 text-purple-600"
+                              : isDark
+                              ? "text-gray-300 hover:bg-gray-700"
                               : "text-gray-700 hover:bg-gray-50"
                           }`}
                         >
@@ -303,22 +368,37 @@ const Navbar = () => {
       </header>
 
       {/* MOBILE TOP BAR - Menu, Logo, Balance */}
-      <header className="md:hidden fixed top-0 left-0 right-0 z-40 bg-white shadow-md">
+      <header
+        className={`md:hidden fixed top-0 left-0 right-0 z-40 shadow-md ${
+          isDark ? "bg-gray-900 shadow-gray-800" : "bg-white"
+        }`}
+      >
         <div className="h-14 flex items-center justify-between px-3 gap-2">
           {/* Left side - Menu Dropdown */}
           <div ref={menuRef} className="relative">
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              className={`p-2 rounded-lg transition-colors ${
+                isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"
+              }`}
               aria-label="Menu"
             >
-              <FaBars size={20} className="text-gray-700" />
+              <FaBars
+                size={20}
+                className={isDark ? "text-gray-300" : "text-gray-700"}
+              />
             </button>
             <button onClick={() => navigate("/")} className="flex-shrink-0">
               <img src={logo} className="h-6 w-auto" alt="Logo" />
             </button>
             {menuOpen && (
-              <div className="absolute left-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50">
+              <div
+                className={`absolute left-0 mt-2 w-56 rounded-xl shadow-xl border overflow-hidden z-50 ${
+                  isDark
+                    ? "bg-gray-800 border-gray-700"
+                    : "bg-white border-gray-100"
+                }`}
+              >
                 <div className="py-2">
                   {mobileNavItems.map((item) => {
                     const Icon = item.icon;
@@ -332,7 +412,11 @@ const Navbar = () => {
                         }}
                         className={`w-full text-left px-4 py-3 text-sm flex items-center gap-3 transition-colors ${
                           active
-                            ? "bg-purple-50 text-purple-600 font-semibold"
+                            ? isDark
+                              ? "bg-purple-900/30 text-purple-400 font-semibold"
+                              : "bg-purple-50 text-purple-600 font-semibold"
+                            : isDark
+                            ? "text-gray-300 hover:bg-gray-700"
                             : "text-gray-700 hover:bg-gray-50"
                         }`}
                       >
@@ -341,13 +425,21 @@ const Navbar = () => {
                       </button>
                     );
                   })}
-                  <div className="border-t border-gray-100 my-1"></div>
+                  <div
+                    className={`border-t my-1 ${
+                      isDark ? "border-gray-700" : "border-gray-100"
+                    }`}
+                  ></div>
                   <button
                     onClick={() => {
                       handleProfileClick();
                       setMenuOpen(false);
                     }}
-                    className="w-full text-left px-4 py-3 text-sm flex items-center gap-3 text-gray-700 hover:bg-gray-50 transition-colors"
+                    className={`w-full text-left px-4 py-3 text-sm flex items-center gap-3 transition-colors ${
+                      isDark
+                        ? "text-gray-300 hover:bg-gray-700"
+                        : "text-gray-700 hover:bg-gray-50"
+                    }`}
                   >
                     <FaUser size={18} />
                     <span>{user ? "Profile" : "Sign In"}</span>
@@ -358,7 +450,11 @@ const Navbar = () => {
                         navigate("/admin");
                         setMenuOpen(false);
                       }}
-                      className="w-full text-left px-4 py-3 text-sm flex items-center gap-3 text-red-600 hover:bg-red-50 transition-colors"
+                      className={`w-full text-left px-4 py-3 text-sm flex items-center gap-3 transition-colors ${
+                        isDark
+                          ? "text-red-400 hover:bg-red-900/30"
+                          : "text-red-600 hover:bg-red-50"
+                      }`}
                     >
                       <FaShieldAlt size={18} />
                       <span>Admin Panel</span>
@@ -369,16 +465,37 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Right side - Balance */}
-          <button
-            onClick={() => navigate("/wallet")}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold shadow-sm flex-shrink-0"
-          >
-            <FaCoins size={14} />
-            <span className="text-xs">
-              ₹{parseFloat(user?.balance || 0).toFixed(0)}
-            </span>
-          </button>
+          {/* Right side - Theme Switcher and Balance */}
+          <div className="flex items-center gap-2">
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className={`p-2 rounded-lg transition-colors ${
+                isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"
+              }`}
+              aria-label="Toggle dark mode"
+            >
+              {isDark ? (
+                <FaSun size={18} className="text-yellow-500" />
+              ) : (
+                <FaMoon
+                  size={18}
+                  className={isDark ? "text-gray-300" : "text-gray-700"}
+                />
+              )}
+            </button>
+
+            {/* Wallet Button */}
+            <button
+              onClick={() => navigate("/wallet")}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold shadow-sm flex-shrink-0"
+            >
+              <FaCoins size={14} />
+              <span className="text-xs">
+                ₹{parseFloat(user?.balance || 0).toFixed(0)}
+              </span>
+            </button>
+          </div>
         </div>
       </header>
 

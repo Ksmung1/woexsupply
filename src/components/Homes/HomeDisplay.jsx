@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTheme } from "../../context/ThemeContext";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 const images = [
@@ -11,6 +12,7 @@ const AUTO_PLAY_MS = 5000;
 const DRAG_THRESHOLD = 50;
 
 const HomeDisplay = () => {
+  const { isDark } = useTheme();
   const total = images.length;
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -206,17 +208,17 @@ const HomeDisplay = () => {
         </div>
         <button
           onClick={() => { stopAutoplay(); goPrev(); resetAutoplay(); }}
-          className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-2 shadow-lg z-10"
+          className={`absolute left-2 top-1/2 -translate-y-1/2 rounded-full p-2 shadow-lg z-10 ${isDark ? "bg-gray-800/90 hover:bg-gray-800" : "bg-white/90 hover:bg-white"}`}
           aria-label="Previous"
         >
-          <FaChevronLeft className="text-gray-800" />
+          <FaChevronLeft className={isDark ? "text-white" : "text-gray-800"} />
         </button>
         <button
           onClick={() => { stopAutoplay(); goNext(); resetAutoplay(); }}
-          className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-2 shadow-lg z-10"
+          className={`absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-2 shadow-lg z-10 ${isDark ? "bg-gray-800/90 hover:bg-gray-800" : "bg-white/90 hover:bg-white"}`}
           aria-label="Next"
         >
-          <FaChevronRight className="text-gray-800" />
+<FaChevronRight className={isDark ? "text-white" : "text-gray-800"} />
         </button>
       </div>
 

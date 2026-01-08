@@ -5,12 +5,14 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { deleteItem } from "../Utils/DeleteItem";
 import { FiPlus, FiUpload, FiX } from "react-icons/fi";
 import { useAlert } from "../../../context/AlertContext";
+import { useTheme } from "../../../context/ThemeContext";
 import AddModal from "../Utils/AddModal";
 import EditModal from "../Utils/EditModal";
 import AdminProduct from "../Utils/AdminProduct";
 import image from "../../../assets/images/game.png";
 
 const SkinAdmin = ({ collectionName = "skinproductlist" }) => {
+  const { isDark } = useTheme();
   const { showError, showSuccess, showWarning } = useAlert();
   const [items, setItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -256,17 +258,22 @@ const SkinAdmin = ({ collectionName = "skinproductlist" }) => {
   };
 
   const handleDelete = async (id) => {
-    await deleteItem(collectionName, id, showError, showSuccess);
+    const ok = await deleteItem({ collectionName, id, db });
+    if (ok) {
+      showSuccess("Item deleted successfully!");
+    } else {
+      showError("Failed to delete item");
+    }
   };
 
   if (loading) {
-    return <div className="p-4">Loading products...</div>;
+    return <div className={`p-4 ${isDark ? "text-gray-400" : "text-gray-600"}`}>Loading products...</div>;
   }
 
   return (
-    <div className="p-4">
+    <div className={`p-4 ${isDark ? "bg-gray-800" : "bg-white"}`}>
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Skin Products</h2>
+        <h2 className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Skin Products</h2>
         <button
           onClick={() => setShowAddForm(true)}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -309,16 +316,16 @@ const SkinAdmin = ({ collectionName = "skinproductlist" }) => {
       {/* Image Upload Overlay - appears when clicked */}
       {showAddForm && showImageUpload && (
         <div className="fixed inset-0 z-[9999] flex items-end justify-end p-4 pointer-events-none">
-          <div className="relative z-10 bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full pointer-events-auto border-2 border-purple-200">
+          <div className={`relative z-10 rounded-xl shadow-2xl p-6 max-w-sm w-full pointer-events-auto border-2 ${isDark ? "bg-gray-800 border-purple-600" : "bg-white border-purple-200"}`}>
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-gray-800">Upload Image</h3>
+              <h3 className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-800"}`}>Upload Image</h3>
               <button
                 onClick={() => {
                   setShowImageUpload(false);
                 }}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className={`p-2 rounded-lg transition-colors ${isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"}`}
               >
-                <FiX className="text-gray-600" />
+                <FiX className={isDark ? "text-gray-400" : "text-gray-600"} />
               </button>
             </div>
 
@@ -327,7 +334,7 @@ const SkinAdmin = ({ collectionName = "skinproductlist" }) => {
                 <img
                   src={imagePreview || newItem.image}
                   alt="Preview"
-                  className="w-full h-48 object-cover rounded-lg border-2 border-gray-200"
+                  className={`w-full h-48 object-cover rounded-lg border-2 ${isDark ? "border-gray-600" : "border-gray-200"}`}
                 />
                 <button
                   onClick={removeImage}
@@ -339,13 +346,13 @@ const SkinAdmin = ({ collectionName = "skinproductlist" }) => {
               </div>
             ) : (
               <div className="mb-4">
-                <label className="block w-full p-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-purple-500 transition-colors bg-gray-50">
+                <label className={`block w-full p-6 border-2 border-dashed rounded-lg cursor-pointer hover:border-purple-500 transition-colors ${isDark ? "border-gray-600 bg-gray-700" : "border-gray-300 bg-gray-50"}`}>
                   <div className="text-center">
-                    <FiUpload className="mx-auto text-3xl text-gray-400 mb-2" />
-                    <p className="text-sm font-medium text-gray-700">
+                    <FiUpload className={`mx-auto text-3xl mb-2 ${isDark ? "text-gray-500" : "text-gray-400"}`} />
+                    <p className={`text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                       {uploadingImage ? "Uploading..." : "Click to upload"}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">PNG, JPG, WEBP (Max 5MB)</p>
+                    <p className={`text-xs mt-1 ${isDark ? "text-gray-500" : "text-gray-500"}`}>PNG, JPG, WEBP (Max 5MB)</p>
                   </div>
                   <input
                     type="file"
@@ -359,9 +366,9 @@ const SkinAdmin = ({ collectionName = "skinproductlist" }) => {
             )}
 
             {newItem.image && (
-              <div className="p-2 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-xs text-green-700 font-medium mb-1">✓ Image uploaded</p>
-                <p className="text-xs text-gray-500 break-all truncate" title={newItem.image}>
+              <div className={`p-2 border rounded-lg ${isDark ? "bg-green-900/30 border-green-800" : "bg-green-50 border-green-200"}`}>
+                <p className={`text-xs font-medium mb-1 ${isDark ? "text-green-400" : "text-green-700"}`}>✓ Image uploaded</p>
+                <p className={`text-xs break-all truncate ${isDark ? "text-gray-400" : "text-gray-500"}`} title={newItem.image}>
                   {newItem.image.substring(0, 40)}...
                 </p>
               </div>
@@ -387,7 +394,7 @@ const SkinAdmin = ({ collectionName = "skinproductlist" }) => {
       </div>
 
       {items.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
+        <div className={`text-center py-8 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
           No products found. Add your first product!
         </div>
       )}
@@ -449,16 +456,16 @@ const SkinAdmin = ({ collectionName = "skinproductlist" }) => {
       {/* Image Upload for Editing - appears when clicked */}
       {selectedItem && showEditImageUpload && (
         <div className="fixed inset-0 z-[9999] flex items-end justify-end p-4 pointer-events-none">
-          <div className="relative z-10 bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full pointer-events-auto border-2 border-purple-200">
+          <div className={`relative z-10 rounded-xl shadow-2xl p-6 max-w-sm w-full pointer-events-auto border-2 ${isDark ? "bg-gray-800 border-purple-600" : "bg-white border-purple-200"}`}>
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-gray-800">Update Image</h3>
+              <h3 className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-800"}`}>Update Image</h3>
               <button
                 onClick={() => {
                   setShowEditImageUpload(false);
                 }}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className={`p-2 rounded-lg transition-colors ${isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"}`}
               >
-                <FiX className="text-gray-600" />
+                <FiX className={isDark ? "text-gray-400" : "text-gray-600"} />
               </button>
             </div>
 
@@ -467,7 +474,7 @@ const SkinAdmin = ({ collectionName = "skinproductlist" }) => {
                 <img
                   src={editingImagePreview || selectedItem.image}
                   alt="Preview"
-                  className="w-full h-48 object-cover rounded-lg border-2 border-gray-200"
+                  className={`w-full h-48 object-cover rounded-lg border-2 ${isDark ? "border-gray-600" : "border-gray-200"}`}
                 />
                 <button
                   onClick={() => {
@@ -482,13 +489,13 @@ const SkinAdmin = ({ collectionName = "skinproductlist" }) => {
               </div>
             ) : (
               <div className="mb-4">
-                <label className="block w-full p-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-purple-500 transition-colors bg-gray-50">
+                <label className={`block w-full p-6 border-2 border-dashed rounded-lg cursor-pointer hover:border-purple-500 transition-colors ${isDark ? "border-gray-600 bg-gray-700" : "border-gray-300 bg-gray-50"}`}>
                   <div className="text-center">
-                    <FiUpload className="mx-auto text-3xl text-gray-400 mb-2" />
-                    <p className="text-sm font-medium text-gray-700">
+                    <FiUpload className={`mx-auto text-3xl mb-2 ${isDark ? "text-gray-500" : "text-gray-400"}`} />
+                    <p className={`text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                       {uploadingEditImage ? "Uploading..." : "Click to upload"}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">PNG, JPG, WEBP (Max 5MB)</p>
+                    <p className={`text-xs mt-1 ${isDark ? "text-gray-500" : "text-gray-500"}`}>PNG, JPG, WEBP (Max 5MB)</p>
                   </div>
                   <input
                     type="file"
@@ -502,9 +509,9 @@ const SkinAdmin = ({ collectionName = "skinproductlist" }) => {
             )}
 
             {selectedItem.image && (
-              <div className="p-2 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-xs text-green-700 font-medium mb-1">✓ Image set</p>
-                <p className="text-xs text-gray-500 break-all truncate" title={selectedItem.image}>
+              <div className={`p-2 border rounded-lg ${isDark ? "bg-green-900/30 border-green-800" : "bg-green-50 border-green-200"}`}>
+                <p className={`text-xs font-medium mb-1 ${isDark ? "text-green-400" : "text-green-700"}`}>✓ Image set</p>
+                <p className={`text-xs break-all truncate ${isDark ? "text-gray-400" : "text-gray-500"}`} title={selectedItem.image}>
                   {selectedItem.image.substring(0, 40)}...
                 </p>
               </div>

@@ -2,11 +2,10 @@ import { useEffect, useState } from "react";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../config/firebase";
 import { useUser } from "../context/UserContext";
-import LoadingPage from "../components/Global/LoadingPage";
 import { useLocation, Navigate } from "react-router-dom";
 
 const MaintenanceGuard = ({ children }) => {
-  const { user, loading, isAdmin } = useUser();
+  const { isAdmin } = useUser();
   const [maintenance, setMaintenance] = useState(null);
   const location = useLocation();
 
@@ -28,9 +27,9 @@ const MaintenanceGuard = ({ children }) => {
     return () => unsub();
   }, []);
 
-  // Still resolving auth or maintenance state
-  if (loading || maintenance === null) {
-    return <LoadingPage />;
+  // Still resolving maintenance state
+  if (maintenance === null) {
+    return null;
   }
 
   // 🚧 Maintenance ON → block non-admins

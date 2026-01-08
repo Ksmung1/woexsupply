@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useUser } from "../context/UserContext";
+import { useTheme } from "../context/ThemeContext";
 import { db } from "../config/firebase";
 import {
   collection,
@@ -16,6 +17,7 @@ import { FaEnvelope, FaEnvelopeOpen, FaSpinner } from "react-icons/fa";
 
 const Messages = () => {
   const { user } = useUser();
+  const { isDark } = useTheme();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const hasMarkedAsRead = useRef(false);
@@ -104,9 +106,9 @@ const Messages = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
         <div className="text-center">
-          <p className="text-gray-600 mb-4">
+          <p className={isDark ? "text-gray-400" : "text-gray-600"}>
             Please log in to view your messages
           </p>
         </div>
@@ -117,14 +119,14 @@ const Messages = () => {
   const unreadCount = messages.filter((msg) => !msg.read).length;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+    <div className={`min-h-screen p-4 md:p-6 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
       <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200">
+        <div className={`rounded-xl shadow-lg border ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}>
           {/* Header */}
-          <div className="p-4 md:p-6 border-b border-gray-200 flex items-center justify-between">
+          <div className={`p-4 md:p-6 border-b flex items-center justify-between ${isDark ? "border-gray-700" : "border-gray-200"}`}>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
-              <p className="text-sm text-gray-600 mt-1">
+              <h1 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Messages</h1>
+              <p className={`text-sm mt-1 ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                 {unreadCount > 0
                   ? `${unreadCount} unread message${unreadCount > 1 ? "s" : ""}`
                   : "No unread messages"}
@@ -141,30 +143,32 @@ const Messages = () => {
           </div>
 
           {/* Messages List */}
-          <div className="divide-y divide-gray-200">
+          <div className={`divide-y ${isDark ? "divide-gray-700" : "divide-gray-200"}`}>
             {loading ? (
               <div className="p-8 text-center">
                 <FaSpinner className="animate-spin text-purple-600 text-2xl mx-auto mb-2" />
-                <p className="text-gray-600">Loading messages...</p>
+                <p className={isDark ? "text-gray-400" : "text-gray-600"}>Loading messages...</p>
               </div>
             ) : messages.length === 0 ? (
               <div className="p-8 text-center">
-                <FaEnvelope className="text-gray-400 text-4xl mx-auto mb-4" />
-                <p className="text-gray-600">No messages yet</p>
+                <FaEnvelope className={`text-4xl mx-auto mb-4 ${isDark ? "text-gray-600" : "text-gray-400"}`} />
+                <p className={isDark ? "text-gray-400" : "text-gray-600"}>No messages yet</p>
               </div>
             ) : (
               messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`p-4 md:p-6 hover:bg-gray-50 transition-colors cursor-pointer ${
-                    !message.read ? "bg-purple-50" : ""
+                  className={`p-4 md:p-6 transition-colors cursor-pointer ${
+                    !message.read 
+                      ? isDark ? "bg-purple-900/30 hover:bg-purple-900/40" : "bg-purple-50 hover:bg-purple-100"
+                      : isDark ? "hover:bg-gray-700" : "hover:bg-gray-50"
                   }`}
                   onClick={() => !message.read && markAsRead(message.id)}
                 >
                   <div className="flex items-start gap-4">
                     <div className="flex-shrink-0">
                       {message.read ? (
-                        <FaEnvelopeOpen className="text-gray-400 text-xl" />
+                        <FaEnvelopeOpen className={`text-xl ${isDark ? "text-gray-500" : "text-gray-400"}`} />
                       ) : (
                         <FaEnvelope className="text-purple-600 text-xl" />
                       )}
@@ -173,7 +177,9 @@ const Messages = () => {
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <h3
                           className={`text-lg font-semibold ${
-                            !message.read ? "text-gray-900" : "text-gray-700"
+                            !message.read 
+                              ? isDark ? "text-white" : "text-gray-900"
+                              : isDark ? "text-gray-300" : "text-gray-700"
                           }`}
                         >
                           {message.subject || "No Subject"}
@@ -182,10 +188,10 @@ const Messages = () => {
                           <span className="flex-shrink-0 w-2 h-2 bg-red-500 rounded-full mt-2"></span>
                         )}
                       </div>
-                      <p className="text-gray-600 text-sm mb-2 whitespace-pre-wrap">
+                      <p className={`text-sm mb-2 whitespace-pre-wrap ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                         {message.content}
                       </p>
-                      <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <div className={`flex items-center gap-4 text-xs ${isDark ? "text-gray-500" : "text-gray-500"}`}>
                         <span>
                           {message.createdAt?.toDate
                             ? format(message.createdAt.toDate(), "PPp")

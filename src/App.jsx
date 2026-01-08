@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { UserProvider } from "./context/UserContext";
 import { AlertProvider } from "./context/AlertContext";
 import { ModalProvider } from "./context/ModalContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import MaintenanceGuard from "./pages/MaintenanceGuard";
 import Maintenance from "./pages/Maintenance";
 
@@ -38,10 +39,11 @@ import Browse from "./pages/Browse";
 
 const App = () => {
   return (
-    <UserProvider>
-      <ModalProvider>
-        <AlertProvider>
-          <Router>
+    <ThemeProvider>
+      <UserProvider>
+        <ModalProvider>
+          <AlertProvider>
+            <Router>
             <Routes>
               {/* 🚧 Maintenance Page */}
               <Route path="/maintenance" element={<Maintenance />} />
@@ -92,10 +94,11 @@ const App = () => {
                 <Route path="messages" element={<AdminMessages />} />
               </Route>
             </Routes>
-          </Router>
-        </AlertProvider>
-      </ModalProvider>
-    </UserProvider>
+            </Router>
+          </AlertProvider>
+        </ModalProvider>
+      </UserProvider>
+    </ThemeProvider>
   );
 };
 

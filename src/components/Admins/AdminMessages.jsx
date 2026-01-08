@@ -9,6 +9,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { useAlert } from "../../context/AlertContext";
+import { useTheme } from "../../context/ThemeContext";
 import {
   FaEnvelope,
   FaSpinner,
@@ -18,6 +19,7 @@ import {
 } from "react-icons/fa";
 
 const AdminMessages = () => {
+  const { isDark } = useTheme();
   const { showSuccess, showError } = useAlert();
   const [users, setUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
@@ -123,14 +125,14 @@ const AdminMessages = () => {
   return (
     <div className="p-4 md:p-6">
       <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 md:p-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">
+        <div className={`rounded-xl shadow-lg border p-4 md:p-6 ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}>
+          <h1 className={`text-2xl font-bold mb-6 ${isDark ? "text-white" : "text-gray-900"}`}>
             Send Message
           </h1>
 
           {/* Message Type Selection */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
               Send To
             </label>
             <div className="flex flex-wrap gap-3">
@@ -139,7 +141,7 @@ const AdminMessages = () => {
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
                   messageType === "all"
                     ? "bg-purple-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    : isDark ? "bg-gray-700 text-gray-300 hover:bg-gray-600" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
                 <FaUsers size={14} />
@@ -150,7 +152,7 @@ const AdminMessages = () => {
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
                   messageType === "role"
                     ? "bg-purple-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    : isDark ? "bg-gray-700 text-gray-300 hover:bg-gray-600" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
                 <FaUserTag size={14} />
@@ -161,7 +163,7 @@ const AdminMessages = () => {
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
                   messageType === "individual"
                     ? "bg-purple-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    : isDark ? "bg-gray-700 text-gray-300 hover:bg-gray-600" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
                 <FaUser size={14} />
@@ -173,13 +175,13 @@ const AdminMessages = () => {
           {/* Role Selection */}
           {messageType === "role" && (
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                 Select Role
               </label>
               <select
                 value={selectedRole}
                 onChange={(e) => setSelectedRole(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 ${isDark ? "border-gray-600 bg-gray-700 text-white" : "border-gray-300 bg-white text-gray-900"}`}
               >
                 <option value="customer">Customer</option>
                 <option value="reseller">Reseller</option>
@@ -190,11 +192,11 @@ const AdminMessages = () => {
           {/* User Selection */}
           {messageType === "individual" && (
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                 Select User
               </label>
               {loadingUsers ? (
-                <div className="flex items-center gap-2 text-gray-600">
+                <div className={`flex items-center gap-2 ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                   <FaSpinner className="animate-spin" />
                   <span>Loading users...</span>
                 </div>
@@ -202,7 +204,7 @@ const AdminMessages = () => {
                 <select
                   value={selectedUserId}
                   onChange={(e) => setSelectedUserId(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 ${isDark ? "border-gray-600 bg-gray-700 text-white" : "border-gray-300 bg-white text-gray-900"}`}
                 >
                   <option value="">Select a user...</option>
                   {users.map((user) => (
@@ -218,7 +220,7 @@ const AdminMessages = () => {
 
           {/* Subject */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
               Subject
             </label>
             <input
@@ -226,13 +228,13 @@ const AdminMessages = () => {
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="Enter message subject"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 ${isDark ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400" : "border-gray-300 bg-white text-gray-900 placeholder-gray-500"}`}
             />
           </div>
 
           {/* Content */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className={`block text-sm font-medium mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
               Message Content
             </label>
             <textarea
@@ -240,7 +242,7 @@ const AdminMessages = () => {
               onChange={(e) => setContent(e.target.value)}
               placeholder="Enter your message..."
               rows={8}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none ${isDark ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400" : "border-gray-300 bg-white text-gray-900 placeholder-gray-500"}`}
             />
           </div>
 

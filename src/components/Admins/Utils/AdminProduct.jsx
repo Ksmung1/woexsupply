@@ -1,4 +1,5 @@
 import React from "react";
+import { useTheme } from "../../../context/ThemeContext";
 
 const AdminProduct = ({
   item,
@@ -9,6 +10,7 @@ const AdminProduct = ({
   typeImageMap = {},
   defaultImage = "/assets/images/default.png", // ← fallback image
 }) => {
+  const { isDark } = useTheme();
   // Smart type resolver
   const resolvedType = (item.type || "").toLowerCase();
 
@@ -24,8 +26,10 @@ const AdminProduct = ({
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") onSelect(item);
       }}
-      className={`bg-white rounded-xl border-2 shadow-md transition-all duration-200 hover:shadow-xl hover:border-purple-300 relative cursor-pointer overflow-hidden
-        ${isSelected ? "ring-2 ring-purple-500 ring-offset-2 border-purple-500" : "border-gray-200"}`}
+      className={`rounded-xl border-2 shadow-md transition-all duration-200 relative cursor-pointer overflow-hidden
+        ${isDark ? "bg-gray-800" : "bg-white"}
+        ${isSelected ? "ring-2 ring-purple-500 ring-offset-2 border-purple-500" : isDark ? "border-gray-700 hover:border-purple-500" : "border-gray-200 hover:border-purple-300"}
+        hover:shadow-xl`}
     >
       {/* API tag */}
       <span
@@ -61,27 +65,27 @@ const AdminProduct = ({
       <div className="p-4 md:p-5 pt-12 md:pt-14">
         <div className="flex gap-3 md:gap-4 items-start mb-4">
           {/* Image */}
-          <div className="w-16 h-16 md:w-20 md:h-20 flex-shrink-0 flex items-center justify-center bg-gray-50 rounded-lg border border-gray-200">
-          <img
-            className="w-full h-full object-contain rounded-lg"
-            src={imageSrc}
-            onError={(e) => {
-              e.currentTarget.src = defaultImage;
-            }}
-            alt={item.type}
-          />
-        </div>
+          <div className={`w-16 h-16 md:w-20 md:h-20 flex-shrink-0 flex items-center justify-center rounded-lg border ${isDark ? "bg-gray-700 border-gray-600" : "bg-gray-50 border-gray-200"}`}>
+            <img
+              className="w-full h-full object-contain rounded-lg"
+              src={imageSrc}
+              onError={(e) => {
+                e.currentTarget.src = defaultImage;
+              }}
+              alt={item.type}
+            />
+          </div>
 
           {/* Label and Diamonds */}
           <div className="flex-1 min-w-0">
-            <p className="text-sm md:text-base font-semibold text-gray-800 mb-1 truncate">
+            <p className={`text-sm md:text-base font-semibold mb-1 truncate ${isDark ? "text-white" : "text-gray-800"}`}>
               {item.label}
             </p>
             <div className="flex items-center gap-2">
-              <span className="text-xs md:text-sm font-bold text-purple-600">
+              <span className={`text-xs md:text-sm font-bold ${isDark ? "text-purple-400" : "text-purple-600"}`}>
                 {item.diamonds}
               </span>
-              <span className="text-xs text-gray-500">
+              <span className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>
             {item.type?.includes("weekly")
               ? "Weekly Pass"
               : item.type?.includes("twilight")
@@ -93,9 +97,9 @@ const AdminProduct = ({
       </div>
 
         {/* Pricing */}
-        <div className="space-y-2 mb-4 pb-4 border-b border-gray-100">
+        <div className={`space-y-2 mb-4 pb-4 border-b ${isDark ? "border-gray-700" : "border-gray-100"}`}>
           <div className="flex items-baseline gap-2">
-            <span className="text-lg md:text-xl font-bold text-gray-800">
+            <span className={`text-lg md:text-xl font-bold ${isDark ? "text-white" : "text-gray-800"}`}>
               ₹{item.rupees}
             </span>
             {item.falseRupees && (
@@ -105,12 +109,12 @@ const AdminProduct = ({
             )}
           </div>
           {item.resellerRupees && (
-            <p className="text-xs text-gray-600">
+            <p className={`text-xs ${isDark ? "text-gray-400" : "text-gray-600"}`}>
               Reseller: <span className="font-semibold">₹{item.resellerRupees}</span>
             </p>
           )}
           {item.price && (
-            <p className="text-xs text-gray-500">
+            <p className={`text-xs ${isDark ? "text-gray-500" : "text-gray-500"}`}>
               Price: <span className="font-medium">₹{item.price}</span>
             </p>
           )}
@@ -125,6 +129,8 @@ const AdminProduct = ({
           className={`w-full text-xs md:text-sm font-semibold py-2 px-4 rounded-lg transition-all duration-200 ${
             item.hide
               ? "bg-orange-500 hover:bg-orange-600 text-white"
+              : isDark
+              ? "bg-gray-700 hover:bg-gray-600 text-gray-300"
               : "bg-gray-200 hover:bg-gray-300 text-gray-700"
           }`}
         >

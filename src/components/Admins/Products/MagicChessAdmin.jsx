@@ -5,12 +5,14 @@ import { collection, onSnapshot, doc, updateDoc, setDoc } from "firebase/firesto
 import { deleteItem } from "../Utils/DeleteItem";
 import { FiPlus } from "react-icons/fi";
 import { useAlert } from "../../../context/AlertContext";
+import { useTheme } from "../../../context/ThemeContext";
 import AddModal from "../Utils/AddModal";
 import EditModal from "../Utils/EditModal";
 import AdminProduct from "../Utils/AdminProduct";
 import image from "../../../assets/images/game.png"
 
 const MagicChessAdmin = ({ collectionName }) => {
+  const { isDark } = useTheme();
   const { showError, showSuccess, showWarning } = useAlert();
   const [items, setItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -191,7 +193,7 @@ const MagicChessAdmin = ({ collectionName }) => {
   });
 
   return (
-    <div className="py-6 px-2  bg-white text-gray-900">
+    <div className={`py-6 px-2 ${isDark ? "bg-gray-800 text-gray-100" : "bg-white text-gray-900"}`}>
       {/* Filter Tabs */}
       <div className="flex gap-3 mb-6 justify-left">
         {Object.entries(groupLabels).map(([key, label]) => (
@@ -201,7 +203,13 @@ const MagicChessAdmin = ({ collectionName }) => {
               setActiveGroup(key);
               setSelectedItem(null);
             }}
-            className={`px-2 py-2 rounded-lg text-xs font-semibold transition-colors ${activeGroup === key ? "bg-green-400 text-black" : "bg-gray-200 text-gray-700"}`}
+            className={`px-2 py-2 rounded-lg text-xs font-semibold transition-colors ${
+              activeGroup === key
+                ? "bg-green-400 text-black"
+                : isDark
+                ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
           >
             {label}
           </button>
@@ -209,11 +217,11 @@ const MagicChessAdmin = ({ collectionName }) => {
       </div>
 
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Products ({collectionName})</h2>
+        <h2 className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Products ({collectionName})</h2>
       </div>
 
       {loading ? (
-        <p>Loading...</p>
+        <p className={isDark ? "text-gray-400" : "text-gray-600"}>Loading...</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredItems.map((item) => (

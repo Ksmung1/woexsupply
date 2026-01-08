@@ -20,11 +20,12 @@ import {
   FaTimes,
 } from "react-icons/fa";
 import { useUser } from "../context/UserContext";
+import { useTheme } from "../context/ThemeContext";
 
 const Queues = () => {
   const { user } = useUser();
+  const { isDark } = useTheme();
   const uid = user?.uid;
-  const isDarkMode = false;
 
   const [queues, setQueues] = useState([]);
   const [input, setInput] = useState("");
@@ -257,13 +258,13 @@ const Queues = () => {
     const s = (status || "").toString().toLowerCase();
     switch (s) {
       case "completed":
-        return isDarkMode ? "text-green-400" : "text-green-700";
+        return isDark ? "text-green-400" : "text-green-700";
       case "pending":
-        return isDarkMode ? "text-yellow-400" : "text-yellow-700";
+        return isDark ? "text-yellow-400" : "text-yellow-700";
       case "failed":
-        return isDarkMode ? "text-red-400" : "text-red-700";
+        return isDark ? "text-red-400" : "text-red-700";
       default:
-        return isDarkMode ? "text-gray-400" : "text-gray-700";
+        return isDark ? "text-gray-400" : "text-gray-700";
     }
   };
 
@@ -274,7 +275,7 @@ const Queues = () => {
     return (
       <div style={style} className="px-2 py-2">
         <div
-          className="bg-white rounded-xl border border-gray-100 p-4 cursor-pointer hover:border-purple-300 hover:shadow-lg transition-all duration-200 group"
+          className={`rounded-xl border p-4 cursor-pointer hover:border-purple-300 hover:shadow-lg transition-all duration-200 group ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-100"}`}
           onClick={() => {
             setSelectedQueue(queue);
             setShowModal(true);
@@ -288,24 +289,24 @@ const Queues = () => {
                   {queue.status?.charAt(0).toUpperCase() + queue.status?.slice(1) || "Unknown"}
                 </span>
               </div>
-              <span className="font-semibold text-base text-gray-800 truncate">
+              <span className={`font-semibold text-base truncate ${isDark ? "text-white" : "text-gray-800"}`}>
                 {queue.item}
               </span>
-              <span className="text-xs text-gray-500 mt-1">
+              <span className={`text-xs mt-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
                 {queue.date || "00-00-0000"} {queue.time || "00:00:00 AM"}
               </span>
             </div>
 
             <div className="hidden md:block">
-              <div className="text-xs text-gray-500 mb-1">Type</div>
-              <div className="text-xs font-semibold text-gray-700 capitalize">
+              <div className={`text-xs mb-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>Type</div>
+              <div className={`text-xs font-semibold capitalize ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                 {queue.type || "N/A"}
               </div>
             </div>
 
             <div className="flex items-center justify-between md:justify-end gap-4">
               <div className="text-right">
-                <div className="text-xs text-gray-500 mb-1">Amount</div>
+                <div className={`text-xs mb-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>Amount</div>
                 <div className={`font-bold text-lg ${getPriceColor(queue.status)}`}>
                   ₹{queue.cost?.toFixed(2) ?? "0.00"}
                 </div>
@@ -321,13 +322,13 @@ const Queues = () => {
     const s = (status || "").toString().toLowerCase();
     switch (s) {
       case "completed":
-        return "text-green-700";
+        return isDark ? "text-green-400" : "text-green-700";
       case "pending":
-        return "text-yellow-700";
+        return isDark ? "text-yellow-400" : "text-yellow-700";
       case "failed":
-        return "text-red-700";
+        return isDark ? "text-red-400" : "text-red-700";
       default:
-        return "text-gray-700";
+        return isDark ? "text-gray-400" : "text-gray-700";
     }
   };
 
@@ -339,37 +340,37 @@ const Queues = () => {
   const isBrowser = typeof window !== "undefined";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-indigo-50/30 py-8">
+    <div className={`min-h-screen bg-gradient-to-br py-8 ${isDark ? "from-gray-900 via-gray-900 to-gray-800" : "from-gray-50 via-purple-50/30 to-indigo-50/30"}`}>
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+          <h1 className={`text-4xl md:text-5xl font-bold mb-2 flex items-center gap-3 ${isDark ? "text-white" : "text-gray-800"}`}>
             <FaClipboardList className="text-purple-600" />
             My Queues
           </h1>
-          <p className="text-gray-600">View and manage all your queue items</p>
+          <p className={isDark ? "text-gray-400" : "text-gray-600"}>View and manage all your queue items</p>
         </div>
 
         {!uid && (
-          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl p-8 md:p-12 text-center border-2 border-purple-200 shadow-xl">
+          <div className={`bg-gradient-to-r rounded-2xl p-8 md:p-12 text-center border-2 shadow-xl ${isDark ? "from-purple-900/30 to-indigo-900/30 border-purple-800" : "from-purple-50 to-indigo-50 border-purple-200"}`}>
             <FaClipboardList className="text-5xl md:text-6xl text-purple-600 mx-auto mb-4" />
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Sign in to view your queues</h2>
-            <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+            <h2 className={`text-2xl md:text-3xl font-bold mb-2 ${isDark ? "text-white" : "text-gray-800"}`}>Sign in to view your queues</h2>
+            <p className={`mb-6 max-w-2xl mx-auto ${isDark ? "text-gray-400" : "text-gray-600"}`}>
               Create an account or sign in to view your queue items and track their status.
             </p>
-            <p className="text-sm text-gray-500">Use the floating login button to get started!</p>
+            <p className={`text-sm ${isDark ? "text-gray-500" : "text-gray-500"}`}>Use the floating login button to get started!</p>
           </div>
         )}
 
         {uid && (
           <>
             {/* Filters and Search */}
-            <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
+            <div className={`rounded-2xl shadow-xl p-6 mb-6 ${isDark ? "bg-gray-800" : "bg-white"}`}>
               {/* Status Filters */}
               <div className="mb-4">
                 <div className="flex items-center gap-2 mb-3">
                   <FaFilter className="text-purple-600" />
-                  <span className="text-sm font-semibold text-gray-700">Filter by Status</span>
+                  <span className={`text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>Filter by Status</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {["all", "pending", "completed", "failed"].map((status) => (
@@ -379,6 +380,8 @@ const Queues = () => {
                       className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
                         statusFilter === status
                           ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg"
+                          : isDark
+                          ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
                           : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                       }`}
                     >
@@ -390,41 +393,41 @@ const Queues = () => {
 
               {/* Search */}
               <div className="relative">
-                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <FaSearch className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${isDark ? "text-gray-500" : "text-gray-400"}`} />
                 <input
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Search by item, status, type, or date..."
-                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200 transition-all"
+                  className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200 transition-all ${isDark ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400" : "border-gray-200 bg-white text-gray-900"}`}
                 />
               </div>
             </div>
 
             {/* Queues List */}
             {queues.length === 0 ? (
-              <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
-                <FaClipboardList className="mx-auto text-6xl text-gray-300 mb-4" />
-                <p className="text-gray-500 text-lg font-medium">No queues found</p>
-                <p className="text-gray-400 text-sm mt-2">Your queue items will appear here once you make a purchase</p>
+              <div className={`rounded-2xl shadow-xl p-12 text-center ${isDark ? "bg-gray-800" : "bg-white"}`}>
+                <FaClipboardList className={`mx-auto text-6xl mb-4 ${isDark ? "text-gray-600" : "text-gray-300"}`} />
+                <p className={`text-lg font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>No queues found</p>
+                <p className={`text-sm mt-2 ${isDark ? "text-gray-500" : "text-gray-400"}`}>Your queue items will appear here once you make a purchase</p>
               </div>
             ) : filteredQueues.length === 0 ? (
-              <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
-                <FaSearch className="mx-auto text-6xl text-gray-300 mb-4" />
-                <p className="text-gray-500 text-lg font-medium">No queues match your filters</p>
-                <p className="text-gray-400 text-sm mt-2">Try adjusting your search or filter criteria</p>
+              <div className={`rounded-2xl shadow-xl p-12 text-center ${isDark ? "bg-gray-800" : "bg-white"}`}>
+                <FaSearch className={`mx-auto text-6xl mb-4 ${isDark ? "text-gray-600" : "text-gray-300"}`} />
+                <p className={`text-lg font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>No queues match your filters</p>
+                <p className={`text-sm mt-2 ${isDark ? "text-gray-500" : "text-gray-400"}`}>Try adjusting your search or filter criteria</p>
               </div>
             ) : (
-              <div className="bg-white rounded-2xl shadow-xl p-6">
+              <div className={`rounded-2xl shadow-xl p-6 ${isDark ? "bg-gray-800" : "bg-white"}`}>
                 <div className="mb-4 flex items-center justify-between">
-                  <p className="text-sm text-gray-600">
-                    Showing <span className="font-semibold text-gray-800">{filteredQueues.length}</span> of{" "}
-                    <span className="font-semibold text-gray-800">{queues.length}</span> queues
+                  <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                    Showing <span className={`font-semibold ${isDark ? "text-white" : "text-gray-800"}`}>{filteredQueues.length}</span> of{" "}
+                    <span className={`font-semibold ${isDark ? "text-white" : "text-gray-800"}`}>{queues.length}</span> queues
                   </p>
-                  <p className="text-xs text-gray-500">Click on any queue to view details</p>
+                  <p className={`text-xs ${isDark ? "text-gray-500" : "text-gray-500"}`}>Click on any queue to view details</p>
                 </div>
                 {isBrowser ? (
-                  <div className="rounded-xl overflow-hidden border border-gray-100">
+                  <div className={`rounded-xl overflow-hidden border ${isDark ? "border-gray-700" : "border-gray-100"}`}>
                     <List height={500} itemCount={filteredQueues.length} itemSize={120} width={"100%"}>
                       {Row}
                     </List>
@@ -438,12 +441,12 @@ const Queues = () => {
                           setSelectedQueue(q);
                           setShowModal(true);
                         }}
-                        className="bg-white rounded-xl border border-gray-100 p-4 cursor-pointer hover:border-purple-300 hover:shadow-lg transition-all duration-200"
+                        className={`rounded-xl border p-4 cursor-pointer hover:border-purple-300 hover:shadow-lg transition-all duration-200 ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-100"}`}
                       >
                         <div className="flex justify-between items-center">
                           <div>
-                            <div className="font-semibold text-gray-800">{q.item}</div>
-                            <div className="text-xs text-gray-500">{q.date} {q.time}</div>
+                            <div className={`font-semibold ${isDark ? "text-white" : "text-gray-800"}`}>{q.item}</div>
+                            <div className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>{q.date} {q.time}</div>
                           </div>
                           <div className={`font-bold text-lg ${getPriceColor(q.status)}`}>
                             ₹{q.cost?.toFixed(2) ?? "0.00"}
@@ -463,40 +466,40 @@ const Queues = () => {
                 onClick={closeModal}
               >
                 <div
-                  className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 p-6 relative max-h-[90vh] overflow-y-auto"
+                  className={`rounded-2xl shadow-2xl max-w-2xl w-full mx-4 p-6 relative max-h-[90vh] overflow-y-auto ${isDark ? "bg-gray-800" : "bg-white"}`}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <button
-                    className="absolute right-4 top-4 text-2xl text-gray-400 hover:text-gray-600 transition-colors"
+                    className={`absolute right-4 top-4 text-2xl transition-colors ${isDark ? "text-gray-400 hover:text-gray-300" : "text-gray-400 hover:text-gray-600"}`}
                     onClick={closeModal}
                     aria-label="Close queue details"
                   >
                     <FaTimes />
                   </button>
 
-                  <h3 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2">
+                  <h3 className={`text-2xl font-bold mb-6 flex items-center gap-2 ${isDark ? "text-white" : "text-gray-800"}`}>
                     <FaClipboardList className="text-purple-600" />
                     Queue Details
                   </h3>
 
                   <div className="space-y-4">
-                    <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-                      <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                        <span className="text-sm font-semibold text-gray-600">Queue ID</span>
-                        <span className="text-sm font-mono font-bold text-gray-800">
+                    <div className={`rounded-xl p-4 space-y-3 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
+                      <div className={`flex items-center justify-between pb-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                        <span className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-600"}`}>Queue ID</span>
+                        <span className={`text-sm font-mono font-bold ${isDark ? "text-white" : "text-gray-800"}`}>
                           {selectedQueue.docId || "N/A"}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                        <span className="text-sm font-semibold text-gray-600">Item</span>
-                        <span className="text-sm font-semibold text-gray-800">{selectedQueue.item || "—"}</span>
+                      <div className={`flex items-center justify-between pb-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                        <span className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-600"}`}>Item</span>
+                        <span className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-800"}`}>{selectedQueue.item || "—"}</span>
                       </div>
-                      <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                        <span className="text-sm font-semibold text-gray-600">Type</span>
-                        <span className="text-sm font-semibold text-gray-800 capitalize">{selectedQueue.type || "—"}</span>
+                      <div className={`flex items-center justify-between pb-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                        <span className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-600"}`}>Type</span>
+                        <span className={`text-sm font-semibold capitalize ${isDark ? "text-white" : "text-gray-800"}`}>{selectedQueue.type || "—"}</span>
                       </div>
-                      <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                        <span className="text-sm font-semibold text-gray-600">Status</span>
+                      <div className={`flex items-center justify-between pb-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                        <span className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-600"}`}>Status</span>
                         <div className="flex items-center gap-2">
                           {getStatusIcon(selectedQueue.status)}
                           <span className={`text-sm font-semibold capitalize ${getStatusColor(selectedQueue.status)}`}>
@@ -504,42 +507,42 @@ const Queues = () => {
                           </span>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                        <span className="text-sm font-semibold text-gray-600">Date & Time</span>
-                        <span className="text-sm text-gray-800">
+                      <div className={`flex items-center justify-between pb-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                        <span className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-600"}`}>Date & Time</span>
+                        <span className={`text-sm ${isDark ? "text-gray-300" : "text-gray-800"}`}>
                           {selectedQueue.date || "00-00-0000"} {selectedQueue.time || "00:00:00 AM"}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                        <span className="text-sm font-semibold text-gray-600">Amount</span>
+                      <div className={`flex items-center justify-between pb-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                        <span className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-600"}`}>Amount</span>
                         <span className="text-lg font-bold text-purple-600">₹{selectedQueue.cost?.toFixed(2) ?? "0.00"}</span>
                       </div>
-                      <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                        <span className="text-sm font-semibold text-gray-600">Payment Method</span>
-                        <span className="text-sm text-gray-800">{selectedQueue.payment || "—"}</span>
+                      <div className={`flex items-center justify-between pb-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                        <span className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-600"}`}>Payment Method</span>
+                        <span className={`text-sm ${isDark ? "text-gray-300" : "text-gray-800"}`}>{selectedQueue.payment || "—"}</span>
                       </div>
-                      <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                        <span className="text-sm font-semibold text-gray-600">User ID</span>
-                        <span className="text-xs font-mono text-gray-700">{selectedQueue.userId || "0"}</span>
+                      <div className={`flex items-center justify-between pb-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                        <span className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-600"}`}>User ID</span>
+                        <span className={`text-xs font-mono ${isDark ? "text-gray-300" : "text-gray-700"}`}>{selectedQueue.userId || "0"}</span>
                       </div>
-                      <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                        <span className="text-sm font-semibold text-gray-600">Server ID</span>
-                        <span className="text-xs font-mono text-gray-700">{selectedQueue.zoneId || "0"}</span>
+                      <div className={`flex items-center justify-between pb-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                        <span className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-600"}`}>Server ID</span>
+                        <span className={`text-xs font-mono ${isDark ? "text-gray-300" : "text-gray-700"}`}>{selectedQueue.zoneId || "0"}</span>
                       </div>
-                      <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                        <span className="text-sm font-semibold text-gray-600">Username</span>
-                        <span className="text-sm text-gray-800">{selectedQueue.username || "anonymous"}</span>
+                      <div className={`flex items-center justify-between pb-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                        <span className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-600"}`}>Username</span>
+                        <span className={`text-sm ${isDark ? "text-gray-300" : "text-gray-800"}`}>{selectedQueue.username || "anonymous"}</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-semibold text-gray-600">In-Game Name</span>
-                        <span className="text-sm text-gray-800">{selectedQueue.gameUsername || "—"}</span>
+                        <span className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-600"}`}>In-Game Name</span>
+                        <span className={`text-sm ${isDark ? "text-gray-300" : "text-gray-800"}`}>{selectedQueue.gameUsername || "—"}</span>
                       </div>
                     </div>
 
                     <div className="flex justify-end pt-2">
                       <button
                         onClick={closeModal}
-                        className="px-6 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 font-semibold text-gray-700 transition-colors"
+                        className={`px-6 py-2.5 rounded-xl font-semibold transition-colors ${isDark ? "bg-gray-700 hover:bg-gray-600 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-700"}`}
                       >
                         Close
                       </button>

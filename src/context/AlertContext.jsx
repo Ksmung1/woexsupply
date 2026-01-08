@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { FaCheckCircle, FaExclamationCircle, FaInfoCircle, FaTimesCircle, FaTimes } from "react-icons/fa";
+import { useTheme } from "./ThemeContext";
 
 const AlertContext = createContext();
 export const useAlert = () => useContext(AlertContext);
 
 export const AlertProvider = ({ children }) => {
+  const { isDark } = useTheme();
   const [toasts, setToasts] = useState([]);
   const [confirmData, setConfirmData] = useState({
     visible: false,
@@ -90,28 +92,28 @@ export const AlertProvider = ({ children }) => {
         {toasts.map((toast) => {
           const typeConfig = {
             success: {
-              bg: "bg-green-50 border-green-200",
+              bg: isDark ? "bg-green-900/30 border-green-800" : "bg-green-50 border-green-200",
               icon: FaCheckCircle,
-              iconColor: "text-green-600",
-              text: "text-green-800",
+              iconColor: isDark ? "text-green-400" : "text-green-600",
+              text: isDark ? "text-green-300" : "text-green-800",
             },
             error: {
-              bg: "bg-red-50 border-red-200",
+              bg: isDark ? "bg-red-900/30 border-red-800" : "bg-red-50 border-red-200",
               icon: FaTimesCircle,
-              iconColor: "text-red-600",
-              text: "text-red-800",
+              iconColor: isDark ? "text-red-400" : "text-red-600",
+              text: isDark ? "text-red-300" : "text-red-800",
             },
             warning: {
-              bg: "bg-yellow-50 border-yellow-200",
+              bg: isDark ? "bg-yellow-900/30 border-yellow-800" : "bg-yellow-50 border-yellow-200",
               icon: FaExclamationCircle,
-              iconColor: "text-yellow-600",
-              text: "text-yellow-800",
+              iconColor: isDark ? "text-yellow-400" : "text-yellow-600",
+              text: isDark ? "text-yellow-300" : "text-yellow-800",
             },
             info: {
-              bg: "bg-blue-50 border-blue-200",
+              bg: isDark ? "bg-blue-900/30 border-blue-800" : "bg-blue-50 border-blue-200",
               icon: FaInfoCircle,
-              iconColor: "text-blue-600",
-              text: "text-blue-800",
+              iconColor: isDark ? "text-blue-400" : "text-blue-600",
+              text: isDark ? "text-blue-300" : "text-blue-800",
             },
           };
 
@@ -141,11 +143,11 @@ export const AlertProvider = ({ children }) => {
       {/* Confirm Modal */}
   {confirmData.visible && (
         <div 
-          className="fixed inset-0 z-[9998] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+          className={`fixed inset-0 z-[9998] backdrop-blur-sm flex items-center justify-center p-4 ${isDark ? "bg-black/70" : "bg-black/60"}`}
           onClick={cancelConfirm}
         >
     <div
-            className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-scale-in"
+            className={`${isDark ? "bg-gray-800" : "bg-white"} rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-scale-in`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -155,7 +157,7 @@ export const AlertProvider = ({ children }) => {
 
             {/* Content */}
             <div className="p-6">
-              <p className="text-gray-700 text-base leading-relaxed mb-6">
+              <p className={`${isDark ? "text-gray-300" : "text-gray-700"} text-base leading-relaxed mb-6`}>
                 {confirmData.message}
               </p>
 
@@ -164,7 +166,11 @@ export const AlertProvider = ({ children }) => {
         <button
           onClick={cancelConfirm}
                   disabled={confirmData.confirming}
-                  className="px-6 py-2.5 rounded-lg font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`px-6 py-2.5 rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
+                    isDark
+                      ? "text-gray-300 bg-gray-700 hover:bg-gray-600"
+                      : "text-gray-700 bg-gray-100 hover:bg-gray-200"
+                  }`}
         >
           Cancel
         </button>

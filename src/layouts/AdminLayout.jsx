@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "../context/UserContext";
+import { useTheme } from "../context/ThemeContext";
 import { doc, updateDoc, onSnapshot } from "firebase/firestore";
 import { db } from "../config/firebase";
 import { signOut } from "firebase/auth";
 import { auth } from "../config/firebase";
-import LoadingPage from "../components/Global/LoadingPage";
 import {
   FaTachometerAlt,
   FaShoppingBag,
@@ -23,7 +23,8 @@ import {
 } from "react-icons/fa";
 
 const AdminLayout = () => {
-  const { user, isAdmin, loading } = useUser();
+  const { user, isAdmin } = useUser();
+  const { isDark } = useTheme();
   const [maintenance, setMaintenance] = useState(false);
   const [loadingMaintenance, setLoadingMaintenance] = useState(true);
 
@@ -45,14 +46,11 @@ const AdminLayout = () => {
   }, []);
 
   useEffect(() => {
-    // Wait for loading to complete before checking permissions
-    if (!loading) {
-      // Redirect if not admin
-      if (!user || !isAdmin) {
-        navigate("/");
-      }
+    // Redirect if not admin
+    if (!user || !isAdmin) {
+      navigate("/");
     }
-  }, [user, isAdmin, loading, navigate]);
+  }, [user, isAdmin, navigate]);
 
   // Close sidebar when route changes on mobile
   useEffect(() => {
@@ -88,18 +86,25 @@ const AdminLayout = () => {
     }
   };
 
-  // Show loading page until user data is fetched from DB
-  if (loading) {
-    return <LoadingPage />;
-  }
-
-  // Show loading or nothing if not admin
+  // Show nothing if not admin
   if (!user || !isAdmin) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-100">
+      <div
+        className={`flex items-center justify-center h-screen ${
+          isDark ? "bg-gray-900" : "bg-gray-100"
+        }`}
+      >
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Checking permissions...</p>
+          <div
+            className={`w-16 h-16 border-4 rounded-full animate-spin mx-auto mb-4 ${
+              isDark
+                ? "border-purple-800 border-t-purple-400"
+                : "border-purple-200 border-t-purple-600"
+            }`}
+          ></div>
+          <p className={isDark ? "text-gray-400" : "text-gray-600"}>
+            Checking permissions...
+          </p>
         </div>
       </div>
     );
@@ -123,40 +128,64 @@ const AdminLayout = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
+    <div
+      className={`flex h-screen bg-gradient-to-br overflow-hidden ${
+        isDark ? "from-gray-900 to-gray-800" : "from-gray-50 to-gray-100"
+      }`}
+    >
       {/* Mobile Overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0  bg-opacity-50 z-40 lg:hidden"
+          className={`fixed inset-0 bg-black z-40 lg:hidden ${
+            isDark ? "bg-opacity-70" : "bg-opacity-50"
+          }`}
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-50 lg:z-auto w-64 bg-white shadow-xl border-r border-gray-200 flex flex-col transform transition-transform duration-300 ease-in-out ${
+        className={`fixed lg:static inset-y-0 left-0 z-50 lg:z-auto w-64 shadow-xl flex flex-col transform transition-transform duration-300 ease-in-out ${
+          isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"
+        } border-r ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
         {/* Logo/Header */}
-        <div className="p-4 lg:p-6 border-b border-gray-200 flex items-center justify-between">
+        <div
+          className={`p-4 lg:p-6 border-b flex items-center justify-between ${
+            isDark ? "border-gray-700" : "border-gray-200"
+          }`}
+        >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
               <FaShieldAlt className="text-white text-lg" />
             </div>
             <div className="hidden sm:block">
-              <h1 className="text-lg lg:text-xl font-bold text-gray-900">
+              <h1
+                className={`text-lg lg:text-xl font-bold ${
+                  isDark ? "text-white" : "text-gray-900"
+                }`}
+              >
                 Admin Panel
               </h1>
-              <p className="text-xs text-gray-500">Control Center</p>
+              <p
+                className={`text-xs ${
+                  isDark ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
+                Control Center
+              </p>
             </div>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            className={`lg:hidden p-2 rounded-lg transition-colors ${
+              isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"
+            }`}
             aria-label="Close sidebar"
           >
-            <FaTimes className="text-gray-600" />
+            <FaTimes className={isDark ? "text-gray-400" : "text-gray-600"} />
           </button>
         </div>
 
@@ -173,12 +202,18 @@ const AdminLayout = () => {
                 className={`flex items-center gap-3 px-3 lg:px-4 py-2.5 lg:py-3 rounded-lg transition-all duration-200 ${
                   active
                     ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg"
+                    : isDark
+                    ? "text-gray-300 hover:bg-gray-800 hover:text-purple-400"
                     : "text-gray-700 hover:bg-gray-100 hover:text-purple-600"
                 }`}
               >
                 <Icon
                   className={`flex-shrink-0 ${
-                    active ? "text-white" : "text-gray-500"
+                    active
+                      ? "text-white"
+                      : isDark
+                      ? "text-gray-400"
+                      : "text-gray-500"
                   }`}
                 />
                 <span className="font-medium text-sm lg:text-base">
@@ -190,7 +225,11 @@ const AdminLayout = () => {
         </nav>
 
         {/* User Info & Logout */}
-        <div className="p-3 lg:p-4 border-t border-gray-200">
+        <div
+          className={`p-3 lg:p-4 border-t ${
+            isDark ? "border-gray-700" : "border-gray-200"
+          }`}
+        >
           <button
             onClick={toggleMaintenance}
             disabled={loadingMaintenance}
@@ -198,7 +237,11 @@ const AdminLayout = () => {
     font-medium text-sm lg:text-base mb-2 transition-colors
     ${
       maintenance
-        ? "bg-green-50 text-green-700 hover:bg-green-100"
+        ? isDark
+          ? "bg-green-900/30 text-green-400 hover:bg-green-900/50 border border-green-800"
+          : "bg-green-50 text-green-700 hover:bg-green-100"
+        : isDark
+        ? "bg-yellow-900/30 text-yellow-400 hover:bg-yellow-900/50 border border-yellow-800"
         : "bg-yellow-50 text-yellow-700 hover:bg-yellow-100"
     }
     ${loadingMaintenance ? "opacity-50 cursor-not-allowed" : ""}
@@ -216,9 +259,13 @@ const AdminLayout = () => {
 
           <button
             onClick={() => navigate("/")}
-            className="w-full flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2 lg:py-3 rounded-lg 
-               bg-red-50 text-red-600 hover:bg-red-100 transition-colors 
-               font-medium text-sm lg:text-base"
+            className={`w-full flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2 lg:py-3 rounded-lg 
+               transition-colors font-medium text-sm lg:text-base
+               ${
+                 isDark
+                   ? "bg-red-900/30 text-red-400 hover:bg-red-900/50 border border-red-800"
+                   : "bg-red-50 text-red-600 hover:bg-red-100"
+               }`}
           >
             <FaSignOutAlt />
             <span>Exit</span>
@@ -229,17 +276,31 @@ const AdminLayout = () => {
       {/* Main content area */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Top Bar */}
-        <header className="w-full bg-white shadow-sm border-b border-gray-200 px-3 sm:px-4 lg:px-6 py-3 lg:py-4">
+        <header
+          className={`w-full shadow-sm border-b px-3 sm:px-4 lg:px-6 py-3 lg:py-4 ${
+            isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"
+          }`}
+        >
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                className={`lg:hidden p-2 rounded-lg transition-colors ${
+                  isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"
+                }`}
                 aria-label="Open sidebar"
               >
-                <FaBars className="text-gray-600 text-lg" />
+                <FaBars
+                  className={`text-lg ${
+                    isDark ? "text-gray-400" : "text-gray-600"
+                  }`}
+                />
               </button>
-              <h2 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
+              <h2
+                className={`text-base sm:text-lg font-semibold truncate ${
+                  isDark ? "text-white" : "text-gray-900"
+                }`}
+              >
                 {navItems.find((item) => isActive(item.to))?.label || "Admin"}
               </h2>
             </div>
@@ -260,7 +321,11 @@ const AdminLayout = () => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto">
+        <main
+          className={`flex-1 overflow-y-auto ${
+            isDark ? "bg-gray-900" : "bg-gray-50"
+          }`}
+        >
           <Outlet />
         </main>
       </div>

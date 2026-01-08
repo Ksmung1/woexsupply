@@ -1,6 +1,7 @@
 // src/pages/Wallet.jsx
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "../context/ThemeContext";
 import * as RW from "react-window";
 import {
   FaCheckCircle,
@@ -59,7 +60,7 @@ if (FixedSizeList) {
   };
 }
 
-const Modal = ({ open, onClose, title, children, footer }) => {
+const Modal = ({ open, onClose, title, children, footer, isDark }) => {
   if (!open) return null;
   return (
     <div
@@ -67,7 +68,7 @@ const Modal = ({ open, onClose, title, children, footer }) => {
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl max-w-4xl mx-auto shadow-2xl w-full overflow-hidden animate-scale-in"
+        className={`rounded-2xl max-w-4xl mx-auto shadow-2xl w-full overflow-hidden animate-scale-in ${isDark ? "bg-gray-800" : "bg-white"}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -93,6 +94,7 @@ const Modal = ({ open, onClose, title, children, footer }) => {
 
 const Wallet = () => {
   const { user } = useUser();
+  const { isDark } = useTheme();
   const uid = user?.uid;
   const navigate = useNavigate();
 
@@ -275,19 +277,19 @@ const Wallet = () => {
     return (
       <div style={style} className="px-3 py-2">
         <div
-          className="grid grid-cols-3 items-center gap-4 p-4 rounded-xl bg-white border-2 border-gray-300 cursor-pointer hover:border-purple-400 hover:shadow-lg transition-all duration-200 group"
+          className={`grid grid-cols-3 items-center gap-4 p-4 rounded-xl border-2 cursor-pointer hover:border-purple-400 hover:shadow-lg transition-all duration-200 group ${isDark ? "bg-gray-800 border-gray-600" : "bg-white border-gray-300"}`}
           onClick={() => setSelectedTx(t)}
         >
           <div className="flex flex-col">
             <div className={`font-bold text-sm ${statusColor(t.status)} mb-1`}>
               {t.id || "Top-up"}
             </div>
-            <div className="text-xs text-gray-500">
+            <div className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>
               {t.date} {t.time}
             </div>
           </div>
           <div
-            className="text-xs font-mono text-gray-600 truncate"
+            className={`text-xs font-mono truncate ${isDark ? "text-gray-400" : "text-gray-600"}`}
             title={t.utr || "-"}
           >
             {t.utr || "No UTR"}
@@ -295,7 +297,7 @@ const Wallet = () => {
           <div className="text-right">
             <div className="flex items-center justify-end gap-2">
               <span className="text-lg">{statusIcon(t.status)}</span>
-              <div className="font-bold text-lg text-gray-800">
+              <div className={`font-bold text-lg ${isDark ? "text-white" : "text-gray-800"}`}>
                 ₹{Math.round(parseFloat(t.amount || 0))}
               </div>
             </div>
@@ -306,30 +308,30 @@ const Wallet = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-indigo-50/30">
+    <div className={`min-h-screen bg-gradient-to-br ${isDark ? "from-gray-900 via-gray-900 to-gray-800" : "from-gray-50 via-purple-50/30 to-indigo-50/30"}`}>
       <div className="px-4 md:px-8  py-8 max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+          <h1 className={`text-4xl md:text-5xl font-bold mb-2 flex items-center gap-3 ${isDark ? "text-white" : "text-gray-800"}`}>
             <FaWallet className="text-purple-600" />
             Wallet
           </h1>
-          <p className="text-gray-600">
+          <p className={isDark ? "text-gray-400" : "text-gray-600"}>
             Manage your balance and view transaction history
           </p>
         </div>
 
         {!uid && (
-          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl p-8 md:p-12 text-center border-2 border-purple-200 shadow-xl">
+          <div className={`bg-gradient-to-r rounded-2xl p-8 md:p-12 text-center border-2 shadow-xl ${isDark ? "from-purple-900/30 to-indigo-900/30 border-purple-800" : "from-purple-50 to-indigo-50 border-purple-200"}`}>
             <FaWallet className="text-5xl md:text-6xl text-purple-600 mx-auto mb-4" />
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
+            <h2 className={`text-2xl md:text-3xl font-bold mb-2 ${isDark ? "text-white" : "text-gray-800"}`}>
               Sign in to view your wallet
             </h2>
-            <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+            <p className={`mb-6 max-w-2xl mx-auto ${isDark ? "text-gray-400" : "text-gray-600"}`}>
               Create an account or sign in to manage your balance, view
               transaction history, and top up your wallet.
             </p>
-            <p className="text-sm text-gray-500">
+            <p className={`text-sm ${isDark ? "text-gray-500" : "text-gray-500"}`}>
               Use the floating login button to get started!
             </p>
           </div>
@@ -371,25 +373,25 @@ const Wallet = () => {
 
             {/* Transactions Section */}
             <div className="w-full">
-              <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8">
+              <div className={`rounded-2xl shadow-xl p-6 md:p-8 ${isDark ? "bg-gray-800" : "bg-white"}`}>
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-                  <h2 className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center gap-2">
+                  <h2 className={`text-2xl md:text-3xl font-bold flex items-center gap-2 ${isDark ? "text-white" : "text-gray-800"}`}>
                     <FaWallet className="text-purple-600" />
                     Top-up History
                   </h2>
                   <div className="relative">
-                    <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    <FaSearch className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${isDark ? "text-gray-500" : "text-gray-400"}`} />
                     <input
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                       placeholder="Search by ID, UTR, or status..."
-                      className="pl-10 pr-4 py-2.5 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200 transition-all w-full md:w-80"
+                      className={`pl-10 pr-4 py-2.5 border-2 rounded-xl focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200 transition-all w-full md:w-80 ${isDark ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400" : "border-gray-200 bg-white text-gray-900"}`}
                     />
                   </div>
                 </div>
 
                 {filtered.length > 0 ? (
-                  <div className="rounded-xl overflow-hidden border border-gray-100">
+                  <div className={`rounded-xl overflow-hidden border ${isDark ? "border-gray-700" : "border-gray-100"}`}>
                     <ListComponent
                       height={500}
                       itemCount={filtered.length}
@@ -401,11 +403,11 @@ const Wallet = () => {
                   </div>
                 ) : (
                   <div className="py-20 text-center">
-                    <FaWallet className="mx-auto text-6xl text-gray-300 mb-4" />
-                    <p className="text-gray-500 text-lg font-medium">
+                    <FaWallet className={`mx-auto text-6xl mb-4 ${isDark ? "text-gray-600" : "text-gray-300"}`} />
+                    <p className={`text-lg font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>
                       No top-up transactions found
                     </p>
-                    <p className="text-gray-400 text-sm mt-2">
+                    <p className={`text-sm mt-2 ${isDark ? "text-gray-500" : "text-gray-400"}`}>
                       Start by adding balance to your wallet
                     </p>
                   </div>
@@ -423,6 +425,7 @@ const Wallet = () => {
             onClose={() => setShowTopupModal(false)}
             title="Top Up Wallet"
             footer={null}
+            isDark={isDark}
           >
             <form
               onSubmit={(e) => {
@@ -431,11 +434,11 @@ const Wallet = () => {
               }}
             >
               <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className={`block text-sm font-semibold mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                   Enter Amount
                 </label>
                 <div className="relative">
-                  <FaRupeeSign className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg" />
+                  <FaRupeeSign className={`absolute left-4 top-1/2 transform -translate-y-1/2 text-lg ${isDark ? "text-gray-500" : "text-gray-400"}`} />
                   <input
                     type="number"
                     min="1"
@@ -443,10 +446,10 @@ const Wallet = () => {
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="Enter amount"
-                    className="w-full pl-10 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200 transition-all text-lg font-semibold"
+                    className={`w-full pl-10 pr-4 py-3.5 border-2 rounded-xl focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200 transition-all text-lg font-semibold ${isDark ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400" : "border-gray-200 bg-white text-gray-900"}`}
                   />
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
+                <p className={`text-xs mt-2 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
                   Minimum: ₹1 | Maximum: ₹19,999
                 </p>
               </div>
@@ -454,7 +457,7 @@ const Wallet = () => {
                 <button
                   type="button"
                   onClick={() => setShowTopupModal(false)}
-                  className="flex-1 px-4 py-3 rounded-xl bg-gray-100 hover:bg-gray-200 font-semibold text-gray-700 transition-colors"
+                  className={`flex-1 px-4 py-3 rounded-xl font-semibold transition-colors ${isDark ? "bg-gray-700 hover:bg-gray-600 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-700"}`}
                 >
                   Cancel
                 </button>
@@ -472,11 +475,12 @@ const Wallet = () => {
             open={confirmOpen}
             onClose={() => setConfirmOpen(false)}
             title="Confirm Top-Up"
+            isDark={isDark}
             footer={
               <div className="flex justify-end gap-3">
                 <button
                   onClick={() => setConfirmOpen(false)}
-                  className="px-6 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 font-semibold text-gray-700 transition-colors"
+                  className={`px-6 py-2.5 rounded-xl font-semibold transition-colors ${isDark ? "bg-gray-700 hover:bg-gray-600 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-700"}`}
                   disabled={loadingPayment}
                 >
                   Cancel
@@ -502,12 +506,12 @@ const Wallet = () => {
                 <div className="text-4xl font-bold text-purple-600 mb-2">
                   ₹{Math.round(parseFloat(orderToCreate?.amount || 0))}
                 </div>
-                <p className="text-sm text-gray-600">
+                <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                   You will be redirected to complete the payment securely.
                 </p>
               </div>
-              <div className="bg-purple-50 rounded-lg p-4 mt-4">
-                <p className="text-xs text-gray-600">
+              <div className={`rounded-lg p-4 mt-4 ${isDark ? "bg-purple-900/30" : "bg-purple-50"}`}>
+                <p className={`text-xs ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                   <strong>Note:</strong> After payment, your balance will be
                   updated automatically.
                 </p>
@@ -520,27 +524,28 @@ const Wallet = () => {
               open={!!selectedTx}
               onClose={() => setSelectedTx(null)}
               title="Transaction Details"
+              isDark={isDark}
             >
               <div className="space-y-4">
-                <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-                  <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                    <span className="text-sm font-semibold text-gray-600">
+                <div className={`rounded-xl p-4 space-y-3 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
+                  <div className={`flex items-center justify-between pb-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                    <span className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                       Order ID
                     </span>
-                    <span className="text-sm font-mono font-bold text-gray-800">
+                    <span className={`text-sm font-mono font-bold ${isDark ? "text-white" : "text-gray-800"}`}>
                       {selectedTx.id}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                    <span className="text-sm font-semibold text-gray-600">
+                  <div className={`flex items-center justify-between pb-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                    <span className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                       Amount
                     </span>
                     <span className="text-lg font-bold text-purple-600">
                       ₹{Math.round(parseFloat(selectedTx.amount || 0))}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                    <span className="text-sm font-semibold text-gray-600">
+                  <div className={`flex items-center justify-between pb-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                    <span className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                       Status
                     </span>
                     <div className="flex items-center gap-2">
@@ -554,28 +559,28 @@ const Wallet = () => {
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                    <span className="text-sm font-semibold text-gray-600">
+                  <div className={`flex items-center justify-between pb-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                    <span className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                       Date & Time
                     </span>
-                    <span className="text-sm text-gray-800">
+                    <span className={`text-sm ${isDark ? "text-gray-300" : "text-gray-800"}`}>
                       {selectedTx.date} {selectedTx.time}
                     </span>
                   </div>
                   {selectedTx.utr && (
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-semibold text-gray-600">
+                      <span className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                         UTR
                       </span>
-                      <span className="text-xs font-mono text-gray-700 break-all text-right w-full">
+                      <span className={`text-xs font-mono break-all text-right w-full ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                         {selectedTx.utr}
                       </span>
                     </div>
                   )}
                 </div>
                 {selectedTx.status === "pending" && (
-                  <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4">
-                    <p className="text-sm text-gray-700 mb-3">
+                  <div className={`border-2 rounded-xl p-4 ${isDark ? "bg-yellow-900/30 border-yellow-800" : "bg-yellow-50 border-yellow-200"}`}>
+                    <p className={`text-sm mb-3 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                       This payment is still pending. Click below to visit the
                       payment page and complete your transaction.
                     </p>
@@ -595,7 +600,7 @@ const Wallet = () => {
                 <div className="flex justify-end pt-2">
                   <button
                     onClick={() => setSelectedTx(null)}
-                    className="px-6 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 font-semibold text-gray-700 transition-colors"
+                    className={`px-6 py-2.5 rounded-xl font-semibold transition-colors ${isDark ? "bg-gray-700 hover:bg-gray-600 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-700"}`}
                   >
                     Close
                   </button>

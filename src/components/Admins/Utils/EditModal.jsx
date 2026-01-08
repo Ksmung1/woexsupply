@@ -2,6 +2,7 @@
 import React from "react";
 import { FiX } from "react-icons/fi";
 import { useAlert } from "../../../context/AlertContext";
+import { useTheme } from "../../../context/ThemeContext";
 
 /**
  * Reusable EditModal
@@ -44,6 +45,7 @@ const EditModal = ({
   ],
   confirmBeforeDelete = true,
 }) => {
+  const { isDark } = useTheme();
   const { showConfirm, showError } = useAlert();
   
   if (!show || !selectedItem) return null;
@@ -72,9 +74,9 @@ const EditModal = ({
 
   return (
     <div role="dialog" aria-modal="true" className="fixed inset-0 z-[9998] flex items-center justify-center p-4">
-      <div onClick={onClose} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div onClick={onClose} className={`absolute inset-0 backdrop-blur-sm ${isDark ? "bg-black/70" : "bg-black/60"}`} />
 
-      <div className="relative z-10 w-full md:w-[90%] lg:w-[70%] xl:w-[60%] max-h-[90vh] overflow-auto rounded-2xl shadow-2xl bg-white animate-scale-in">
+      <div className={`relative z-10 w-full md:w-[90%] lg:w-[70%] xl:w-[60%] max-h-[90vh] overflow-auto rounded-2xl shadow-2xl animate-scale-in ${isDark ? "bg-gray-800" : "bg-white"}`}>
         {/* Header */}
         <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4 sticky top-0 z-10">
           <div className="flex justify-between items-center">
@@ -99,13 +101,13 @@ const EditModal = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           {fields.map(({ label, field, type, placeholder }) => (
               <div key={field} className="flex flex-col gap-2">
-                <label className="font-semibold text-sm text-gray-700">{label}</label>
+                <label className={`font-semibold text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>{label}</label>
               <input
                 type={type}
                 value={selectedItem[field] ?? ""}
                 onChange={(e) => onChange(field, e.target.value)}
                 placeholder={placeholder}
-                  className="w-full border-2 border-gray-200 px-4 py-2.5 rounded-lg text-sm bg-white text-gray-900 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
+                  className={`w-full border-2 px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:border-purple-500 focus:ring-2 transition-all ${isDark ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:ring-purple-900" : "border-gray-200 bg-white text-gray-900 placeholder-gray-500 focus:ring-purple-200"}`}
               />
             </div>
           ))}
@@ -116,12 +118,12 @@ const EditModal = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mt-4">
               {groups.length > 0 && (
                 <div className="flex flex-col gap-2">
-                  <label className="font-semibold text-sm text-gray-700">Group</label>
+                  <label className={`font-semibold text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>Group</label>
                   <div className="flex items-center gap-3">
                     <select
                       value={selectedItem.group ?? ""}
                       onChange={(e) => onChange("group", e.target.value)}
-                      className="flex-1 border-2 border-gray-200 px-4 py-2.5 rounded-lg text-sm bg-white text-gray-900 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
+                      className={`flex-1 border-2 px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:border-purple-500 focus:ring-2 transition-all ${isDark ? "border-gray-600 bg-gray-700 text-white focus:ring-purple-900" : "border-gray-200 bg-white text-gray-900 focus:ring-purple-200"}`}
                     >
                       <option value="">Select Group</option>
                       {groups.map((g) => (
@@ -133,7 +135,7 @@ const EditModal = ({
                     {selectedItem.group && (() => {
                       const sel = groups.find((g) => g.key === selectedItem.group);
                       return sel && sel.image ? (
-                        <img src={sel.image} alt={sel.label ?? sel.key} className="h-12 w-12 rounded-lg border-2 border-gray-200 object-cover" />
+                        <img src={sel.image} alt={sel.label ?? sel.key} className={`h-12 w-12 rounded-lg border-2 object-cover ${isDark ? "border-gray-600" : "border-gray-200"}`} />
                       ) : null;
                     })()}
                   </div>
@@ -142,12 +144,12 @@ const EditModal = ({
 
               {apiOptions.length > 0 && (
                 <div className="flex flex-col gap-2">
-                  <label className="font-semibold text-sm text-gray-700">API</label>
+                  <label className={`font-semibold text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>API</label>
                   {apiOptions && apiOptions.length > 0 ? (
                     <select
                       value={selectedItem.api ?? apiOptions[0].value}
                       onChange={(e) => onChange("api", e.target.value)}
-                      className="w-full border-2 border-gray-200 px-4 py-2.5 rounded-lg text-sm bg-white text-gray-900 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
+                      className={`w-full border-2 px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:border-purple-500 focus:ring-2 transition-all ${isDark ? "border-gray-600 bg-gray-700 text-white focus:ring-purple-900" : "border-gray-200 bg-white text-gray-900 focus:ring-purple-200"}`}
                     >
                       {apiOptions.map((opt) => (
                         <option key={opt.value} value={opt.value}>
@@ -160,7 +162,7 @@ const EditModal = ({
                       type="text"
                       value={selectedItem.api ?? "yokcash"}
                       readOnly
-                      className="w-full border-2 border-gray-200 px-4 py-2.5 rounded-lg text-sm bg-gray-100 text-gray-600 cursor-not-allowed"
+                      className={`w-full border-2 px-4 py-2.5 rounded-lg text-sm cursor-not-allowed ${isDark ? "border-gray-600 bg-gray-700 text-gray-400" : "border-gray-200 bg-gray-100 text-gray-600"}`}
                     />
                   )}
                 </div>
@@ -169,7 +171,7 @@ const EditModal = ({
           )}
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-6 border-t border-gray-200">
+          <div className={`flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-6 border-t ${isDark ? "border-gray-700" : "border-gray-200"}`}>
             <button
               onClick={handleDelete}
               disabled={loading}

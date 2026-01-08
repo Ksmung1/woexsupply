@@ -1,26 +1,27 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
 import { useUser } from "../context/UserContext";
+import { useTheme } from "../context/ThemeContext";
 import Navbar from "../components/Global/Navbar";
 import ScrollToTop from "../components/utils/ScrollToTop";
 import FloatingLoginButton from "../components/Global/FloatingLoginButton";
 import FloatingAdminButton from "../components/Global/FloatingAdminButton";
 import Shortcut from "../components/Global/Shortcut";
-import LoadingPage from "../components/Global/LoadingPage";
 
 const MainLayout = () => {
-  const { loading } = useUser();
-
-  // Show loading page until user data is fetched from DB
-  if (loading) {
-    return <LoadingPage />;
-  }
+  const { isDark } = useTheme();
 
   return (
-    <div>
+    <div
+      className={`min-h-screen transition-colors ${
+        isDark ? "bg-gray-900" : "bg-white"
+      }`}
+    >
       <Navbar />
       <ScrollToTop />
-      <main>
+      <main
+        className={`transition-colors ${isDark ? "bg-gray-900" : "bg-white"}`}
+      >
         <Outlet />
       </main>
       <FloatingLoginButton />

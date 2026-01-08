@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTheme } from "../../context/ThemeContext";
 import games from "../../assets/files/games";
 import MobileLegendsAdmin from "./Products/MobileLegendsAdmin";
 import MagicChessAdmin from "./Products/MagicChessAdmin";
@@ -24,6 +25,7 @@ const componentMap = {
 };
 
 const AdminProducts = () => {
+  const { isDark } = useTheme();
   const gamesArray = Array.isArray(games) ? games : [];
   // Filter out charisma and skin from games array to avoid duplicates
   const filteredGames = gamesArray.filter(
@@ -57,8 +59,8 @@ const AdminProducts = () => {
   if (!allProducts.length) {
     return (
       <div className="py-4 px-4">
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-          <p>No products configured.</p>
+        <div className={`border-l-4 p-4 ${isDark ? "bg-yellow-900/30 border-yellow-600" : "bg-yellow-50 border-yellow-400"}`}>
+          <p className={isDark ? "text-gray-200" : "text-gray-900"}>No products configured.</p>
         </div>
       </div>
     );
@@ -78,6 +80,8 @@ const AdminProducts = () => {
               className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm whitespace-nowrap transition-all ${
                 isActive
                   ? "bg-blue-600 text-white shadow-lg"
+                  : isDark
+                  ? "bg-gray-800 text-gray-300 border border-gray-700 hover:shadow-sm hover:bg-gray-700"
                   : "bg-white text-gray-700 border border-gray-200 hover:shadow-sm hover:bg-gray-50"
               }`}
             >
@@ -96,7 +100,7 @@ const AdminProducts = () => {
         return (
           <div key={key} hidden={!isActive}>
             {isActive && (
-              <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-3 sm:p-4 lg:p-6 mt-2 sm:mt-4">
+              <div className={`border rounded-lg shadow-sm p-3 sm:p-4 lg:p-6 mt-2 sm:mt-4 ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-100"}`}>
                 <PanelComponent game={g} collectionName={g.collectionName} />
               </div>
             )}

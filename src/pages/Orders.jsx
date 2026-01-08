@@ -21,11 +21,13 @@ import {
   FaUser
 } from "react-icons/fa";
 import { useUser } from "../context/UserContext";
+import { useTheme } from "../context/ThemeContext";
 
 const Orders = () => {
   const { user } = useUser();
+  const { isDark } = useTheme();
   const uid = user?.uid;
-  const isDarkMode=false;
+  const isDarkMode = isDark;
 
   const [orders, setOrders] = useState([]);
   const [input, setInput] = useState("");
@@ -305,7 +307,7 @@ const Orders = () => {
         className="px-2 py-2"
       >
         <div
-          className="bg-white rounded-xl border border-gray-100 p-4 cursor-pointer hover:border-purple-300 hover:shadow-lg transition-all duration-200 group"
+          className={`rounded-xl border p-4 cursor-pointer hover:shadow-lg transition-all duration-200 group ${isDark ? "bg-gray-800 border-gray-700 hover:border-purple-500" : "bg-white border-gray-100 hover:border-purple-300"}`}
         onClick={() => {
           setSelectedOrder(order);
           setShowModal(true);
@@ -319,24 +321,24 @@ const Orders = () => {
                   {order.status?.charAt(0).toUpperCase() + order.status?.slice(1) || "Unknown"}
                 </span>
               </div>
-              <span className="font-semibold text-base text-gray-800 truncate">
+              <span className={`font-semibold text-base truncate ${isDark ? "text-white" : "text-gray-800"}`}>
               {order.item}
             </span>
-              <span className="text-xs text-gray-500 mt-1">
+              <span className={`text-xs mt-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
                 {order.date || "00-00-0000"} {order.time || "00:00:00 AM"}
             </span>
           </div>
 
             <div className="hidden md:block">
-              <div className="text-xs text-gray-500 mb-1">Order ID</div>
-              <div className="text-xs font-mono text-gray-700 truncate">
+              <div className={`text-xs mb-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>Order ID</div>
+              <div className={`text-xs font-mono truncate ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                 {order.orderId || order.docId || "N/A"}
               </div>
           </div>
 
             <div className="flex items-center justify-between md:justify-end gap-4">
               <div className="text-right">
-                <div className="text-xs text-gray-500 mb-1">Amount</div>
+                <div className={`text-xs mb-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>Amount</div>
                 <div className={`font-bold text-lg ${getPriceColor(order.status)}`}>
                   ₹{order.cost?.toFixed(2) ?? "0.00"}
                 </div>
@@ -370,37 +372,37 @@ const Orders = () => {
   const isBrowser = typeof window !== "undefined";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-indigo-50/30 py-8">
+    <div className={`min-h-screen bg-gradient-to-br py-8 transition-colors ${isDark ? "from-gray-900 via-gray-900 to-gray-800" : "from-gray-50 via-purple-50/30 to-indigo-50/30"}`}>
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-2 flex items-center gap-3">
-            <FaShoppingBag className="text-purple-600" />
+          <h1 className={`text-4xl md:text-5xl font-bold mb-2 flex items-center gap-3 ${isDark ? "text-white" : "text-gray-800"}`}>
+            <FaShoppingBag className={isDark ? "text-purple-400" : "text-purple-600"} />
             My Orders
           </h1>
-          <p className="text-gray-600">View and manage all your orders</p>
+          <p className={isDark ? "text-gray-400" : "text-gray-600"}>View and manage all your orders</p>
         </div>
 
         {!uid && (
-          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl p-8 md:p-12 text-center border-2 border-purple-200 shadow-xl">
-            <FaShoppingBag className="text-5xl md:text-6xl text-purple-600 mx-auto mb-4" />
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Sign in to view your orders</h2>
-            <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+          <div className={`bg-gradient-to-r rounded-2xl p-8 md:p-12 text-center border-2 shadow-xl ${isDark ? "from-purple-900/30 to-indigo-900/30 border-purple-800" : "from-purple-50 to-indigo-50 border-purple-200"}`}>
+            <FaShoppingBag className={`text-5xl md:text-6xl mx-auto mb-4 ${isDark ? "text-purple-400" : "text-purple-600"}`} />
+            <h2 className={`text-2xl md:text-3xl font-bold mb-2 ${isDark ? "text-white" : "text-gray-800"}`}>Sign in to view your orders</h2>
+            <p className={`mb-6 max-w-2xl mx-auto ${isDark ? "text-gray-400" : "text-gray-600"}`}>
               Create an account or sign in to view your order history, track deliveries, and manage your purchases.
             </p>
-            <p className="text-sm text-gray-500">Use the floating login button to get started!</p>
+            <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>Use the floating login button to get started!</p>
           </div>
         )}
 
         {uid && (
           <>
         {/* Filters and Search */}
-        <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
+        <div className={`rounded-2xl shadow-xl p-6 mb-6 ${isDark ? "bg-gray-800" : "bg-white"}`}>
           {/* Status Filters */}
           <div className="mb-4">
             <div className="flex items-center gap-2 mb-3">
-              <FaFilter className="text-purple-600" />
-              <span className="text-sm font-semibold text-gray-700">Filter by Status</span>
+              <FaFilter className={isDark ? "text-purple-400" : "text-purple-600"} />
+              <span className={`text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>Filter by Status</span>
             </div>
             <div className="flex flex-wrap gap-2">
         {["all", "pending", "completed", "failed"].map((status) => (
@@ -410,6 +412,8 @@ const Orders = () => {
                   className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
                     statusFilter === status
                       ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg"
+                      : isDark
+                      ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
           >
@@ -421,41 +425,41 @@ const Orders = () => {
 
           {/* Search */}
           <div className="relative">
-            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <FaSearch className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${isDark ? "text-gray-500" : "text-gray-400"}`} />
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
               placeholder="Search by ID, item, status, or date..."
-              className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200 transition-all"
+              className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 transition-all ${isDark ? "border-gray-700 bg-gray-900 text-white focus:border-purple-400 focus:ring-purple-900" : "border-gray-200 bg-white text-gray-900 focus:border-purple-500 focus:ring-purple-200"}`}
         />
           </div>
       </div>
 
         {/* Orders List */}
       {orders.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
-            <FaShoppingBag className="mx-auto text-6xl text-gray-300 mb-4" />
-            <p className="text-gray-500 text-lg font-medium">No orders found</p>
-            <p className="text-gray-400 text-sm mt-2">Your orders will appear here once you make a purchase</p>
+          <div className={`rounded-2xl shadow-xl p-12 text-center ${isDark ? "bg-gray-800" : "bg-white"}`}>
+            <FaShoppingBag className={`mx-auto text-6xl mb-4 ${isDark ? "text-gray-600" : "text-gray-300"}`} />
+            <p className={`text-lg font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>No orders found</p>
+            <p className={`text-sm mt-2 ${isDark ? "text-gray-500" : "text-gray-400"}`}>Your orders will appear here once you make a purchase</p>
           </div>
         ) : filteredOrders.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
-            <FaSearch className="mx-auto text-6xl text-gray-300 mb-4" />
-            <p className="text-gray-500 text-lg font-medium">No orders match your filters</p>
-            <p className="text-gray-400 text-sm mt-2">Try adjusting your search or filter criteria</p>
+          <div className={`rounded-2xl shadow-xl p-12 text-center ${isDark ? "bg-gray-800" : "bg-white"}`}>
+            <FaSearch className={`mx-auto text-6xl mb-4 ${isDark ? "text-gray-600" : "text-gray-300"}`} />
+            <p className={`text-lg font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>No orders match your filters</p>
+            <p className={`text-sm mt-2 ${isDark ? "text-gray-500" : "text-gray-400"}`}>Try adjusting your search or filter criteria</p>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl shadow-xl p-6">
+          <div className={`rounded-2xl shadow-xl p-6 ${isDark ? "bg-gray-800" : "bg-white"}`}>
             <div className="mb-4 flex items-center justify-between">
-              <p className="text-sm text-gray-600">
-                Showing <span className="font-semibold text-gray-800">{filteredOrders.length}</span> of{" "}
-                <span className="font-semibold text-gray-800">{orders.length}</span> orders
+              <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                Showing <span className={`font-semibold ${isDark ? "text-white" : "text-gray-800"}`}>{filteredOrders.length}</span> of{" "}
+                <span className={`font-semibold ${isDark ? "text-white" : "text-gray-800"}`}>{orders.length}</span> orders
               </p>
-              <p className="text-xs text-gray-500">Click on any order to view details</p>
+              <p className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>Click on any order to view details</p>
             </div>
           {isBrowser ? (
-              <div className="rounded-xl overflow-hidden border border-gray-100">
+              <div className={`rounded-xl overflow-hidden border ${isDark ? "border-gray-700" : "border-gray-100"}`}>
                 <List height={500} itemCount={filteredOrders.length} itemSize={120} width={"100%"}>
               {Row}
             </List>
@@ -469,12 +473,12 @@ const Orders = () => {
                       setSelectedOrder(o);
                       setShowModal(true);
                     }}
-                    className="bg-white rounded-xl border border-gray-100 p-4 cursor-pointer hover:border-purple-300 hover:shadow-lg transition-all duration-200"
+                    className={`rounded-xl border p-4 cursor-pointer hover:shadow-lg transition-all duration-200 ${isDark ? "bg-gray-800 border-gray-700 hover:border-purple-500" : "bg-white border-gray-100 hover:border-purple-300"}`}
                   >
                     <div className="flex justify-between items-center">
                       <div>
-                        <div className="font-semibold text-gray-800">{o.item}</div>
-                        <div className="text-xs text-gray-500">{o.date} {o.time}</div>
+                        <div className={`font-semibold ${isDark ? "text-white" : "text-gray-800"}`}>{o.item}</div>
+                        <div className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>{o.date} {o.time}</div>
                       </div>
                       <div className={`font-bold text-lg ${getPriceColor(o.status)}`}>
                         ₹{o.cost?.toFixed(2) ?? "0.00"}
@@ -490,40 +494,40 @@ const Orders = () => {
         {/* Order Details Modal */}
       {showModal && selectedOrder && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            className={`fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm ${isDark ? "bg-black/70" : "bg-black/60"}`}
             onClick={closeModal}
           >
             <div
-              className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 p-6 relative max-h-[90vh] overflow-y-auto"
+              className={`rounded-2xl shadow-2xl max-w-2xl w-full mx-4 p-6 relative max-h-[90vh] overflow-y-auto ${isDark ? "bg-gray-800" : "bg-white"}`}
               onClick={(e) => e.stopPropagation()}
             >
               <button
-                className="absolute right-4 top-4 text-2xl text-gray-400 hover:text-gray-600 transition-colors"
+                className={`absolute right-4 top-4 text-2xl transition-colors ${isDark ? "text-gray-500 hover:text-gray-300" : "text-gray-400 hover:text-gray-600"}`}
                 onClick={closeModal}
                 aria-label="Close order details"
               >
                 <FaTimes />
               </button>
 
-              <h3 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2">
-                <FaShoppingBag className="text-purple-600" />
+              <h3 className={`text-2xl font-bold mb-6 flex items-center gap-2 ${isDark ? "text-white" : "text-gray-800"}`}>
+                <FaShoppingBag className={isDark ? "text-purple-400" : "text-purple-600"} />
                 Order Details
               </h3>
 
               <div className="space-y-4">
-                <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-                  <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                    <span className="text-sm font-semibold text-gray-600">Order ID</span>
-                    <span className="text-sm font-mono font-bold text-gray-800">
+                <div className={`rounded-xl p-4 space-y-3 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
+                  <div className={`flex items-center justify-between pb-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                    <span className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-600"}`}>Order ID</span>
+                    <span className={`text-sm font-mono font-bold ${isDark ? "text-white" : "text-gray-800"}`}>
                       {selectedOrder.orderId || selectedOrder.docId || "N/A"}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                    <span className="text-sm font-semibold text-gray-600">Item</span>
-                    <span className="text-sm font-semibold text-gray-800">{selectedOrder.item || "—"}</span>
+                  <div className={`flex items-center justify-between pb-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                    <span className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-600"}`}>Item</span>
+                    <span className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-800"}`}>{selectedOrder.item || "—"}</span>
                   </div>
-                  <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                    <span className="text-sm font-semibold text-gray-600">Status</span>
+                  <div className={`flex items-center justify-between pb-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                    <span className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-600"}`}>Status</span>
                     <div className="flex items-center gap-2">
                       {getStatusIcon(selectedOrder.status)}
                       <span className={`text-sm font-semibold capitalize ${getStatusColor(selectedOrder.status)}`}>
@@ -531,49 +535,49 @@ const Orders = () => {
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                    <span className="text-sm font-semibold text-gray-600">Date & Time</span>
-                    <span className="text-sm text-gray-800">
+                  <div className={`flex items-center justify-between pb-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                    <span className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-600"}`}>Date & Time</span>
+                    <span className={`text-sm ${isDark ? "text-gray-300" : "text-gray-800"}`}>
                       {selectedOrder.date || "00-00-0000"} {selectedOrder.time || "00:00:00 AM"}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                    <span className="text-sm font-semibold text-gray-600">Amount</span>
-                    <span className="text-lg font-bold text-purple-600">₹{selectedOrder.cost?.toFixed(2) ?? "0.00"}</span>
+                  <div className={`flex items-center justify-between pb-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                    <span className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-600"}`}>Amount</span>
+                    <span className={`text-lg font-bold ${isDark ? "text-purple-400" : "text-purple-600"}`}>₹{selectedOrder.cost?.toFixed(2) ?? "0.00"}</span>
                   </div>
-                  <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                    <span className="text-sm font-semibold text-gray-600">Payment Method</span>
-                    <span className="text-sm text-gray-800">{selectedOrder.payment || "—"}</span>
+                  <div className={`flex items-center justify-between pb-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                    <span className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-600"}`}>Payment Method</span>
+                    <span className={`text-sm ${isDark ? "text-gray-300" : "text-gray-800"}`}>{selectedOrder.payment || "—"}</span>
                   </div>
-                  <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                    <span className="text-sm font-semibold text-gray-600">User ID</span>
-                    <span className="text-xs font-mono text-gray-700">{selectedOrder.userId || "0"}</span>
+                  <div className={`flex items-center justify-between pb-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                    <span className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-600"}`}>User ID</span>
+                    <span className={`text-xs font-mono ${isDark ? "text-gray-300" : "text-gray-700"}`}>{selectedOrder.userId || "0"}</span>
                   </div>
-                  <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                    <span className="text-sm font-semibold text-gray-600">Server ID</span>
-                    <span className="text-xs font-mono text-gray-700">{selectedOrder.zoneId || "0"}</span>
+                  <div className={`flex items-center justify-between pb-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                    <span className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-600"}`}>Server ID</span>
+                    <span className={`text-xs font-mono ${isDark ? "text-gray-300" : "text-gray-700"}`}>{selectedOrder.zoneId || "0"}</span>
                   </div>
-                  <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                    <span className="text-sm font-semibold text-gray-600">Username</span>
-                    <span className="text-sm text-gray-800">{selectedOrder.username || "anonymous"}</span>
+                  <div className={`flex items-center justify-between pb-3 border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                    <span className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-600"}`}>Username</span>
+                    <span className={`text-sm ${isDark ? "text-gray-300" : "text-gray-800"}`}>{selectedOrder.username || "anonymous"}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-gray-600">In-Game Name</span>
-                    <span className="text-sm text-gray-800">{selectedOrder.gameUsername || "—"}</span>
+                    <span className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-600"}`}>In-Game Name</span>
+                    <span className={`text-sm ${isDark ? "text-gray-300" : "text-gray-800"}`}>{selectedOrder.gameUsername || "—"}</span>
                   </div>
                 </div>
 
                 {selectedOrder.payment === "upi" && selectedOrder.utr && (
-                  <div className="bg-green-50 rounded-xl p-4 border border-green-200">
-                    <div className="text-sm font-semibold text-green-800 mb-2">UTR / Transaction ID</div>
-                    <div className="text-xs font-mono text-green-700 break-all">{selectedOrder.utr}</div>
+                  <div className={`rounded-xl p-4 border ${isDark ? "bg-green-900/30 border-green-800" : "bg-green-50 border-green-200"}`}>
+                    <div className={`text-sm font-semibold mb-2 ${isDark ? "text-green-400" : "text-green-800"}`}>UTR / Transaction ID</div>
+                    <div className={`text-xs font-mono break-all ${isDark ? "text-green-300" : "text-green-700"}`}>{selectedOrder.utr}</div>
                   </div>
                 )}
 
                 <div className="flex justify-end pt-2">
                   <button
                     onClick={closeModal}
-                    className="px-6 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 font-semibold text-gray-700 transition-colors"
+                    className={`px-6 py-2.5 rounded-xl font-semibold transition-colors ${isDark ? "bg-gray-700 hover:bg-gray-600 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-700"}`}
                   >
                     Close
                   </button>

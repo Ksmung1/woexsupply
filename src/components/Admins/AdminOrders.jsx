@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTheme } from "../../context/ThemeContext";
 import { db } from "../../config/firebase";
 import {
   collection,
@@ -46,6 +47,7 @@ const formatDate = (val) => {
 };
 
 export default function AdminOrders() {
+  const { isDark } = useTheme();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState(null);
@@ -113,60 +115,60 @@ export default function AdminOrders() {
   return (
     <div className="p-4">
       <div className="flex items-center justify-between mb-3">
-        <h1 className="text-lg font-semibold text-gray-900">Orders</h1>
-        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+        <h1 className={`text-lg font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>Orders</h1>
+        <span className={`text-xs px-2 py-1 rounded-full ${isDark ? "text-gray-400 bg-gray-800" : "text-gray-500 bg-gray-100"}`}>
           {orders.length} total
         </span>
       </div>
 
       {error && (
-        <div className="mb-3 p-2 bg-red-50 text-red-700 rounded text-xs">
+        <div className={`mb-3 p-2 rounded text-xs ${isDark ? "bg-red-900/30 text-red-400" : "bg-red-50 text-red-700"}`}>
           {error}
         </div>
       )}
 
       {loading ? (
-        <div className="text-xs text-gray-500 py-4">Loading orders…</div>
+        <div className={`text-xs py-4 ${isDark ? "text-gray-400" : "text-gray-500"}`}>Loading orders…</div>
       ) : orders.length === 0 ? (
-        <div className="text-xs text-gray-600 py-4 text-center bg-gray-50 rounded-lg">
+        <div className={`text-xs py-4 text-center rounded-lg ${isDark ? "text-gray-400 bg-gray-800" : "text-gray-600 bg-gray-50"}`}>
           No orders found.
         </div>
       ) : (
         <>
           {/* Desktop Table View */}
-          <div className="hidden lg:block overflow-x-auto bg-white rounded-lg border border-gray-200">
+          <div className={`hidden lg:block overflow-x-auto rounded-lg border ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}>
             <table className="min-w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className={`border-b ${isDark ? "bg-gray-900 border-gray-700" : "bg-gray-50 border-gray-200"}`}>
                 <tr>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className={`px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                     ID
                   </th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className={`px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                     Buyer
                   </th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className={`px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                     Item
                   </th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className={`px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                     Cost
                   </th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className={`px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                     Time
                   </th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className={`px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                     Status
                   </th>
-                  <th className="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className={`px-3 py-2 text-right text-xs font-semibold uppercase tracking-wider ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                     Actions
                   </th>
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-gray-100">
+              <tbody className={`divide-y ${isDark ? "divide-gray-700" : "divide-gray-100"}`}>
                 {orders.map((order) => (
                   <tr
                     key={order.id}
-                    className="hover:bg-gray-50 transition-colors cursor-pointer"
+                    className={`transition-colors cursor-pointer ${isDark ? "hover:bg-gray-700/50" : "hover:bg-gray-50"}`}
                     onClick={(e) => {
                       // Don't open details if clicking on interactive elements
                       if (
@@ -178,30 +180,30 @@ export default function AdminOrders() {
                     }}
                   >
                     <td className="px-3 py-2">
-                      <span className="text-xs font-mono text-gray-600 truncate block max-w-[120px]">
+                      <span className={`text-xs font-mono truncate block max-w-[120px] ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                         {order.id.slice(0, 8)}...
                       </span>
                     </td>
                     <td className="px-3 py-2">
-                      <span className="text-xs text-gray-800 truncate block max-w-[120px]">
+                      <span className={`text-xs truncate block max-w-[120px] ${isDark ? "text-gray-200" : "text-gray-800"}`}>
                         {order.username ?? order.buyer ?? "—"}
                       </span>
                     </td>
                     <td className="px-3 py-2">
                       <span
-                        className="text-xs text-gray-700 truncate block max-w-[150px]"
+                        className={`text-xs truncate block max-w-[150px] ${isDark ? "text-gray-300" : "text-gray-700"}`}
                         title={order.item ?? order.product ?? ""}
                       >
                         {order.item ?? order.product ?? "—"}
                       </span>
                     </td>
                     <td className="px-3 py-2">
-                      <span className="text-xs font-semibold text-gray-900">
+                      <span className={`text-xs font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>
                         {order.cost != null ? `₹${order.cost}` : "—"}
                       </span>
                     </td>
                     <td className="px-3 py-2">
-                      <span className="text-xs text-gray-500">
+                      <span className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>
                         {formatDate(order.createdAt)}
                       </span>
                     </td>
@@ -224,7 +226,7 @@ export default function AdminOrders() {
                         <button
                           onClick={() => handleToggle(order)}
                           disabled={savingId === order.id}
-                          className="px-2 py-1 text-xs rounded-md border border-gray-300 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          className={`px-2 py-1 text-xs rounded-md border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isDark ? "border-gray-600 bg-gray-800 hover:bg-gray-700 text-gray-300" : "border-gray-300 bg-white hover:bg-gray-50 text-gray-700"}`}
                           title={
                             order.status === "completed"
                               ? "Mark pending"
@@ -242,7 +244,7 @@ export default function AdminOrders() {
                           disabled={
                             savingId === order.id || order.status === "failed"
                           }
-                          className="px-2 py-1 text-xs rounded-md border border-red-300 bg-white text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          className={`px-2 py-1 text-xs rounded-md border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isDark ? "border-red-700 bg-gray-800 text-red-400 hover:bg-red-900/30" : "border-red-300 bg-white text-red-600 hover:bg-red-50"}`}
                           title="Mark failed"
                         >
                           {savingId === order.id ? "..." : "Fail"}
@@ -260,7 +262,7 @@ export default function AdminOrders() {
             {orders.map((order) => (
               <div
                 key={order.id}
-                className="bg-white rounded-lg border border-gray-200 p-3 hover:shadow-sm transition-shadow cursor-pointer"
+                className={`rounded-lg border p-3 hover:shadow-sm transition-shadow cursor-pointer ${isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}
                 onClick={(e) => {
                   // Don't open details if clicking on interactive elements
                   if (
@@ -273,10 +275,10 @@ export default function AdminOrders() {
               >
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-mono text-gray-500 truncate">
+                    <p className={`text-xs font-mono truncate ${isDark ? "text-gray-400" : "text-gray-500"}`}>
                       {order.id.slice(0, 12)}...
                     </p>
-                    <p className="text-sm font-semibold text-gray-900 truncate">
+                    <p className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>
                       {order.username ?? order.buyer ?? "—"}
                     </p>
                   </div>
@@ -284,10 +286,10 @@ export default function AdminOrders() {
                     className={
                       "inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full capitalize flex-shrink-0 " +
                       (order.status === "completed"
-                        ? "bg-green-100 text-green-700"
+                        ? isDark ? "bg-green-900/30 text-green-400" : "bg-green-100 text-green-700"
                         : order.status === "failed"
-                        ? "bg-red-100 text-red-700"
-                        : "bg-yellow-100 text-yellow-700")
+                        ? isDark ? "bg-red-900/30 text-red-400" : "bg-red-100 text-red-700"
+                        : isDark ? "bg-yellow-900/30 text-yellow-400" : "bg-yellow-100 text-yellow-700")
                     }
                   >
                     {order.status ?? "pending"}
@@ -296,30 +298,30 @@ export default function AdminOrders() {
 
                 <div className="grid grid-cols-2 gap-2 mb-2 text-xs">
                   <div>
-                    <span className="text-gray-500">Item:</span>
-                    <span className="text-gray-800 ml-1 truncate block">
+                    <span className={isDark ? "text-gray-400" : "text-gray-500"}>Item:</span>
+                    <span className={`ml-1 truncate block ${isDark ? "text-gray-200" : "text-gray-800"}`}>
                       {order.item ?? order.product ?? "—"}
                     </span>
                   </div>
                   <div className="text-right">
-                    <span className="text-gray-500">Cost:</span>
-                    <span className="text-gray-900 font-semibold ml-1">
+                    <span className={isDark ? "text-gray-400" : "text-gray-500"}>Cost:</span>
+                    <span className={`font-semibold ml-1 ${isDark ? "text-white" : "text-gray-900"}`}>
                       {order.cost != null ? `₹${order.cost}` : "—"}
                     </span>
                   </div>
                   <div className="col-span-2">
-                    <span className="text-gray-500">Time:</span>
-                    <span className="text-gray-600 ml-1">
+                    <span className={isDark ? "text-gray-400" : "text-gray-500"}>Time:</span>
+                    <span className={`ml-1 ${isDark ? "text-gray-300" : "text-gray-600"}`}>
                       {formatDate(order.createdAt)}
                     </span>
                   </div>
                 </div>
 
-                <div className="flex gap-1.5 pt-2 border-t border-gray-100">
+                <div className={`flex gap-1.5 pt-2 border-t ${isDark ? "border-gray-700" : "border-gray-100"}`}>
                   <button
                     onClick={() => handleToggle(order)}
                     disabled={savingId === order.id}
-                    className="flex-1 px-2 py-1.5 text-xs rounded-md border border-gray-300 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
+                    className={`flex-1 px-2 py-1.5 text-xs rounded-md border transition-colors disabled:opacity-50 ${isDark ? "border-gray-600 bg-gray-800 hover:bg-gray-700 text-gray-300" : "border-gray-300 bg-white hover:bg-gray-50 text-gray-700"}`}
                   >
                     {savingId === order.id
                       ? "..."
@@ -332,7 +334,7 @@ export default function AdminOrders() {
                     disabled={
                       savingId === order.id || order.status === "failed"
                     }
-                    className="flex-1 px-2 py-1.5 text-xs rounded-md border border-red-300 bg-white text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                    className={`flex-1 px-2 py-1.5 text-xs rounded-md border transition-colors disabled:opacity-50 ${isDark ? "border-red-700 bg-gray-800 text-red-400 hover:bg-red-900/30" : "border-red-300 bg-white text-red-600 hover:bg-red-50"}`}
                   >
                     {savingId === order.id ? "..." : "Fail"}
                   </button>
@@ -345,20 +347,20 @@ export default function AdminOrders() {
 
       {/* Order Details Modal */}
       {selectedOrder && (
-        <div className="fixed inset-0  bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
+        <div className={`fixed inset-0 flex items-center justify-center z-50 p-4 ${isDark ? "bg-black/70" : "bg-black/50"} backdrop-blur-sm`}>
+          <div className={`rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 ${isDark ? "bg-gray-800" : "bg-white"}`}>
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                  <FaShoppingBag className="text-purple-600" />
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isDark ? "bg-purple-900/30" : "bg-purple-100"}`}>
+                  <FaShoppingBag className={isDark ? "text-purple-400" : "text-purple-600"} />
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 className={`text-xl font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>
                   Order Details
                 </h2>
               </div>
               <button
                 onClick={() => setSelectedOrder(null)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className={`transition-colors ${isDark ? "text-gray-500 hover:text-gray-300" : "text-gray-400 hover:text-gray-600"}`}
               >
                 <FaTimes className="text-lg" />
               </button>
@@ -366,58 +368,58 @@ export default function AdminOrders() {
 
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <span className="text-xs text-gray-500 block mb-1">
+                <div className={`rounded-lg p-4 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
+                  <span className={`text-xs block mb-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
                     Order ID
                   </span>
-                  <p className="text-xs font-mono text-gray-900 break-all">
+                  <p className={`text-xs font-mono break-all ${isDark ? "text-gray-200" : "text-gray-900"}`}>
                     {selectedOrder.id ?? "—"}
                   </p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <span className="text-xs text-gray-500 block mb-1">
+                <div className={`rounded-lg p-4 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
+                  <span className={`text-xs block mb-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
                     Status
                   </span>
                   <span
                     className={
                       "inline-flex items-center px-2 py-1 text-xs font-medium rounded-full capitalize " +
                       (selectedOrder.status === "completed"
-                        ? "bg-green-100 text-green-700"
+                        ? isDark ? "bg-green-900/30 text-green-400" : "bg-green-100 text-green-700"
                         : selectedOrder.status === "failed"
-                        ? "bg-red-100 text-red-700"
-                        : "bg-yellow-100 text-yellow-700")
+                        ? isDark ? "bg-red-900/30 text-red-400" : "bg-red-100 text-red-700"
+                        : isDark ? "bg-yellow-900/30 text-yellow-400" : "bg-yellow-100 text-yellow-700")
                     }
                   >
                     {selectedOrder.status ?? "pending"}
                   </span>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <span className="text-xs text-gray-500 block mb-1">
+                <div className={`rounded-lg p-4 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
+                  <span className={`text-xs block mb-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
                     Buyer
                   </span>
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className={`text-sm font-medium ${isDark ? "text-white" : "text-gray-900"}`}>
                     {selectedOrder.username ?? selectedOrder.buyer ?? "—"}
                   </p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <span className="text-xs text-gray-500 block mb-1">Item</span>
-                  <p className="text-sm text-gray-700">
+                <div className={`rounded-lg p-4 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
+                  <span className={`text-xs block mb-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>Item</span>
+                  <p className={`text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                     {selectedOrder.item ?? selectedOrder.product ?? "—"}
                   </p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <span className="text-xs text-gray-500 block mb-1">Cost</span>
-                  <p className="text-sm font-semibold text-gray-900">
+                <div className={`rounded-lg p-4 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
+                  <span className={`text-xs block mb-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>Cost</span>
+                  <p className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>
                     {selectedOrder.cost != null
                       ? `₹${selectedOrder.cost}`
                       : "—"}
                   </p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <span className="text-xs text-gray-500 block mb-1">
+                <div className={`rounded-lg p-4 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
+                  <span className={`text-xs block mb-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
                     Created At
                   </span>
-                  <p className="text-sm text-gray-700">
+                  <p className={`text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                     {formatDate(selectedOrder.createdAt)}
                   </p>
                 </div>
@@ -471,11 +473,11 @@ export default function AdminOrders() {
                 if (fieldsToShow.length === 0) return null;
 
                 return (
-                  <div className="border-t border-gray-200 pt-4">
-                    <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                  <div className={`border-t pt-4 ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                    <h3 className={`text-sm font-semibold mb-3 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                       Additional Information
                     </h3>
-                    <div className="bg-gray-50 rounded-lg p-4">
+                    <div className={`rounded-lg p-4 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
                       <div className="space-y-2 max-h-60 overflow-y-auto">
                         {fieldsToShow.map((key) => {
                           const value = selectedOrder[key];
@@ -484,10 +486,10 @@ export default function AdminOrders() {
                               key={key}
                               className="flex justify-between items-start gap-4 text-xs"
                             >
-                              <span className="text-gray-500 font-medium capitalize">
+                              <span className={`font-medium capitalize ${isDark ? "text-gray-400" : "text-gray-500"}`}>
                                 {key.replace(/([A-Z])/g, " $1").trim()}:
                               </span>
-                              <span className="text-gray-700 text-right break-all flex-1">
+                              <span className={`text-right break-all flex-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                                 {typeof value === "object" && value !== null
                                   ? JSON.stringify(value, null, 2)
                                   : String(value ?? "—")}
@@ -505,7 +507,7 @@ export default function AdminOrders() {
             <div className="mt-6 flex justify-end">
               <button
                 onClick={() => setSelectedOrder(null)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${isDark ? "text-gray-300 bg-gray-700 hover:bg-gray-600" : "text-gray-700 bg-gray-100 hover:bg-gray-200"}`}
               >
                 Close
               </button>
