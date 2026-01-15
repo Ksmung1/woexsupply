@@ -1,8 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { doc, getDoc, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../config/firebase";
-import { useUser } from "../context/UserContext";
 import { useAlert } from "../context/AlertContext";
 import {
   FaCheckCircle,
@@ -10,7 +9,6 @@ import {
   FaSpinner,
   FaWallet,
   FaGamepad,
-  FaCopy,
 } from "react-icons/fa";
 import logo from "../assets/images/logo.png";
 import axios from "axios";
@@ -18,30 +16,27 @@ import axios from "axios";
 const Payment = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user } = useUser();
   const { showSuccess, showError } = useAlert();
-  const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
-  const type = searchParams.get("type") || "topup"; // "topup" or "game" or "manual"
+
+  const type = searchParams.get("type") || "topup";
   const orderId = searchParams.get("order_id") || searchParams.get("orderId");
 
   const [orderData, setOrderData] = useState(null);
-  const [status, setStatus] = useState("pending"); // pending, success, failed, checking
+  const [status, setStatus] = useState("loading");
   const [loading, setLoading] = useState(true);
-  const [checkingCount, setCheckingCount] = useState(0);
-  const [copied, setCopied] = useState(false);
-  const maxChecks = 60; // Check for 10 minutes (60 * 10 seconds)
-  const intervalRef = useRef(null);
-  const countRef = useRef(0);
-  const successHandledRef = useRef(false); // Track if success has already been handled
+
+  const successHandledRef = useRef(false);
+  const failureHandledRef = useRef(false);
+
+  const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
 
   useEffect(() => {
     if (!orderId) {
-      showError("No order ID found in URL");
-      setTimeout(() => navigate("/"), 3000);
+      showError("No order ID found");
+      setTimeout(() => navigate("/"), 2000);
       return;
     }
 
-    // Determine collection based on type
     const collectionName =
       type === "game"
         ? "orders"
@@ -50,543 +45,298 @@ const Payment = () => {
         : type === "account"
         ? "gameAccounts"
         : "topups";
+
     const orderRef = doc(db, collectionName, orderId);
 
-    // Initial fetch
-    const fetchOrder = async () => {
-      try {
-        const docSnap = await getDoc(orderRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setOrderData(data);
-          setStatus(data.status || "pending");
-          setLoading(false);
-
-          // If already successful, show success
-          // For manual orders, also check if paymentReceived is true
-          if (
-            data.status === "success" ||
-            data.status === "completed" ||
-            data.status === "closed" ||
-            (type === "manual" && data.paymentReceived)
-          ) {
-            handleSuccess(data);
-          } else if (data.status === "failed") {
-            setStatus("failed");
-          } else {
-            // Start checking payment status with synced count
-            startStatusCheck(data);
-          }
-        } else {
-          showError("Order not found");
-          setLoading(false);
-          setTimeout(() => navigate("/"), 3000);
-        }
-      } catch (error) {
-        console.error("Error fetching order:", error);
-        showError("Failed to load order details");
-        setLoading(false);
-      }
-    };
-
-    fetchOrder();
-
-    // Real-time listener for order updates
+    // ── Real-time listener ── is the main control flow
     const unsubscribe = onSnapshot(
       orderRef,
-      (docSnap) => {
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          const newStatus = data.status || "pending";
+      (snap) => {
+        if (!snap.exists()) {
+          setLoading(false);
+          showError("Order not found");
+          setTimeout(() => navigate("/"), 3000);
+          return;
+        }
 
+        const data = {
+          id: snap.id,
+          ...snap.data(),
+        };
+
+        setOrderData(data);
+        setLoading(false);
+
+        const newStatus = data.status || "pending";
+        const prevStatus = status;
+
+        // Debug log for status transitions
+        if (prevStatus !== "loading" && prevStatus !== newStatus) {
           console.log(
-            `[Payment] Firestore update for ${orderId}: status=${newStatus}, current status=${status}`
+            `%c[Payment] Status changed: ${prevStatus} → ${newStatus}`,
+            "background:#222;color:#bada55;padding:2px 6px;border-radius:4px"
           );
+        }
 
-          setOrderData(data);
+        setStatus(newStatus);
 
-          if (newStatus !== status) {
-            console.log(
-              `[Payment] Status changed from ${status} to ${newStatus} for ${orderId}`
-            );
-            setStatus(newStatus);
+        // ── SUCCESS / COMPLETED ───────────────────────────────
+        if (
+          (newStatus === "success" || newStatus === "completed") &&
+          !successHandledRef.current
+        ) {
+          successHandledRef.current = true;
+          handleSuccess(data);
+        }
 
-            // For manual orders, check if paymentReceived is true (even if status is pending)
-            if (
-              type === "manual" &&
-              data.paymentReceived &&
-              newStatus === "pending"
-            ) {
-              // Clear interval if payment succeeded
-              if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-                intervalRef.current = null;
-              }
-              console.log(
-                `[Payment] ✅ Payment received for manual order, showing success...`
-              );
-              // Only handle success once to prevent duplicate alerts
-              if (!successHandledRef.current) {
-                successHandledRef.current = true;
-                handleSuccess(data);
-              }
-            } else if (newStatus === "success" || newStatus === "completed") {
-              // Clear interval if payment succeeded
-              if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-                intervalRef.current = null;
-              }
-              console.log(`[Payment] ✅ Payment successful, redirecting...`);
-              // Only handle success once to prevent duplicate alerts
-              if (!successHandledRef.current) {
-                successHandledRef.current = true;
-                handleSuccess(data);
-              }
-            } else if (newStatus === "failed") {
-              // Clear interval if payment failed
-              if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-                intervalRef.current = null;
-              }
-              setStatus("failed");
-            } else if (newStatus === "pending" && status === "checking") {
-              // If status changed back to pending, restart check with synced count
-              startStatusCheck(data);
-            }
-          }
+        // ── MANUAL PAYMENT RECEIVED (even if status = pending) ──
+        else if (
+          type === "manual" &&
+          data.paymentReceived === true &&
+          !successHandledRef.current
+        ) {
+          successHandledRef.current = true;
+          handleSuccess(data);
+        }
+
+        // ── FAILED ─────────────────────────────────────────────
+        else if (newStatus === "failed" && !failureHandledRef.current) {
+          failureHandledRef.current = true;
+          showError("Payment was not successful.");
         }
       },
       (error) => {
-        console.error(
-          `[Payment] Firestore listener error for ${orderId}:`,
-          error
-        );
+        console.error("Firestore snapshot error:", error);
+        showError("Failed to listen to order updates");
+        setLoading(false);
       }
     );
 
-    return () => {
-      unsubscribe();
-      // Clean up interval on unmount
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    };
-  }, [orderId, type]);
-
-  const openUpiIntent = () => {
-    if (!orderData?.intentLink) return;
-    window.location.href = orderData.intentLink;
-  };
-
-  const startStatusCheck = (orderDataParam) => {
-    // Clear any existing interval first
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-
-    // Use passed orderData or current state
-    const dataToUse = orderDataParam || orderData;
-
-    // Calculate elapsed time since order creation
-    let initialCount = 0;
-    if (dataToUse?.createdAt) {
-      let createdAt = null;
-
-      // Handle Firestore Timestamp
-      if (dataToUse.createdAt?.toDate) {
-        createdAt = dataToUse.createdAt.toDate();
-      } else if (dataToUse.createdAt?.toMillis) {
-        createdAt = new Date(dataToUse.createdAt.toMillis());
-      } else if (dataToUse.createdAt instanceof Date) {
-        createdAt = dataToUse.createdAt;
-      } else if (typeof dataToUse.createdAt === "number") {
-        createdAt = new Date(dataToUse.createdAt);
-      }
-
-      if (createdAt && !isNaN(createdAt.getTime())) {
-        const now = new Date();
-        const elapsedSeconds = Math.floor((now - createdAt) / 1000);
-        // Each check happens every 10 seconds
-        initialCount = Math.floor(elapsedSeconds / 10);
-        // Cap at maxChecks
-        initialCount = Math.min(initialCount, maxChecks);
-      }
-    }
-
-    // Set initial count based on elapsed time
-    countRef.current = initialCount;
-    setCheckingCount(initialCount);
-    setStatus("checking");
-
-    // If we've already exceeded max checks, don't start interval
-    if (initialCount >= maxChecks) {
-      setStatus("pending");
-      return;
-    }
-
-    intervalRef.current = setInterval(async () => {
-      countRef.current += 1;
-      const currentCount = countRef.current;
-
-      setCheckingCount(currentCount);
-
-      if (currentCount >= maxChecks) {
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-          intervalRef.current = null;
-        }
-        setStatus("pending");
-        return;
-      }
-
+    // Initial quick check (optional fallback)
+    const initialCheck = async () => {
       try {
         const backendUrl = import.meta.env.VITE_BACKEND_URL;
-        const response = await axios.post(
-          `${backendUrl}/payment/check-status`,
-          {
-            order_id: orderId,
-            type: type,
-          }
-        );
+        const res = await axios.post(`${backendUrl}/payment/check-status`, {
+          order_id: orderId,
+          type,
+        });
 
-        console.log(
-          `[Payment] Status check response for ${orderId}:`,
-          response.data
-        );
-
-        // For manual orders, check if paymentReceived is true
-        const orderDataFromResponse = response.data.orderData || orderData;
         if (
-          response.data.status === "success" ||
-          response.data.status === "completed" ||
-          (type === "manual" && orderDataFromResponse?.paymentReceived)
+          res.data?.status === "success" ||
+          res.data?.status === "completed"
         ) {
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-          }
-          setStatus(
-            type === "manual" && orderDataFromResponse?.paymentReceived
-              ? "paid"
-              : "completed"
-          );
-          // Only handle success once to prevent duplicate alerts
+          // If backend already knows it's successful → force success
           if (!successHandledRef.current) {
             successHandledRef.current = true;
-            if (response.data.orderData) {
-              setOrderData(response.data.orderData);
-              handleSuccess(response.data.orderData);
-            } else {
-              // If orderData not in response, trigger success anyway
-              handleSuccess(orderData);
-            }
+            handleSuccess({ ...orderData, status: "success" });
           }
-        } else if (response.data.status === "failed") {
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-          }
-          setStatus("failed");
         }
-      } catch (error) {
-        console.error("Error checking status:", error);
+      } catch (err) {
+        // silent fail — we trust snapshot more anyway
       }
-    }, 10000); // Check every 10 seconds
-  };
+    };
+
+    // Give snapshot a chance first, then fallback check after 2s
+    const timeout = setTimeout(initialCheck, 2200);
+
+    return () => {
+      unsubscribe();
+      clearTimeout(timeout);
+      successHandledRef.current = false;
+      failureHandledRef.current = false;
+    };
+  }, [orderId, type, navigate, showSuccess, showError]);
 
   const handleSuccess = (data) => {
+    let message = "";
+
     if (type === "manual") {
-      showSuccess(
-        "Payment received! An admin will process your order shortly. Thank you for your purchase!"
-      );
+      message = "Payment received! An admin will process your order shortly.";
+    } else if (type === "game") {
+      message = "Payment successful! Your game top-up is being processed.";
     } else {
-      showSuccess(
-        type === "game"
-          ? "Payment successful! Your game topup is being processed."
-          : "Payment successful! Your wallet has been topped up."
-      );
+      message = "Payment successful! Your wallet has been topped up.";
     }
 
-    // Redirect after 3 seconds
+    showSuccess(message);
+
     setTimeout(() => {
-      if (type === "game") {
-        navigate("/orders");
-      } else if (type === "manual") {
-        navigate("/queues");
-      } else if (type === "account") {
-        navigate("/accounts");
-      } else {
-        navigate("/wallet");
-      }
-    }, 3000);
+      if (type === "game") navigate("/orders");
+      else if (type === "manual") navigate("/queues");
+      else if (type === "account") navigate("/accounts");
+      else navigate("/wallet");
+    }, 2800);
   };
 
-  const getStatusIcon = () => {
-    // For manual orders with paymentReceived, show success icon even if status is pending
-    if (type === "manual" && orderData?.paymentReceived) {
-      return <FaCheckCircle className="text-6xl text-green-500" />;
-    }
-    switch (status) {
-      case "success":
-      case "completed":
-      case "paid":
-        return <FaCheckCircle className="text-6xl text-green-500" />;
-      case "failed":
-        return <FaTimesCircle className="text-6xl text-red-500" />;
-      case "checking":
-        return <FaSpinner className="text-6xl text-purple-600 animate-spin" />;
-      default:
-        return <FaSpinner className="text-6xl text-gray-400 animate-spin" />;
+  const openUpiIntent = () => {
+    if (orderData?.intentLink) {
+      window.location.href = orderData.intentLink;
     }
   };
 
-  const getStatusText = () => {
-    // For manual orders with paymentReceived, show success even if status is pending
-    if (type === "manual" && orderData?.paymentReceived) {
+  // ── RENDER HELPERS ────────────────────────────────────────
+  const isSuccess =
+    status === "success" ||
+    status === "completed" ||
+    (type === "manual" && orderData?.paymentReceived);
+
+  const isFailed = status === "failed";
+
+  const getMainIcon = () => {
+    if (loading)
+      return <FaSpinner className="text-6xl text-purple-600 animate-spin" />;
+    if (isSuccess) return <FaCheckCircle className="text-6xl text-green-500" />;
+    if (isFailed) return <FaTimesCircle className="text-6xl text-red-500" />;
+    return <FaSpinner className="text-6xl text-indigo-500 animate-spin" />;
+  };
+
+  const getTitle = () => {
+    if (loading) return "Loading...";
+    if (isSuccess) return "Payment Successful!";
+    if (isFailed) return "Payment Failed";
+    if (type === "manual" && orderData?.paymentReceived)
       return "Payment Received!";
-    }
-    switch (status) {
-      case "success":
-      case "completed":
-      case "paid":
-        return "Payment Successful!";
-      case "failed":
-        return "Payment Failed";
-      case "checking":
-        return "Checking Payment Status...";
-      default:
-        return "Payment Pending";
-    }
+    return "Waiting for Payment...";
   };
 
-  if (loading) {
+  if (loading && !orderData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-indigo-50/30 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-indigo-50/40">
         <div className="text-center">
-          <FaSpinner className="text-6xl text-purple-600 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600 text-lg">Loading payment details...</p>
+          {getMainIcon()}
+          <p className="mt-4 text-gray-600">Loading payment details...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-indigo-50/30 py-8">
-      <div className="max-w-3xl shadow-black/20 border-gray-200 border shadow-2xl mx-auto px-4 md:px-6 lg:px-6">
-        <div className="bg-white rounded-2xl shadow-xl p-4 md:p-5">
-          {/* Status Icon and Text */}
-          <div className="text-center mb-2">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
-              {getStatusText()}
-            </h1>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-indigo-50/30 py-6 px-4">
+      <div className="max-w-lg mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+        {/* Header / Status */}
+        <div className="p-4 text-center ">
+          {getMainIcon()}
+          <h1 className="mt-4 text-2xl md:text-3xl font-bold text-gray-800">
+            {getTitle()}
+          </h1>
+        </div>
 
-          {/* QR Code Display (for pending payments) */}
-          {/* For manual orders, show QR if payment not received yet */}
-          {orderData &&
-            (status === "pending" || status === "checking") &&
-            !(type === "manual" && orderData.paymentReceived) &&
-            orderData.qrCode && (
-              <div className="border-t border-gray-200 pt-6 mb-6">
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                    Scan QR Code to Pay
-                  </h3>
+        {/* QR / Payment Instructions */}
+        {orderData && !isSuccess && !isFailed && (
+          <div className="p-4">
+            {orderData.qrCode && (
+              <div className="text-center">
+                <p className="text-lg font-semibold mb-3">Scan to Pay</p>
+                <div className="inline-block p-3 bg-white rounded-xl shadow-inner ">
                   <img
-                    src={logo}
-                    className="w-20 flex items-center max-w-md mx-auto my-2"
+                    src={orderData.qrCode}
+                    alt="UPI QR Code"
+                    className="w-52 h-52 object-contain mx-auto"
                   />
-
-                  <div className="inline-block p-2 bg-white rounded-xl shadow-lg border-2 border-gray-200">
-                    <img
-                      src={orderData.qrCode}
-                      alt="UPI QR Code"
-                      className="w-44 h-44 mx-auto"
-                    />
-                  </div>
-
-                  {orderData.amount && (
-                    <p className="mt-4 text-lg font-bold text-gray-800">
-                      Amount: ₹{orderData.amount}
-                    </p>
-                  )}
-
-                  {isMobile && orderData?.intentLink && (
-                    <div className="mt-4 w-full px-4">
-                      <button
-                        onClick={openUpiIntent}
-                        className="w-full flex items-center justify-center gap-3 bg-[#00B9F1] active:bg-[#00A3D6] text-white font-semibold py-4 rounded-xl shadow-md transition-all duration-150"
-                      >
-                        <img
-                          src="https://upload.wikimedia.org/wikipedia/commons/5/55/Paytm_logo.png"
-                          alt="Paytm"
-                          className="h-6"
-                        />
-                        <span className="text-base">Pay using Paytm</span>
-                      </button>
-                    </div>
-                  )}
-
-                  <p className="text-xs text-gray-500 mt-2 text-center">
-                    Works with Paytm, Google Pay, PhonePe, BHIM
-                  </p>
                 </div>
+
+                <div className="mt-4 text-xl font-bold text-indigo-700">
+                  ₹{orderData.cost || orderData.amount || "?.??"}
+                </div>
+
+                {isMobile && orderData.intentLink && (
+                  <button
+                    onClick={openUpiIntent}
+                    className="mt-5 w-full bg-[#00B9F1] hover:bg-[#009fd9] text-white font-semibold py-3.5 rounded-xl flex items-center justify-center gap-3 shadow-md transition"
+                  >
+                    {/* <img
+                      src="https://upload.wikimedia.org/wikipedia/commons/5/55/Paytm_logo.png"
+                      className="h-6"
+                      alt="Paytm"
+                    /> */}
+                    Pay with Paytm App
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Order Summary */}
+        {orderData && (
+          <div className="p-6 space-y-4 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-600">Order ID</span>
+              <span className="font-mono font-medium">{orderData.id}</span>
+            </div>
+
+            {orderData.amount && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">Amount</span>
+                <span className="font-bold">₹{orderData.amount}</span>
+              </div>
+            )}
+            {orderData.cost && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">Amount</span>
+                <span className="font-bold">₹{orderData.cost}</span>
               </div>
             )}
 
-          {/* Order Details */}
-          {orderData && (
-            <div className="border-t border-gray-200 pt-6 space-y-4">
-              <div className="flex items-center justify-between py-2">
-                <span className="text-gray-600 font-medium">Order ID:</span>
-                <span className="text-gray-900 font-semibold">
-                  {orderData.id || orderId}
-                </span>
+            {orderData.item && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">Item</span>
+                <span>{orderData.item}</span>
               </div>
+            )}
 
-              {orderData.amount && (
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-gray-600 font-medium">Amount:</span>
-                  <span className="text-gray-900 font-semibold">
-                    ₹{orderData.amount}
-                  </span>
-                </div>
-              )}
+            {orderData.utr && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">UTR</span>
+                <span className="font-mono">{orderData.utr}</span>
+              </div>
+            )}
+          </div>
+        )}
 
-              {orderData.item && (
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-gray-600 font-medium">Item:</span>
-                  <span className="text-gray-900 font-semibold">
-                    {orderData.item}
-                  </span>
-                </div>
-              )}
-
-              {orderData.date && (
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-gray-600 font-medium">Date:</span>
-                  <span className="text-gray-900 font-semibold">
-                    {orderData.date} {orderData.time && `at ${orderData.time}`}
-                  </span>
-                </div>
-              )}
-
-              {orderData.status && (
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-gray-600 font-medium">Status:</span>
-                  <span
-                    className={`font-semibold ${
-                      orderData.status === "success" ||
-                      orderData.status === "completed"
-                        ? "text-green-600"
-                        : orderData.status === "failed"
-                        ? "text-red-600"
-                        : "text-yellow-600"
-                    }`}
-                  >
-                    {orderData.status.toUpperCase()}
-                  </span>
-                </div>
-              )}
-
-              {orderData.utr && (
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-gray-600 font-medium">
-                    Transaction ID:
-                  </span>
-                  <span className="text-gray-900 font-semibold font-mono text-sm">
-                    {orderData.utr}
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Success Message for Manual Orders */}
-          {type === "manual" && orderData?.paymentReceived && (
-            <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-green-800 font-semibold text-center">
-                ✅ Payment Received Successfully!
-              </p>
-              <p className="text-green-700 text-sm text-center mt-2">
-                An admin will process your order shortly. You will be notified
-                once it's completed.
-              </p>
-            </div>
-          )}
-
-          {/* Action Buttons */}
-          <div className="mt-8 flex flex-col sm:flex-row gap-4">
-            {status === "success" ||
-            status === "completed" ||
-            status === "paid" ||
-            (type === "manual" && orderData?.paymentReceived) ? (
-              <>
-                <button
-                  onClick={() =>
-                    navigate(type === "game" ? "/orders" : "/wallet")
-                  }
-                  className="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
-                >
-                  {type === "game" ? (
-                    <>
-                      <FaGamepad /> View Orders
-                    </>
-                  ) : (
-                    <>
-                      <FaWallet /> Go to Wallet
-                    </>
-                  )}
-                </button>
-                <button
-                  onClick={() => navigate("/")}
-                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition-all duration-200"
-                >
-                  Back to Home
-                </button>
-              </>
-            ) : status === "failed" ? (
-              <>
-                <button
-                  onClick={() =>
-                    navigate(type === "game" ? "/recharge" : "/wallet")
-                  }
-                  className="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200"
-                >
-                  Try Again
-                </button>
-                <button
-                  onClick={() => navigate("/")}
-                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition-all duration-200"
-                >
-                  Back to Home
-                </button>
-              </>
-            ) : (
+        {/* Action Buttons */}
+        <div className="p-6 bg-gray-50 flex flex-col sm:flex-row gap-4">
+          {isSuccess ? (
+            <>
+              <button
+                onClick={() =>
+                  navigate(type === "game" ? "/orders" : "/wallet")
+                }
+                className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl font-medium hover:brightness-105 transition"
+              >
+                {type === "game" ? "View Orders" : "Go to Wallet"}
+              </button>
               <button
                 onClick={() => navigate("/")}
-                className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition-all duration-200"
+                className="flex-1 bg-gray-200 py-3 rounded-xl font-medium hover:bg-gray-300 transition"
               >
-                Back to Home
+                Home
               </button>
-            )}
-          </div>
-
-          {/* Checking Progress */}
-          {status === "checking" && (
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-500">
-                Checking payment status... ({checkingCount}/{maxChecks})
-              </p>
-              <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-gradient-to-r from-purple-600 to-indigo-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${(checkingCount / maxChecks) * 100}%` }}
-                />
-              </div>
-            </div>
+            </>
+          ) : isFailed ? (
+            <>
+              <button
+                onClick={() =>
+                  navigate(type === "game" ? "/recharge" : "/wallet")
+                }
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-medium transition"
+              >
+                Try Again
+              </button>
+              <button
+                onClick={() => navigate("/")}
+                className="flex-1 bg-gray-200 py-3 rounded-xl font-medium hover:bg-gray-300 transition"
+              >
+                Home
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => navigate("/")}
+              className="w-full bg-gray-200 hover:bg-gray-300 py-3 rounded-xl font-medium transition"
+            >
+              Back to Home
+            </button>
           )}
         </div>
       </div>

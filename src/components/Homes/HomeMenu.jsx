@@ -23,12 +23,16 @@ const HomeMenu = () => {
       {/* Popular Games */}
       <div className="mb-3 md:mb-5">
         <div className="flex items-center justify-between mb-2">
-          <h3 className={`text-2xl md:text-3xl font-bold ${isDark ? "text-white" : "text-gray-800"}`}>
+          <h3
+            className={`text-2xl md:text-3xl font-bold ${
+              isDark ? "text-white" : "text-gray-800"
+            }`}
+          >
             Popular Games
           </h3>
         </div>
 
-        <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-4">
+        <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
           {popularGames.map((g) => (
             <GameCard
               key={g.id}
@@ -43,7 +47,11 @@ const HomeMenu = () => {
       {/* All Games */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <h3 className={`text-2xl md:text-3xl font-bold ${isDark ? "text-white" : "text-gray-800"}`}>
+          <h3
+            className={`text-2xl md:text-3xl font-bold ${
+              isDark ? "text-white" : "text-gray-800"
+            }`}
+          >
             All Games
           </h3>
         </div>

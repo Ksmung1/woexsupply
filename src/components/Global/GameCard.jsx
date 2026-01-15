@@ -12,20 +12,14 @@ function GameCardComponent({ id, name, tag, img, route, isLoaded, onLoad }) {
     <Link
       to={route}
       aria-label={name}
-      className="group w-full flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-lg rounded-lg border border-gray-300 overflow-hidden"
+      className="group flex flex-col items-center text-center focus:outline-none"
     >
-      {/* Image */}
-      <div
-        className={`relative w-full aspect-square overflow-hidden ${
-          isDark ? "bg-gray-700" : "bg-gray-100"
-        }`}
-      >
+      {/* Icon */}
+      <div className="relative w-20 md:w-24 h-20 md:h-24 aspect-square">
         {!isLoaded && (
           <div
-            className={`absolute inset-0 animate-pulse bg-gradient-to-r ${
-              isDark
-                ? "from-gray-700 via-gray-600 to-gray-700"
-                : "from-gray-200 via-gray-100 to-gray-200"
+            className={`absolute inset-0 rounded-2xl animate-pulse ${
+              isDark ? "bg-gray-700" : "bg-gray-200"
             }`}
           />
         )}
@@ -37,27 +31,30 @@ function GameCardComponent({ id, name, tag, img, route, isLoaded, onLoad }) {
           draggable={false}
           onLoad={() => onLoad(id)}
           onError={(e) => (e.currentTarget.src = fallbackSvg)}
-          className={`w-full h-full object-cover transition-all duration-300 group-hover:scale-105 ${
-            isLoaded ? "opacity-100" : "opacity-0"
-          }`}
+          className={`w-full h-full object-cover rounded-2xl transition-all duration-200
+            ${isLoaded ? "opacity-100 scale-100" : "opacity-0 scale-95"}
+            group-hover:scale-105`}
         />
       </div>
 
-      {/* Text */}
-      <div
-        className={`px-2 py-1 text-center ${
-          isDark ? "bg-gray-800" : "bg-white"
-        }`}
+      {/* Name */}
+      <p
+        className={`mt-2 text-xs sm:text-sm font-medium leading-tight line-clamp-2
+          ${isDark ? "text-gray-100" : "text-gray-800"}`}
       >
+        {name}
+      </p>
+
+      {/* Tag / Region */}
+      {/* {tag && (
         <p
-          className={`text-sm font-semibold truncate ${
-            isDark ? "text-white" : "text-gray-900"
+          className={`text-[11px] ${
+            isDark ? "text-gray-400" : "text-gray-500"
           }`}
         >
-          {name}
+          ({tag})
         </p>
-        {/* <p className="text-xs text-gray-500">{tag}</p> */}
-      </div>
+      )} */}
     </Link>
   );
 }
