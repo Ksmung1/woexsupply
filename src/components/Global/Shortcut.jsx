@@ -20,7 +20,7 @@ const shortcutItems = [
     icon: <EarthIcon size={24} />,
   },
   {
-    label: "Region Checker",
+    label: "Status Checker",
     routes: ["/region-checker"],
     icon: <CgGames size={24} />,
   },
@@ -78,7 +78,11 @@ function Shortcut() {
     <div
       className={`fixed bottom-0 left-0 right-0 flex justify-between items-center 
       py-2 border-t z-10 h-16 md:hidden
-      ${isDark ? "bg-gray-900 border-gray-700 text-gray-300" : "bg-white border-gray-300 text-gray-700"}`}
+      ${
+        isDark
+          ? "bg-gray-900 border-gray-700 text-gray-300"
+          : "bg-white border-gray-300 text-gray-700"
+      }`}
     >
       {shortcutItems.map(({ label, routes, icon }) => {
         const isActive = routes.includes(location.pathname);
@@ -91,13 +95,14 @@ function Shortcut() {
             className={`flex flex-col flex-1 items-center justify-center 
             cursor-pointer select-none text-xs transition-all duration-200 
             py-1 relative
-            ${isActive
-              ? isDark
-                ? "text-blue-400 font-semibold"
-                : "text-blue-600 font-semibold"
-              : isDark
-              ? "text-gray-400 hover:text-white"
-              : "text-gray-600 hover:text-blue-500"
+            ${
+              isActive
+                ? isDark
+                  ? "text-blue-400 font-semibold"
+                  : "text-blue-600 font-semibold"
+                : isDark
+                ? "text-gray-400 hover:text-white"
+                : "text-gray-600 hover:text-blue-500"
             }`}
           >
             <span className="mb-1 relative">
