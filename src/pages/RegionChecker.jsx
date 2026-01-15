@@ -17,38 +17,91 @@ const RegionChecker = () => {
   const [error, setError] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [goods, setGoods] = useState([]);
+  const DAILY_LIMIT = 5;
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setResult(null);
-    setSubmitted(false);
+const canCheckToday = () => {
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const raw = localStorage.getItem("ml_region_checks");
 
-    if (!userId) return setError("Please enter User ID");
-    if (!serverId) return setError("Please enter Server ID");
+  if (!raw) {
+    return { allowed: true, count: 0, today };
+  }
 
-    try {
-      setLoading(true);
-      const res = await axios.get(
-        `${
-          import.meta.env.VITE_BACKEND_URL
-        }/ml/get-username/${userId}/${serverId}`
-      );
-      setResult(res.data);
-
-      const shopEvents = res.data?.data?.data?.shop_events;
-      if (shopEvents?.length && shopEvents[0].goods) {
-        const goodsArray = shopEvents[0].goods;
-        setGoods(goodsArray);
-      } else setGoods([]);
-
-      setSubmitted(true);
-    } catch (err) {
-      setError(err.response?.data?.error || "Something went wrong");
-    } finally {
-      setLoading(false);
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed.date !== today) {
+      return { allowed: true, count: 0, today };
     }
-  };
+    return {
+      allowed: parsed.count < DAILY_LIMIT,
+      count: parsed.count,
+      today,
+    };
+  } catch {
+    return { allowed: true, count: 0, today };
+  }
+};
+
+const incrementCheck = () => {
+  const today = new Date().toISOString().slice(0, 10);
+  const raw = localStorage.getItem("ml_region_checks");
+
+  let count = 0;
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed.date === today) {
+        count = parsed.count || 0;
+      }
+    } catch {}
+  }
+
+  localStorage.setItem(
+    "ml_region_checks",
+    JSON.stringify({ date: today, count: count + 1 })
+  );
+};
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError("");
+  setResult(null);
+  setSubmitted(false);
+
+  if (!userId) return setError("Please enter User ID");
+  if (!serverId) return setError("Please enter Server ID");
+
+  // 🔒 Frontend daily limit (soft)
+  const limit = canCheckToday();
+  if (!limit.allowed) {
+    return setError("Daily limit reached (5 checks per day)");
+  }
+
+  try {
+    setLoading(true);
+    const res = await axios.get(
+      `${import.meta.env.VITE_BACKEND_URL}/ml/get-username/${userId}/${serverId}`
+    );
+
+    setResult(res.data);
+
+    const shopEvents = res.data?.data?.data?.shop_events;
+    if (shopEvents?.length && shopEvents[0].goods) {
+      setGoods(shopEvents[0].goods);
+    } else {
+      setGoods([]);
+    }
+
+    // ✅ Increment only on success
+    incrementCheck();
+    setSubmitted(true);
+  } catch (err) {
+    setError(err.response?.data?.error || "Something went wrong");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div
