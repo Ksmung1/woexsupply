@@ -10,6 +10,7 @@ import defaultImg from "../../../assets/images/d1.jpg";
 import smallPacks from "../../../assets/images/small-packs.png";
 import mediumPacks from "../../../assets/images/medium-packs.png";
 import largePacks from "../../../assets/images/large-packs.png";
+import hvp from "../../../assets/images/hvp.png";
 
 /**
  * MobileLegendsProductList
@@ -86,19 +87,21 @@ const MobileLegendsProductList = ({ selectedItem, setSelectedItem }) => {
 
   if (!loaded) return <div className="py-6 text-center">Loading products…</div>;
 
-  const filteredList = (products || []).filter((item) => {
-    if (!item) return false;
-    if (item.hide) return false;
-    const t = (item.type || "").toLowerCase();
-    if (activeGroup === "twilight") return t === "ml-twilight";
-    if (activeGroup === "weekly") return t === "ml-weekly";
-    return item.group === activeGroup;
-  });
+  const filteredList = (products || [])
+    .filter((item) => {
+      if (!item) return false;
+      if (item.hide) return false;
+      const t = (item.type || "").toLowerCase();
+      if (activeGroup === "twilight") return t === "ml-twilight";
+      if (activeGroup === "weekly") return t === "ml-weekly";
+      return item.group === activeGroup;
+    })
+    .sort((a, b) => a.rupees - b.rupees);
 
   const getImageByGroupOrType = (item) => {
     const diamonds = Number(item.diamonds) || 0;
     const t = (item.type || "").toLowerCase();
-
+    if (item.label === "High-Value Pass") return hvp;
     if (t === "weekly") return weeklyImg;
     if (t === "twilight pass") return twilightImg;
 
@@ -111,11 +114,10 @@ const MobileLegendsProductList = ({ selectedItem, setSelectedItem }) => {
     }
 
     if (item.group === "dd") return firstRechargeImg;
-    if (item.group === 'weekly') return weeklyImg
-    if (item.group === 'twilight') return twilightImg
+    if (item.group === "weekly") return weeklyImg;
+    if (item.group === "twilight") return twilightImg;
     return defaultImg;
   };
-
 
   const formatPrice = (item) => {
     const rupees = Number(item.rupees) || 0;
