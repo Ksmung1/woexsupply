@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
+import { db } from "../config/firebase";
+import { doc, onSnapshot } from "firebase/firestore";
 import { useUser } from "../context/UserContext";
 import { useTheme } from "../context/ThemeContext";
 import Navbar from "../components/Global/Navbar";
@@ -10,6 +12,24 @@ import Shortcut from "../components/Global/Shortcut";
 
 const MainLayout = () => {
   const { isDark } = useTheme();
+  const [maintenance, setMaintenance] = useState(false);
+  useEffect(() => {
+    const ref = doc(db, "settings", "website");
+
+    const unsub = onSnapshot(
+      ref,
+      (snap) => {
+        if (snap.exists()) {
+          setMaintenance(!!snap.data().maintenance);
+        } else {
+          setMaintenance(false);
+        }
+      },
+      () => setMaintenance(false)
+    );
+
+    return () => unsub();
+  }, []);
 
   return (
     <div
@@ -18,6 +38,11 @@ const MainLayout = () => {
       }`}
     >
       <Navbar />
+      {maintenance && (
+        <div className="w-full bg-red-500">
+          <p className="w-fit mx-auto font-semibold text-white"> Website under Maintenance Mode</p>
+        </div>
+      )}
       <ScrollToTop />
       <main
         className={`transition-colors ${isDark ? "bg-gray-900" : "bg-white"}`}
