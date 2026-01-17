@@ -136,7 +136,7 @@ const AdminLayout = () => {
       {/* Mobile Overlay */}
       {sidebarOpen && (
         <div
-          className={`fixed inset-0 bg-black z-40 lg:hidden ${
+          className={`fixed inset-0  z-40 lg:hidden ${
             isDark ? "bg-opacity-70" : "bg-opacity-50"
           }`}
           onClick={() => setSidebarOpen(false)}

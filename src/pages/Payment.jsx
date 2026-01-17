@@ -12,10 +12,12 @@ import {
 } from "react-icons/fa";
 import logo from "../assets/images/logo.png";
 import axios from "axios";
+import { useTheme } from "../context/ThemeContext";
 
 const Payment = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const {isDark} = useTheme()
   const { showSuccess, showError } = useAlert();
 
   const type = searchParams.get("type") || "topup";
@@ -211,129 +213,143 @@ const Payment = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-indigo-50/30 py-6 px-4">
-      <div className="max-w-lg mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-        {/* Header / Status */}
-        <div className="p-4 text-center ">
-          {getMainIcon()}
-          <h1 className="mt-4 text-2xl md:text-3xl font-bold text-gray-800">
-            {getTitle()}
+    <div
+      className={`min-h-screen flex items-center justify-center px-4 ${
+        isDark ? "bg-zinc-900" : "bg-zinc-100"
+      }`}
+    >
+      <div
+        className={`w-full max-w-sm rounded-2xl shadow-xl border overflow-hidden ${
+          isDark
+            ? "bg-zinc-800 border-zinc-700"
+            : "bg-white border-zinc-200"
+        }`}
+      >
+        {/* Header */}
+        <div
+          className={`p-6 text-center border-b ${
+            isDark ? "border-zinc-700" : "border-zinc-200"
+          }`}
+        >
+          <h1
+            className={`text-xl font-semibold ${
+              isDark ? "text-zinc-100" : "text-zinc-800"
+            }`}
+          >
+            Checking Payment Status...
           </h1>
+          <p
+            className={`mt-1 text-sm ${
+              isDark ? "text-zinc-400" : "text-zinc-500"
+            }`}
+          >
+            Scan QR Code to Pay
+          </p>
         </div>
-
-        {/* QR / Payment Instructions */}
+  
+        {/* QR Section */}
         {orderData && !isSuccess && !isFailed && (
-          <div className="p-4">
-            {orderData.qrCode && (
-              <div className="text-center">
-                <p className="text-lg font-semibold mb-3">Scan to Pay</p>
-                <div className="inline-block p-3 bg-white rounded-xl shadow-inner ">
-                  <img
-                    src={orderData.qrCode}
-                    alt="UPI QR Code"
-                    className="w-52 h-52 object-contain mx-auto"
-                  />
-                </div>
-
-                <div className="mt-4 text-xl font-bold text-indigo-700">
-                  ₹{orderData.cost || orderData.amount || "?.??"}
-                </div>
-
-                {isMobile && orderData.intentLink && (
-                  <button
-                    onClick={openUpiIntent}
-                    className="mt-5 w-full bg-[#00B9F1] hover:bg-[#009fd9] text-white font-semibold py-3.5 rounded-xl flex items-center justify-center gap-3 shadow-md transition"
-                  >
-                    {/* <img
-                      src="https://upload.wikimedia.org/wikipedia/commons/5/55/Paytm_logo.png"
-                      className="h-6"
-                      alt="Paytm"
-                    /> */}
-                    Pay with Paytm App
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Order Summary */}
-        {orderData && (
-          <div className="p-6 space-y-4 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-600">Order ID</span>
-              <span className="font-mono font-medium">{orderData.id}</span>
+          <div className="p-6 text-center space-y-3">
+            {/* Brand */}
+            <div
+              className={`flex items-center justify-center gap-2 font-semibold ${
+                isDark ? "text-indigo-400" : "text-indigo-600"
+              }`}
+            >
+              <img
+                className="w-10 h-10 rounded-full border border-zinc-500"
+                src="https://scontent.fshl2-1.fna.fbcdn.net/v/t39.30808-6/475967196_122137310864552129_4890777849722756121_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=ixCLQHPNTVEQ7kNvwHdnCJ8&_nc_oc=AdkBtfLhQkCJXxpu_pCoZrw3OKI4NGJKCyA5xdHShIumxoffM_lQ8XxsgZrYBcfkK4WvRSbxx5uQc_9x2dYj9Cn0&_nc_zt=23&_nc_ht=scontent.fshl2-1.fna&_nc_gid=6NhihHRAbn19IBWEX7otkw&oh=00_Afo1bxagya9NZoaQOqo9WMMIGFc_yW8hZ5GWhGKh2BE_fQ&oe=69714C9E"
+                alt="WOEX"
+              />
+              <span>WOEX SUPPLY</span>
             </div>
-
-            {orderData.amount && (
-              <div className="flex justify-between">
-                <span className="text-gray-600">Amount</span>
-                <span className="font-bold">₹{orderData.amount}</span>
+  
+            {/* QR */}
+            {orderData.qrCode && (
+              <div className="mx-auto w-56 h-56 bg-white rounded-xl p-3 shadow-inner">
+                <img
+                  src={orderData.qrCode}
+                  alt="UPI QR Code"
+                  className="w-full h-full object-contain"
+                />
               </div>
             )}
-            {orderData.cost && (
-              <div className="flex justify-between">
-                <span className="text-gray-600">Amount</span>
-                <span className="font-bold">₹{orderData.cost}</span>
-              </div>
+  
+            {/* Amount */}
+            <div
+              className={`text-lg font-bold ${
+                isDark ? "text-zinc-100" : "text-zinc-800"
+              }`}
+            >
+              ₹{orderData.cost || orderData.amount || "--"}
+            </div>
+  
+            {/* Paytm Button */}
+            {orderData.intentLink && (
+              <button
+                onClick={openUpiIntent}
+                className="w-full bg-[#00B9F1] hover:bg-[#009fd9] text-white font-semibold py-3 rounded-xl transition"
+              >
+                Pay using Paytm
+              </button>
             )}
-
-            {orderData.item && (
-              <div className="flex justify-between">
-                <span className="text-gray-600">Item</span>
-                <span>{orderData.item}</span>
-              </div>
-            )}
-
-            {orderData.utr && (
-              <div className="flex justify-between">
-                <span className="text-gray-600">UTR</span>
-                <span className="font-mono">{orderData.utr}</span>
-              </div>
-            )}
+  
+            <p
+              className={`text-xs ${
+                isDark ? "text-zinc-400" : "text-zinc-500"
+              }`}
+            >
+              Works with Paytm, Google Pay, PhonePe, BHIM
+            </p>
           </div>
         )}
-
-        {/* Action Buttons */}
-        <div className="p-6 bg-gray-50 flex flex-col sm:flex-row gap-4">
+  
+        {/* Success / Failed */}
+        {(isSuccess || isFailed) && (
+          <div className="p-6 text-center space-y-4">
+            {getMainIcon()}
+            <h2
+              className={`text-lg font-semibold ${
+                isDark ? "text-zinc-100" : "text-zinc-800"
+              }`}
+            >
+              {getTitle()}
+            </h2>
+          </div>
+        )}
+  
+        {/* Footer Buttons */}
+        <div
+          className={`p-4 border-t ${
+            isDark
+              ? "bg-zinc-900 border-zinc-700"
+              : "bg-zinc-50 border-zinc-200"
+          }`}
+        >
           {isSuccess ? (
-            <>
-              <button
-                onClick={() =>
-                  navigate(type === "game" ? "/orders" : "/wallet")
-                }
-                className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl font-medium hover:brightness-105 transition"
-              >
-                {type === "game" ? "View Orders" : "Go to Wallet"}
-              </button>
-              <button
-                onClick={() => navigate("/")}
-                className="flex-1 bg-gray-200 py-3 rounded-xl font-medium hover:bg-gray-300 transition"
-              >
-                Home
-              </button>
-            </>
+            <button
+              onClick={() =>
+                navigate(type === "game" ? "/orders" : "/wallet")
+              }
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-medium transition"
+            >
+              Continue
+            </button>
           ) : isFailed ? (
-            <>
-              <button
-                onClick={() =>
-                  navigate(type === "game" ? "/recharge" : "/wallet")
-                }
-                className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-medium transition"
-              >
-                Try Again
-              </button>
-              <button
-                onClick={() => navigate("/")}
-                className="flex-1 bg-gray-200 py-3 rounded-xl font-medium hover:bg-gray-300 transition"
-              >
-                Home
-              </button>
-            </>
+            <button
+              onClick={() => navigate("/")}
+              className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-medium transition"
+            >
+              Go Home
+            </button>
           ) : (
             <button
               onClick={() => navigate("/")}
-              className="w-full bg-gray-200 hover:bg-gray-300 py-3 rounded-xl font-medium transition"
+              className={`w-full py-3 rounded-xl font-medium transition ${
+                isDark
+                  ? "bg-zinc-700 hover:bg-zinc-600 text-zinc-100"
+                  : "bg-zinc-200 hover:bg-zinc-300 text-zinc-800"
+              }`}
             >
               Back to Home
             </button>
@@ -342,6 +358,8 @@ const Payment = () => {
       </div>
     </div>
   );
+  
+  
 };
 
 export default Payment;
