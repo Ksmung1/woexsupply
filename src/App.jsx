@@ -1,5 +1,10 @@
 import "./App.css";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import { UserProvider } from "./context/UserContext";
 import { AlertProvider } from "./context/AlertContext";
 import { ModalProvider } from "./context/ModalContext";
@@ -44,56 +49,56 @@ const App = () => {
         <ModalProvider>
           <AlertProvider>
             <Router>
-            <Routes>
-              {/* 🚧 Maintenance Page */}
-              <Route path="/maintenance" element={<Maintenance />} />
+              <Routes>
+                {/* 🚧 Maintenance Page */}
+                <Route path="/maintenance" element={<Maintenance />} />
 
-              {/* 🌍 PUBLIC / USER ROUTES (GUARDED) */}
-              <Route
-                path="/"
-                element={
-                  <MaintenanceGuard>
-                    <MainLayout />
-                  </MaintenanceGuard>
-                }
-              >
-                <Route index element={<Home />} />
-                <Route path="orders" element={<Orders />} />
-                <Route path="accounts" element={<MyAccounts />} />
-                <Route path="browse" element={<Browse />} />
-                <Route path="game-acc" element={<GameAccount />} />
-                <Route path="region-checker" element={<RegionChecker />} />
-                <Route path="queues" element={<Queues />} />
-                <Route path="wallet" element={<Wallet />} />
-                <Route path="messages" element={<Messages />} />
-                <Route path="login" element={<Authentication />} />
-                <Route path="about" element={<About />} />
-                <Route path="leaderboards" element={<Profile />} />
-                <Route path="recharge/:gamename" element={<Recharge />} />
-                <Route path="charisma" element={<Charisma />} />
-                <Route path="skin" element={<Skin />} />
-                <Route path="profile" element={<Profile />} />
-                <Route path="payment" element={<Payment />} />
+                {/* 🌍 PUBLIC / USER ROUTES (GUARDED) */}
                 <Route
-                  path="authentication-selection"
-                  element={<Authentication />}
-                />
-                <Route path="*" element={<NotFound />} />
-              </Route>
+                  path="/"
+                  element={
+                    <MaintenanceGuard>
+                      <MainLayout />
+                    </MaintenanceGuard>
+                  }
+                >
+                  <Route index element={<Home />} />
+                  <Route path="orders" element={<Orders />} />
+                  <Route path="accounts" element={<MyAccounts />} />
+                  <Route path="browse" element={<Browse />} />
+                  <Route path="game-acc" element={<GameAccount />} />
+                  <Route path="region-checker" element={<RegionChecker />} />
+                  <Route path="queues" element={<Queues />} />
+                  <Route path="wallet" element={<Wallet />} />
+                  <Route path="messages" element={<Messages />} />
+                  <Route path="login" element={<Authentication />} />
+                  <Route path="about" element={<About />} />
+                  <Route path="leaderboards" element={<Profile />} />
+                  <Route path="recharge/:gamename" element={<Recharge />} />
+                  <Route path="charisma" element={<Charisma />} />
+                  <Route path="skin" element={<Skin />} />
+                  <Route path="profile" element={<Profile />} />
+                  <Route path="payment" element={<Payment />} />
+                  <Route
+                    path="authentication-selection"
+                    element={<Authentication />}
+                  />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Route>
 
-              {/* 🔐 ADMIN ROUTES (NOT GUARDED) */}
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route index element={<Admin />} />
-                <Route path="orders" element={<AdminOrders />} />
-                <Route path="topups" element={<AdminTopups />} />
-                <Route path="queues" element={<AdminQueues />} />
-                <Route path="users" element={<AdminUsers />} />
-                <Route path="accounts" element={<AdminAccounts />} />
-                <Route path="game-accounts" element={<AdminGameAccounts />} />
-                <Route path="products" element={<AdminProducts />} />
-                <Route path="messages" element={<AdminMessages />} />
-              </Route>
-            </Routes>
+                {/* 🔐 ADMIN ROUTES (NOT GUARDED) */}
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<Admin />} />
+                  <Route path="orders" element={<AdminOrders />} />
+                  <Route path="topups" element={<AdminTopups />} />
+                  <Route path="queues" element={<AdminQueues />} />
+                  <Route path="users" element={<AdminUsers />} />
+                  <Route path="accounts" element={<AdminAccounts />} />
+                  <Route path="game-accounts" element={<AdminGameAccounts />} />
+                  <Route path="products" element={<AdminProducts />} />
+                  <Route path="messages" element={<AdminMessages />} />
+                </Route>
+              </Routes>
             </Router>
           </AlertProvider>
         </ModalProvider>
