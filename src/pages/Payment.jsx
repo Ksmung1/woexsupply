@@ -246,6 +246,43 @@ const Payment = () => {
             Scan QR Code to Pay
           </p>
         </div>
+
+        {/* Order Summary */}
+<div
+  className={`rounded-xl border p-4 text-left space-y-2 ${
+    isDark
+      ? "bg-zinc-900 border-zinc-700"
+      : "bg-zinc-50 border-zinc-200"
+  }`}
+>
+  <div className="flex justify-between text-sm">
+    <span className={isDark ? "text-zinc-400" : "text-zinc-500"}>
+      Order ID
+    </span>
+    <span className={`capitalize font-mono text-xs ${isDark ? "text-zinc-100" : "text-zinc-500"}`}>
+      {orderData.id}
+    </span>
+  </div>
+
+  <div className="flex justify-between text-sm">
+    <span className={isDark ? "text-zinc-100" : "text-zinc-500"}>
+      Type
+    </span>
+    <span className={`capitalize font-medium ${isDark ? "text-zinc-100" : "text-zinc-500"}`}>
+      {type}
+    </span>
+  </div>
+
+  <div className="flex justify-between items-center pt-2 border-t border-dashed border-zinc-300 dark:border-zinc-700">
+  <span className={`capitalize font-medium ${isDark ? "text-zinc-100" : "text-zinc-500"}`}>
+  Total Amount
+    </span>
+    <span className="text-xl font-bold text-indigo-600">
+      ₹{orderData.cost || orderData.amount}
+    </span>
+  </div>
+</div>
+
   
         {/* QR Section */}
         {orderData && !isSuccess && !isFailed && (
@@ -303,6 +340,8 @@ const Payment = () => {
             </p>
           </div>
         )}
+
+        
   
         {/* Success / Failed */}
         {(isSuccess || isFailed) && (
