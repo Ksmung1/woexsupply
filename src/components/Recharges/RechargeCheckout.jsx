@@ -44,7 +44,7 @@ const RechargeCheckout = ({
   const [orderDetails, setOrderDetails] = useState(null);
   const [product, setProduct] = useState(null);
 
-  const [isSelectedPayment, setIsSelectedPayment] = useState("coin");
+  const [isSelectedPayment, setIsSelectedPayment] = useState("upi");
   const [isDisabled, setIsDisabled] = useState(false);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 

@@ -225,7 +225,7 @@ const HomeDisplay = () => {
       {/* Desktop: 3D Carousel */}
       <div className="hidden md:block relative w-full max-w-5xl mx-auto" ref={containerRef}>
         <div
-          className="relative h-[400px] lg:h-[400px] w-full"
+          className="relative h-[400px] lg:h-[280px] w-full"
           style={{
             perspective: "1500px",
             perspectiveOrigin: "50% 50%",

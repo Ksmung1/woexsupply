@@ -9,6 +9,7 @@ import ScrollToTop from "../components/utils/ScrollToTop";
 import FloatingLoginButton from "../components/Global/FloatingLoginButton";
 import FloatingAdminButton from "../components/Global/FloatingAdminButton";
 import Shortcut from "../components/Global/Shortcut";
+import Footer from "../components/Global/Footer";
 
 const MainLayout = () => {
   const { isDark } = useTheme();
@@ -49,6 +50,7 @@ const MainLayout = () => {
       >
         <Outlet />
       </main>
+
       <FloatingLoginButton />
       <FloatingAdminButton />
       <Shortcut />
