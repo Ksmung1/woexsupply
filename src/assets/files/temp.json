@@ -1,0 +1,124 @@
+[
+{
+"id": "22590",
+"label": "55💎 (50+5 diamonds)",
+"group": "group1",
+"price": 39,
+"diamonds": 55,
+"api": "smile",
+"rupees": 70,
+"resellerRupees": 70,
+"falseRupees": 70,
+"type": "custom"
+},
+{
+          "id": "13",
+          "label": "86💎 (78+8 diamonds)",
+          "group": "group1",
+          "price": 61.5,
+          "diamonds": 86,
+          "api": "smile",
+          "rupees": 115,
+          "resellerRupees": 115,
+          "falseRupees": 120,
+          "type": "custom"
+          },
+          {
+                    "id": "22590-22590",
+                    "label": "110💎 (55+55 diamonds)",
+                    "group": "group2",
+                    "price": 78,
+                    "diamonds": 110,
+                    "api": "smile",
+                    "rupees": 150,
+                    "resellerRupees": 150,
+                    "falseRupees": 150,
+                    "type": "custom"
+                    },
+                    {
+                              "id": "23",
+                              "label": "172💎 (156+16 diamonds)",
+                              "group": "group2",
+                              "price": 122,
+                              "diamonds": 172,
+                              "api": "smile",
+                              "rupees": 219,
+                              "resellerRupees": 219,
+                              "falseRupees": 219,
+                              "type": "custom"
+                              },
+                              {
+                                        "id": "22592",
+                                        "label": "275💎 (250+15 diamonds)",
+                                        "group": "group3",
+                                        "price": 187.5,
+                                        "diamonds": 275,
+                                        "api": "smile",
+                                        "rupees": 350,
+                                        "resellerRupees": 350,
+                                        "falseRupees": 350,
+                                        "type": "custom"
+                                        },
+                                        {
+                                                  "id": "25-13",
+                                                  "label": "343💎 (312+31 diamonds)",
+                                                  "group": "group3",
+                                                  "price": 343,
+                                                  "diamonds": 55,
+                                                  "api": "smile",
+                                                  "rupees": 1420,
+                                                  "resellerRupees": 1420,
+                                                  "falseRupees": 1420,
+                                                  "type": "custom"
+                                                  },
+                                                  {
+                                                            "id": "22593",
+                                                            "label": "565💎 (500+65 diamonds)",
+                                                            "group": "group4",
+                                                            "price": 565,
+                                                            "diamonds": 55,
+                                                            "api": "smile",
+                                                            "rupees": 1420,
+                                                            "resellerRupees": 1420,
+                                                            "falseRupees": 1420,
+                                                            "type": "custom"
+                                                            },
+                                                            {
+                                                                      "id": "26",
+                                                                      "label": "706💎 (625+81 diamonds)",
+                                                                      "group": "group4",
+                                                                      "price": 706,
+                                                                      "diamonds": 55,
+                                                                      "api": "smile",
+                                                                      "rupees": 1420,
+                                                                      "resellerRupees": 1420,
+                                                                      "falseRupees": 1420,
+                                                                      "type": "custom"
+                                                                      },
+                                                                      {
+                                                                                "id": "22593-22593",
+                                                                                "label": "1130💎 (565+565 diamonds)",
+                                                                                "group": "group5",
+                                                                                "price": 770,
+                                                                                "diamonds": 1139,
+                                                                                "api": "smile",
+                                                                                "rupees": 1420,
+                                                                                "resellerRupees": 1420,
+                                                                                "falseRupees": 1420,
+                                                                                "type": "custom"
+                                                                                },
+                                                                                {
+                                                                                          "id": "26-26",
+                                                                                          "label": "1412💎 (706+706 diamonds)",
+                                                                                          "group": "group5",
+                                                                                          "price": 960,
+                                                                                          "diamonds": 1412,
+                                                                                          "api": "smile",
+                                                                                          "rupees": 2000,
+                                                                                          "resellerRupees": 2020,
+                                                                                          "falseRupees": 2000,
+                                                                                          "type": "custom"
+                                                                                          }
+                                                            
+
+]

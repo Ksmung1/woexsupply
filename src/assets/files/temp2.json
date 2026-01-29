@@ -1,0 +1,85 @@
+[
+          {
+"id": "56",
+"label": "60 Crystals",
+"group": "Genshin Impact",
+"diamonds": 60,
+"price": 0.65,
+"api": "gtu",
+"rupees": 1000,
+"falseRupees": 1000,
+"resellerRupees": 1000,
+"type": "crystals"
+},
+{
+"id": "57",
+"label": "300+30 Crystals",
+"group": "Genshin Impact",
+"price": 3.3,
+"diamonds": 330,
+"api": "gtu",
+"rupees": 1000,
+"falseRupees": 1000,
+"resellerRupees": 1000,
+"type": "crystals"
+},
+{
+"id": "58",
+"label": "Blessing Welkin Moon",
+"group": "Genshin Impact",
+"price": 3.3,
+"api": "gtu",
+"rupees": 1000,
+"falseRupees": 1000,
+"resellerRupees": 1000,
+"type": "welkin"
+},
+{
+"id": "59",
+"label": "980+110 Crystals",
+"group": "Genshin Impact",
+"price": 10.07,
+"diamonds": 1090,
+"api": "gtu",
+"rupees": 10000,
+"falseRupees": 10000,
+"resellerRupees": 10000,
+"type": "crystals"
+},
+{
+"id": "60",
+"label": "1980+260 Crystals",
+"group": "Genshin Impact",
+"price": 21.25,
+"diamonds": 2240,
+"api": "gtu",
+"rupees": 10000,
+"falseRupees": 1000,
+"resellerRupees": 10000,
+"type": "crystals"
+},
+{
+"id": "61",
+"label": "3280+600 Crystals",
+"group": "Genshin Impact",
+"price": 34.45,
+"diamonds": 3880,
+"api": "gtu",
+"rupees": 10000,
+"falseRupees": 10000,
+"resellerRupees": 10000,
+"type": "crystals"
+},
+{
+"id": "62",
+"label": "6480+1600 Crystals",
+"group": "Genshin Impact",
+"price": 66.28,
+"diamonds": 8080,
+"api": "gtu",
+"rupees": 10000,
+"falseRupees": 10000,
+"resellerRupees": 10000,
+"type": "crystals"
+}
+]
