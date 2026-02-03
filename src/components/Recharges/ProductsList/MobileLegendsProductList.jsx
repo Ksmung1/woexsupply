@@ -11,9 +11,13 @@ import smallPacks from "../../../assets/images/small-packs.png";
 import mediumPacks from "../../../assets/images/medium-packs.png";
 import largePacks from "../../../assets/images/large-packs.png";
 import hvp from "../../../assets/images/hvp.png";
+import mellite from "../../../assets/images/elite-bundle.webp";
+import mEpic from "../../../assets/images/epic-bundle.webp";
 
 /**
  * MobileLegendsProductList
+ * 
+ * 
  * - Now accepts `collectionName` prop (default: "mlproductlist")
  * - Does NOT require an "order" field (no orderBy)
  * - Safer numeric parsing and type checks
@@ -102,6 +106,8 @@ const MobileLegendsProductList = ({ selectedItem, setSelectedItem }) => {
     const diamonds = Number(item.diamonds) || 0;
     const t = (item.type || "").toLowerCase();
     if (item.label === "High-Value Pass") return hvp;
+    if (item.label === "Weekly Elite Bundle") return mellite;
+    if (item.label === "Monthly Epic Bundle") return mEpic;
     if (t === "weekly") return weeklyImg;
     if (t === "twilight pass") return hvp;
 

@@ -74,11 +74,11 @@ const Modal = ({ open, onClose, title, children, footer, isDark }) => {
       onClick={onClose}
     >
       <div
-        className={`rounded-2xl max-w-4xl mx-auto shadow-2xl w-full overflow-hidden animate-scale-in ${isDark ? "bg-gray-800" : "bg-white"}`}
+        className={`rounded-2xl max-w-4xl w-full mx-4 md:mx-auto shadow-2xl overflow-hidden animate-scale-in flex flex-col max-h-[90vh] ${isDark ? "bg-gray-800" : "bg-white"}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4 relative">
+        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4 relative flex-shrink-0">
           <h3 className="text-xl font-bold text-white pr-8">{title}</h3>
           <button
             onClick={onClose}
@@ -89,7 +89,7 @@ const Modal = ({ open, onClose, title, children, footer, isDark }) => {
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-6 overflow-y-auto custom-scrollbar">
           <div>{children}</div>
           {footer && <div className="mt-6">{footer}</div>}
         </div>
@@ -312,28 +312,31 @@ const Wallet = () => {
     return (
       <div style={style} className="px-2 py-1 md:px-3 md:py-2">
         <div
-          className={`grid grid-cols-3 items-center gap-3 p-3 md:gap-4 md:p-4 rounded-xl border-2 cursor-pointer hover:border-purple-400 hover:shadow-lg transition-all duration-200 group ${isDark ? "bg-gray-800 border-gray-600" : "bg-white border-gray-300"}`}
+          className={`grid grid-cols-[1fr_auto] md:grid-cols-3 items-center gap-3 p-3 md:gap-4 md:p-4 rounded-xl border-2 cursor-pointer hover:border-purple-400 hover:shadow-lg transition-all duration-200 group ${isDark ? "bg-gray-800 border-gray-600" : "bg-white border-gray-300"}`}
           onClick={() => setSelectedTx(t)}
         >
-          <div className="flex flex-col">
-            <div className={`font-bold text-sm ${statusColor(t.status)} mb-1`}>
+          <div className="flex flex-col overflow-hidden">
+            <div className={`font-bold text-sm ${statusColor(t.status)} mb-1 truncate`}>
               {t.id || "Top-up"}
             </div>
-            <div className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+            <div className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"} truncate`}>
               {t.date} {t.time}
+            </div>
+            <div className={`md:hidden text-xs font-mono truncate mt-1 ${isDark ? "text-gray-500" : "text-gray-500"}`}>
+               {t.utr || "-"}
             </div>
           </div>
           <div
-            className={`text-xs font-mono truncate ${isDark ? "text-gray-400" : "text-gray-600"}`}
+            className={`hidden md:block text-xs font-mono truncate text-center ${isDark ? "text-gray-400" : "text-gray-600"}`}
             title={t.utr || "-"}
           >
             {t.utr || "No UTR"}
           </div>
-              <div className="text-right">
+          <div className="text-right pl-2">
             <div className="flex items-center justify-end gap-2">
-              <span className="text-lg">{statusIcon(t.status)}</span>
-              <div className={`font-bold text-lg ${isDark ? "text-white" : "text-gray-800"}`}>
-                    {Math.round(parseFloat(t.amount || 0))} WCoins
+              <span className="text-lg flex-shrink-0">{statusIcon(t.status)}</span>
+              <div className={`font-bold text-lg whitespace-nowrap ${isDark ? "text-white" : "text-gray-800"}`}>
+                    {Math.round(parseFloat(t.amount || 0))} <span className="text-sm">WCoins</span>
               </div>
             </div>
           </div>
@@ -384,30 +387,30 @@ const Wallet = () => {
                     <div className="text-sm md:text-base opacity-90 mb-3 font-medium">
                       Available WCoins
                     </div>
-                    <div className="flex items-baseline gap-3 mb-4">
+                    <div className="flex items-center gap-3 mb-4">
                       <div className="text-4xl md:text-5xl font-bold">
                         {Math.round(parseFloat(user?.balance || 0))} WCoins
                       </div>
                       <img
                         src={coinImg}
                         alt="wcoin"
-                        className="w-12 h-12 md:w-14 md:h-14 opacity-90"
+                        className="w-8 h-8 md:w-10 md:h-10 "
                       />
                     </div>
                     <div className="text-sm opacity-75">
                       Your WCoins balance is ready to use
                     </div>
                   </div>
-                  <div className="flex gap-3">
+                  <div className="flex  flex-col gap-3">
                     <button
                       onClick={() => setShowCouponModal(true)}
-                      className="bg-white/20 text-white px-5 py-3 rounded-full font-bold shadow-lg hover:shadow-xl hover:bg-white/30 transition-all duration-200 flex items-center gap-2 text-sm md:text-base backdrop-blur-sm border border-white/10"
+                      className="bg-white/20 text-white px-2 py-1 rounded-full font-bold shadow-lg hover:shadow-xl hover:bg-white/30 transition-all duration-200 flex items-center gap-2 text-sm md:text-base backdrop-blur-sm border border-white/10"
                     >
                       <FaGift className="text-lg" /> Redeem
                     </button>
                     <button
                       onClick={() => setShowTopupModal(true)}
-                      className="bg-white text-purple-600 px-6 py-3 rounded-full font-bold shadow-xl hover:shadow-2xl hover:bg-purple-50 transition-all duration-200 flex items-center gap-2 text-sm md:text-base"
+                      className="bg-white text-purple-600 px-2 py-2 rounded-full font-bold shadow-xl hover:shadow-2xl hover:bg-purple-50 transition-all duration-200 flex items-center gap-2 text-sm md:text-base"
                     >
                       <FaPlus className="text-lg" /> Add Balance
                     </button>
@@ -498,7 +501,7 @@ const Wallet = () => {
                   Minimum: ₹1 | Maximum: ₹19,999
                 </p>
               </div>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   type="button"
                   onClick={() => setShowTopupModal(false)}
@@ -543,7 +546,7 @@ const Wallet = () => {
                   Enter the 12-character code to redeem WCoins
                 </p>
               </div>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   type="button"
                   onClick={() => setShowCouponModal(false)}
@@ -575,21 +578,21 @@ const Wallet = () => {
             title="Confirm Top-Up"
             isDark={isDark}
             footer={
-              <div className="flex justify-end gap-3">
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
                 <button
                   onClick={() => setConfirmOpen(false)}
-                  className={`px-6 py-2.5 rounded-xl font-semibold transition-colors ${isDark ? "bg-gray-700 hover:bg-gray-600 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-700"}`}
+                  className={`px-6 py-2.5 rounded-xl font-semibold transition-colors w-full sm:w-auto ${isDark ? "bg-gray-700 hover:bg-gray-600 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-700"}`}
                   disabled={loadingPayment}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={confirmTopup}
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
                   disabled={loadingPayment}
                 >
                   {loadingPayment ? (
-                    <span className="flex items-center gap-2">
+                    <span className="flex items-center gap-2 justify-center">
                       <span className="animate-spin">⏳</span> Processing...
                     </span>
                   ) : (
