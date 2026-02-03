@@ -20,6 +20,7 @@ import {
   FaGamepad,
   FaStore,
   FaWallet,
+  FaTags,
 } from "react-icons/fa";
 
 const AdminLayout = () => {
@@ -119,6 +120,7 @@ const AdminLayout = () => {
     { to: "/admin/accounts", label: "Accounts", icon: FaGamepad },
     { to: "/admin/game-accounts", label: "Game Accounts", icon: FaStore },
     { to: "/admin/products", label: "Products", icon: FaBox },
+    { to: "/admin/coupons", label: "Coupons", icon: FaTags },
     { to: "/admin/messages", label: "Messages", icon: FaEnvelope },
   ];
 

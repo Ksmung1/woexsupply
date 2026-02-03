@@ -29,6 +29,7 @@ import AdminQueues from "./components/Admins/AdminQueues";
 import AdminLayout from "./layouts/AdminLayout";
 import MainLayout from "./layouts/MainLayout";
 import AdminProducts from "./components/Admins/AdminProducts";
+import AdminCoupons from "./components/Admins/AdminCoupons";
 import AdminUsers from "./components/Admins/AdminUsers";
 import AdminMessages from "./components/Admins/AdminMessages";
 import AdminAccounts from "./components/Admins/AdminAccounts";
@@ -96,6 +97,7 @@ const App = () => {
                   <Route path="accounts" element={<AdminAccounts />} />
                   <Route path="game-accounts" element={<AdminGameAccounts />} />
                   <Route path="products" element={<AdminProducts />} />
+                  <Route path="coupons" element={<AdminCoupons />} />
                   <Route path="messages" element={<AdminMessages />} />
                 </Route>
               </Routes>

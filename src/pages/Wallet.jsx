@@ -13,6 +13,7 @@ import {
   FaRupeeSign,
   FaUser,
   FaExternalLinkAlt,
+  FaGift,
 } from "react-icons/fa";
 import { useUser } from "../context/UserContext";
 import { useAlert } from "../context/AlertContext";
@@ -25,8 +26,13 @@ import {
   doc as docRef,
   getDoc,
   onSnapshot as onDocSnapshot,
+  runTransaction,
+  getDocs,
+  limit,
+  serverTimestamp,
+  increment,
 } from "firebase/firestore";
-import { db } from "../config/firebase";
+import { db, auth } from "../config/firebase";
 import axios from "axios";
 import coinImg from "../assets/images/topup.png";
 
@@ -106,6 +112,9 @@ const Wallet = () => {
   const [loadingPayment, setLoadingPayment] = useState(false);
   const [orderToCreate, setOrderToCreate] = useState(null);
   const [selectedTx, setSelectedTx] = useState(null);
+  const [showCouponModal, setShowCouponModal] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [redeeming, setRedeeming] = useState(false);
 
   const getLocalParts = () => {
     const now = new Date();
@@ -259,6 +268,32 @@ const Wallet = () => {
     }
   };
 
+  const handleRedeemCoupon = async (e) => {
+    e.preventDefault();
+    if (!couponCode.trim()) {
+      showError("Please enter a coupon code");
+      return;
+    }
+
+    setRedeeming(true);
+    try {
+      const token = await auth.currentUser.getIdToken();
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/coupon/redeem`,
+        { couponCode: couponCode.trim(), uid: user.uid },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      showSuccess(response.data.success);
+      setCouponCode("");
+      setShowCouponModal(false);
+    } catch (error) {
+      console.error("Redemption error:", error);
+      showError(error.response?.data?.error || "Failed to redeem coupon");
+    } finally {
+      setRedeeming(false);
+    }
+  };
+
   const statusIcon = (s) => {
     if (s === "completed") return <FaCheckCircle className="text-green-500" />;
     if (s === "pending") return <FaHourglassHalf className="text-yellow-500" />;
@@ -363,12 +398,20 @@ const Wallet = () => {
                       Your WCoins balance is ready to use
                     </div>
                   </div>
-                  <button
-                    onClick={() => setShowTopupModal(true)}
-                    className="bg-white text-purple-600 px-6 py-3 rounded-full font-bold shadow-xl hover:shadow-2xl hover:bg-purple-50 transition-all duration-200 flex items-center gap-2 text-sm md:text-base"
-                  >
-                    <FaPlus className="text-lg" /> Add Balance
-                  </button>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setShowCouponModal(true)}
+                      className="bg-white/20 text-white px-5 py-3 rounded-full font-bold shadow-lg hover:shadow-xl hover:bg-white/30 transition-all duration-200 flex items-center gap-2 text-sm md:text-base backdrop-blur-sm border border-white/10"
+                    >
+                      <FaGift className="text-lg" /> Redeem
+                    </button>
+                    <button
+                      onClick={() => setShowTopupModal(true)}
+                      className="bg-white text-purple-600 px-6 py-3 rounded-full font-bold shadow-xl hover:shadow-2xl hover:bg-purple-50 transition-all duration-200 flex items-center gap-2 text-sm md:text-base"
+                    >
+                      <FaPlus className="text-lg" /> Add Balance
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -468,6 +511,59 @@ const Wallet = () => {
                   className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold hover:from-purple-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all"
                 >
                   Continue to Payment
+                </button>
+              </div>
+            </form>
+          </Modal>
+
+          <Modal
+            open={showCouponModal}
+            onClose={() => setShowCouponModal(false)}
+            title="Redeem Coupon"
+            footer={null}
+            isDark={isDark}
+          >
+            <form onSubmit={handleRedeemCoupon}>
+              <div className="mb-6">
+                <label className={`block text-sm font-semibold mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+                  Enter Coupon Code
+                </label>
+                <div className="relative">
+                  <FaGift className={`absolute left-4 top-1/2 transform -translate-y-1/2 text-lg ${isDark ? "text-gray-500" : "text-gray-400"}`} />
+                  <input
+                    type="text"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    placeholder="XXXX-XXXX-XXXX"
+                    maxLength={14}
+                    className={`w-full pl-10 pr-4 py-3.5 border-2 rounded-xl focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200 transition-all text-lg font-mono font-semibold uppercase ${isDark ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400" : "border-gray-200 bg-white text-gray-900"}`}
+                  />
+                </div>
+                <p className={`text-xs mt-2 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                  Enter the 12-character code to redeem WCoins
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowCouponModal(false)}
+                  className={`flex-1 px-4 py-3 rounded-xl font-semibold transition-colors ${isDark ? "bg-gray-700 hover:bg-gray-600 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-700"}`}
+                  disabled={redeeming}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold hover:from-purple-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={redeeming || !couponCode.trim()}
+                >
+                  {redeeming ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="animate-spin">⏳</span> Redeeming...
+                    </span>
+                  ) : (
+                    "Redeem Now"
+                  )}
                 </button>
               </div>
             </form>
