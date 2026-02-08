@@ -31,7 +31,7 @@ const [smileBalance, setSmileBalance] = useState(0);
 const baseUrl = import.meta.env.VITE_BACKEND_URL;
 const getSmileBalance = async () => {
   try {
-    const res = await axios.get(
+    const res = await axios.post(
       `${baseUrl}/smile/get-smile-balance`
     );
     return res.data?.smile_points ?? 0;
@@ -189,6 +189,7 @@ if (selectedItem?.outOfStock) {
 if (selectedItem.api === "smile") {
   if (smileBalance < selectedItem.price) {
     showAlert("Currently out of stock. Please try again later.");
+    console.log(smileBalance, selectedItem.price);
     return;
   }
 }
