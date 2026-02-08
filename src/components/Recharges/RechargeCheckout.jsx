@@ -27,6 +27,31 @@ const RechargeCheckout = ({
   const { openModal } = useModal();
   const navigate = useNavigate();
   const location = useLocation();
+const [smileBalance, setSmileBalance] = useState(0);
+const baseUrl = import.meta.env.VITE_BACKEND_URL;
+const getSmileBalance = async () => {
+  try {
+    const res = await axios.get(
+      `${baseUrl}/smile/get-smile-balance`
+    );
+    return res.data?.smile_points ?? 0;
+  } catch (error) {
+    console.error("Error fetching Smile balance:", error);
+    return 0;
+  }
+};
+
+useEffect(() => {
+  let mounted = true;
+
+  getSmileBalance().then((balance) => {
+    if (mounted) setSmileBalance(balance);
+  });
+
+  return () => {
+    mounted = false;
+  };
+}, []);
 
   /* ---------------- SCREEN SIZE MOBILE DETECTION ---------------- */
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
@@ -154,6 +179,20 @@ const RechargeCheckout = ({
       ),
       type: "confirm",
       onConfirm: async () => {
+     // hard stock block
+if (selectedItem?.outOfStock) {
+  showAlert("This product is out of stock.");
+  return;
+}
+
+// Smile API balance check (only when applicable)
+if (selectedItem.api === "smile") {
+  if (smileBalance < selectedItem.price) {
+    showAlert("Currently out of stock. Please try again later.");
+    return;
+  }
+}
+
         if (isSelectedPayment === "upi") return handleUpi();
         else if (isSelectedPayment === "coin") {
   try {
